@@ -21,3 +21,8 @@
 - Vite + React + TypeScript SPA (Capacitor 8 기반 iOS/Android 출시 목표). SSR,
   Next.js, React Router Framework Mode는 사용하지 않는다.
 - 도메인 로직(repository/service/store 등)이 아직 없으므로 임의로 추가하지 않는다.
+
+## 로드맵
+
+프론트엔드 전체 실행 순서·단계 경계·현재 위치는 `docs/frontend-roadmap.md`가 기준이다.
+새 작업을 시작하기 전에 현재 STEP과 해당 단계에서 허용/금지되는 범위를 그 문서에서 확인한다.
