@@ -44,11 +44,24 @@ test.describe('nav-map 라우트 스모크 테스트', () => {
     }
   });
 
-  test('has no horizontal overflow at the configured viewport', async ({ page }) => {
-    await page.goto(ROUTE_PATHS.home);
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
+  const OVERFLOW_CHECK_PATHS: Array<{ label: string; path: string }> = [
+    { label: 'Home', path: ROUTE_PATHS.home },
+    { label: 'Ask', path: buildAskPath() },
+    { label: 'Journal List', path: ROUTE_PATHS.journalList },
+    { label: 'Journal New', path: buildJournalNewPath('investment') },
+    { label: 'Journal Detail', path: buildJournalDetailPath(SAMPLE_ID) },
+    { label: 'Journal Review', path: buildJournalReviewPath(SAMPLE_ID) },
+    { label: 'Onboarding', path: ROUTE_PATHS.onboarding },
+    { label: 'NotFound', path: '/this-route-does-not-exist' },
+  ];
+
+  for (const { label, path } of OVERFLOW_CHECK_PATHS) {
+    test(`has no horizontal overflow at the configured viewport (${label})`, async ({ page }) => {
+      await page.goto(path);
+      const hasHorizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(hasHorizontalOverflow).toBe(false);
+    });
+  }
 });
