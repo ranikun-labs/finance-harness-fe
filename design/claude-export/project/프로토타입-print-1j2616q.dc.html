@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style data-omelette-print-defaults>
+@media print {
+  @page { margin: 0.5in; }
+  h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+  figure, table, pre, blockquote, img, svg, tr, [class~="card" i] { break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  p { orphans: 3; widows: 3; }
+}
+</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E9EBEE}
+  ::selection{background:#3182F6;color:#fff}
+  .scr::-webkit-scrollbar{display:none}
+  input,textarea{outline:none;resize:none;font-family:Pretendard,-apple-system,sans-serif}
+</style>
+</helmet>
+
+<div style="font-family:Pretendard,-apple-system,sans-serif;background:#E9EBEE;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased">
+
+  <!-- PHONE FRAME -->
+  <div style="width:393px;height:830px;background:#000;border-radius:54px;padding:11px;box-shadow:0 40px 80px -20px rgba(20,30,50,0.4),0 0 0 1px rgba(0,0,0,0.05)">
+    <div style="position:relative;width:100%;height:100%;background:#F2F4F6;border-radius:44px;overflow:hidden">
+
+      <!-- STATUS BAR (always) -->
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 32px;pointer-events:none">
+        <span style="font-size:15px;font-weight:600;color:#191F28">9:41</span>
+        <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px">📶</span><span style="font-size:13px">🔋</span></div>
+      </div>
+      <!-- NOTCH (always) -->
+      <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+
+      <!-- ===================== HOME SCREEN ===================== -->
+      <div style="{{ styleHome }}">
+        <div class="scr" style="flex:1;overflow-y:auto;padding:62px 20px 20px;display:flex;flex-direction:column;gap:22px">
+          <!-- app header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 0">
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="width:30px;height:30px;border-radius:10px;background:#3182F6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px">✓</div>
+              <span style="font-size:15px;font-weight:700;color:#191F28">체크리스트</span>
+            </div>
+            <div style="width:36px;height:36px;border-radius:50%;background:#E5E8EB;display:flex;align-items:center;justify-content:center;font-size:15px">🙂</div>
+          </div>
+
+          <!-- HERO QUESTION BAR -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <h1 style="font-size:27px;font-weight:800;letter-spacing:-0.03em;line-height:1.3;color:#191F28">무엇이<br/>궁금하세요?</h1>
+            <div style="background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px -8px rgba(49,130,246,0.22),0 2px 8px rgba(20,30,50,0.05);border:1.5px solid #DCE7FB;display:flex;flex-direction:column;gap:16px">
+              <span style="font-size:11px;font-weight:700;color:#1B64DA;background:#EBF3FE;padding:5px 9px;border-radius:8px;align-self:flex-start">✦ AI에게 질문</span>
+              <span style="font-size:20px;font-weight:500;color:#B0B8C1;line-height:1.4;letter-spacing:-0.02em">하이닉스 요즘 어때?</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px">
+                <span style="font-size:13px;color:#8B95A1">질문이 체크리스트로 바뀌어요</span>
+                <button onClick="{{ goAsk }}" style="width:48px;height:48px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(49,130,246,0.35)" style-hover="background:#1B64DA">→</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- QUICK CHIPS -->
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ goAsk }}" style="flex:1;height:48px;border:1px solid #E5E8EB;border-radius:15px;background:#fff;color:#333D4B;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#F9FAFB">📊 지금 시장 체크</button>
+            <button onClick="{{ goAsk }}" style="flex:1;height:48px;border:1px solid #E5E8EB;border-radius:15px;background:#fff;color:#333D4B;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#F9FAFB">⭐ 관심종목 체크</button>
+          </div>
+
+          <!-- TODAY'S QUESTION -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:16px;font-weight:700;color:#191F28;padding:0 2px">오늘의 질문</span>
+            <div style="background:#fff;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 1px 3px rgba(20,30,50,0.05);border:1px solid #ECEFF2">
+              <span style="font-family:Georgia,serif;font-size:34px;line-height:0.6;color:#C9E0FC">"</span>
+              <span style="font-size:19px;font-weight:600;color:#333D4B;line-height:1.55;letter-spacing:-0.02em;margin-top:-8px">나는 실적을 보고 있는가,<br/>가격 상승에 반응하고 있는가?</span>
+              <div style="height:1px;background:#F2F4F6"></div>
+              <button onClick="{{ goAsk }}" style="align-self:flex-start;height:38px;padding:0 16px;border:none;border-radius:11px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#DCE7FB">짚어보기 →</button>
+            </div>
+          </div>
+
+          <!-- WATCHLIST -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+              <span style="font-size:16px;font-weight:700;color:#191F28">관심종목</span>
+              <span style="font-size:13px;font-weight:600;color:#8B95A1">전체</span>
+            </div>
+            <!-- SK하이닉스 -->
+            <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:40px;height:40px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#4E5968">SK</div>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <span style="font-size:16px;font-weight:700;color:#191F28">SK하이닉스</span>
+                  <span style="font-size:12px;color:#8B95A1">마지막 체크 6.28</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:#4E5968;background:#F2F4F6;padding:5px 10px;border-radius:8px">관심</span>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onClick="{{ goAsk }}" style="flex:1;height:40px;border:none;border-radius:12px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#DCE7FB">질문하기</button>
+                <button onClick="{{ goSave }}" style="flex:1;height:40px;border:1px solid #E5E8EB;border-radius:12px;background:#fff;color:#4E5968;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">기록하기</button>
+              </div>
+            </div>
+            <!-- SK스퀘어 -->
+            <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:40px;height:40px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#4E5968">SK</div>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <span style="font-size:16px;font-weight:700;color:#191F28">SK스퀘어</span>
+                  <span style="font-size:12px;color:#8B95A1">마지막 체크 6.21</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:#8B95A1;background:#F2F4F6;padding:5px 10px;border-radius:8px">관망</span>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onClick="{{ goAsk }}" style="flex:1;height:40px;border:none;border-radius:12px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#DCE7FB">질문하기</button>
+                <button onClick="{{ goSave }}" style="flex:1;height:40px;border:1px solid #E5E8EB;border-radius:12px;background:#fff;color:#4E5968;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">기록하기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT RECORDS -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+              <span style="font-size:16px;font-weight:700;color:#191F28">최근 기록</span>
+              <span style="font-size:13px;font-weight:600;color:#8B95A1">전체</span>
+            </div>
+            <div style="background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div onClick="{{ goDetail }}" style="padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F2F4F6;cursor:pointer" style-hover="background:#F9FAFB">
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:15px;font-weight:600;color:#191F28">SK하이닉스</span>
+                  <span style="font-size:12px;color:#8B95A1">2026.06.28</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:5px 10px;border-radius:8px">관심</span>
+              </div>
+              <div onClick="{{ goDetail }}" style="padding:16px 18px;display:flex;align-items:center;gap:12px;cursor:pointer" style-hover="background:#F9FAFB">
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:15px;font-weight:600;color:#191F28">에코프로</span>
+                  <span style="font-size:12px;color:#8B95A1">2026.06.24</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:#8B95A1;background:#F2F4F6;padding:5px 10px;border-radius:8px">관망</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ASK 결과 SCREEN ===================== -->
+      <div style="{{ styleAsk }}">
+        <div style="flex-shrink:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(242,244,246,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #ECEFF2">
+          <div onClick="{{ goHome }}" style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #ECEFF2;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4E5968;cursor:pointer" style-hover="background:#F2F4F6">←</div>
+          <span style="font-size:15px;font-weight:700;color:#191F28">AI 체크</span>
+          <div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#8B95A1">⋯</div>
+        </div>
+        <div class="scr" style="flex:1;overflow-y:auto;padding:16px 20px 24px;display:flex;flex-direction:column;gap:24px">
+          <!-- question -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:#8B95A1">내 질문</span>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:4px;align-self:stretch;border-radius:2px;background:#3182F6;flex-shrink:0"></div>
+              <span style="font-size:22px;font-weight:700;color:#191F28;line-height:1.4;letter-spacing:-0.02em">하이닉스 요즘 어때?</span>
+            </div>
+          </div>
+          <!-- perspective chips -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:13px;font-weight:600;color:#6B7684">적용된 체크 관점</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">반도체 업황</span>
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">외국인 수급</span>
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">월말·분기말 리밸런싱</span>
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">실적 기대</span>
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">환율·금리</span>
+              <span style="font-size:13px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:7px 12px;border-radius:10px">단기 과열</span>
+            </div>
+          </div>
+          <!-- checklist -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:16px;font-weight:700;color:#191F28">확인할 항목</span>
+              <span style="font-size:12px;font-weight:600;color:#8B95A1">6가지</span>
+            </div>
+            <div style="background:#F9FAFB;border:1px solid #ECEFF2;border-radius:14px;padding:13px 15px;display:flex;gap:9px;align-items:flex-start">
+              <span style="font-size:14px;line-height:1.2">💡</span>
+              <span style="font-size:13px;color:#6B7684;line-height:1.55">정답이 아니라 <b style="color:#4E5968;font-weight:600">직접 확인할 항목</b>이에요.</span>
+            </div>
+            <div style="background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="padding:15px 18px;display:flex;gap:13px;border-bottom:1px solid #F4F6F8">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">반도체 업황</span><span style="font-size:14px;color:#4E5968;line-height:1.5">HBM·AI 수요 기대가 유지되는지 확인하세요.</span></div>
+              </div>
+              <div style="padding:15px 18px;display:flex;gap:13px;border-bottom:1px solid #F4F6F8">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">외국인 수급</span><span style="font-size:14px;color:#4E5968;line-height:1.5">하루짜리 매수인지, 누적 흐름인지 짚어보세요.</span></div>
+              </div>
+              <div style="padding:15px 18px;display:flex;gap:13px;border-bottom:1px solid #F4F6F8">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">월말·분기말 리밸런싱</span><span style="font-size:14px;color:#4E5968;line-height:1.5">기관 수급 변동성 구간인지 확인하세요.</span></div>
+              </div>
+              <div style="padding:15px 18px;display:flex;gap:13px;border-bottom:1px solid #F4F6F8">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">4</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">실적 기대</span><span style="font-size:14px;color:#4E5968;line-height:1.5">이미 가격에 반영된 기대인지 점검하세요.</span></div>
+              </div>
+              <div style="padding:15px 18px;display:flex;gap:13px;border-bottom:1px solid #F4F6F8">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">5</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">환율·금리</span><span style="font-size:14px;color:#4E5968;line-height:1.5">투자 전제에 영향을 주는지 보세요.</span></div>
+              </div>
+              <div style="padding:15px 18px;display:flex;gap:13px">
+                <span style="width:26px;height:26px;flex-shrink:0;border-radius:9px;background:#EBF3FE;color:#1B64DA;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">6</span>
+                <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:700;color:#191F28">단기 과열</span><span style="font-size:14px;color:#4E5968;line-height:1.5">최근 상승이 펀더멘털인지 분위기인지 구분하세요.</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- questions to record -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:16px;font-weight:700;color:#191F28">다음 기록에 남길 질문</span>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div style="background:#fff;border:1px solid #ECEFF2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:11px"><span style="font-family:Georgia,serif;font-size:22px;line-height:0.5;color:#C9E0FC;flex-shrink:0">"</span><span style="font-size:15px;font-weight:500;color:#333D4B;flex:1">나는 실적을 보고 있는가?</span><span style="font-size:18px;color:#C0C6CE">+</span></div>
+              <div style="background:#fff;border:1px solid #ECEFF2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:11px"><span style="font-family:Georgia,serif;font-size:22px;line-height:0.5;color:#C9E0FC;flex-shrink:0">"</span><span style="font-size:15px;font-weight:500;color:#333D4B;flex:1">수급을 보고 있는가?</span><span style="font-size:18px;color:#C0C6CE">+</span></div>
+              <div style="background:#fff;border:1px solid #ECEFF2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:11px"><span style="font-family:Georgia,serif;font-size:22px;line-height:0.5;color:#C9E0FC;flex-shrink:0">"</span><span style="font-size:15px;font-weight:500;color:#333D4B;flex:1">가격 상승에 반응한 것인가?</span><span style="font-size:18px;color:#C0C6CE">+</span></div>
+            </div>
+          </div>
+          <!-- CTAs -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ goSave }}" style="flex:1;height:50px;border:1px solid #E5E8EB;border-radius:15px;background:#fff;color:#333D4B;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">📓 공부 노트로 저장</button>
+              <button onClick="{{ goSave }}" style="flex:1;height:50px;border:none;border-radius:15px;background:#3182F6;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#1B64DA">📝 투자 기록으로 저장</button>
+            </div>
+            <button onClick="{{ goHome }}" style="width:100%;height:48px;border:none;border-radius:15px;background:#F2F4F6;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#E5E8EB">✦ 추가 질문하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 일지 저장 SCREEN ===================== -->
+      <div style="{{ styleSave }}">
+        <div style="flex-shrink:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(242,244,246,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #ECEFF2">
+          <div onClick="{{ goAsk }}" style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #ECEFF2;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4E5968;cursor:pointer" style-hover="background:#F2F4F6">←</div>
+          <span style="font-size:15px;font-weight:700;color:#191F28">기록 저장</span>
+          <div style="width:38px"></div>
+        </div>
+        <div class="scr" style="flex:1;overflow-y:auto;padding:16px 20px 24px;display:flex;flex-direction:column;gap:16px">
+          <!-- type toggle -->
+          <div style="background:#E5E8EB;border-radius:16px;padding:4px;display:flex;gap:4px">
+            <button style="flex:1;height:42px;border:none;border-radius:13px;background:#fff;color:#191F28;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(20,30,50,0.1)">투자 기록</button>
+            <button style="flex:1;height:42px;border:none;border-radius:13px;background:transparent;color:#8B95A1;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">공부 노트</button>
+          </div>
+          <!-- 종목 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968">종목</label>
+            <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 16px;height:50px;display:flex;align-items:center">
+              <input type="text" placeholder="종목명 또는 티커" value="SK하이닉스" style="flex:1;border:none;background:transparent;font-size:16px;font-weight:500;color:#191F28" />
+            </div>
+          </div>
+          <!-- 행동 칩 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968">내가 한 행동 <span style="font-size:12px;color:#B0B8C1;font-weight:400">기록용 선택</span></label>
+            <div style="display:flex;gap:8px">
+              <button style="height:38px;padding:0 18px;border:1px solid #3182F6;border-radius:11px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">관심</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">관망</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">매수</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">매도</button>
+            </div>
+          </div>
+          <!-- 가격/수량 -->
+          <div style="display:flex;gap:10px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <label style="font-size:13px;font-weight:600;color:#4E5968">가격 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+              <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 14px;height:50px;display:flex;align-items:center;gap:6px">
+                <input type="text" placeholder="예: 185,000" style="flex:1;border:none;background:transparent;font-size:15px;color:#191F28" />
+                <span style="font-size:13px;color:#8B95A1">원</span>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <label style="font-size:13px;font-weight:600;color:#4E5968">수량 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+              <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 14px;height:50px;display:flex;align-items:center;gap:6px">
+                <input type="text" placeholder="예: 5" style="flex:1;border:none;background:transparent;font-size:15px;color:#191F28" />
+                <span style="font-size:13px;color:#8B95A1">주</span>
+              </div>
+            </div>
+          </div>
+          <!-- 메모 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968">판단 이유 / 메모</label>
+            <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:14px 16px">
+              <textarea placeholder="이 시점에 이 행동을 한 이유를 적어보세요." style="width:100%;height:80px;border:none;background:transparent;font-size:15px;color:#191F28;line-height:1.6"></textarea>
+            </div>
+          </div>
+          <!-- 감정 태그 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968">감정 태그 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">FOMO</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">불안</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #3182F6;border-radius:10px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">확신</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">관망</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">혼란</button>
+            </div>
+          </div>
+          <!-- 체크리스트 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968">체크리스트 확인 <span style="font-size:12px;color:#B0B8C1;font-weight:400">AI 항목 기반</span></label>
+            <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECEFF2">
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #F2F4F6">
+                <div style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;border:1.5px solid #3182F6;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#3182F6;font-size:12px;font-weight:700">✓</div>
+                <span style="font-size:14px;color:#333D4B;line-height:1.5">외국인 수급이 누적 흐름인지 확인했다</span>
+              </div>
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #F2F4F6">
+                <div style="width:22px;height:22px;border-radius:7px;background:#F2F4F6;border:1.5px solid #E5E8EB;flex-shrink:0"></div>
+                <span style="font-size:14px;color:#6B7684;line-height:1.5">실적 기대가 이미 가격에 반영됐는지 점검했다</span>
+              </div>
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
+                <div style="width:22px;height:22px;border-radius:7px;background:#F2F4F6;border:1.5px solid #E5E8EB;flex-shrink:0"></div>
+                <span style="font-size:14px;color:#6B7684;line-height:1.5">월말 리밸런싱 구간 여부를 확인했다</span>
+              </div>
+            </div>
+          </div>
+          <!-- save CTA -->
+          <button onClick="{{ goDetail }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px -4px rgba(49,130,246,0.4)" style-hover="background:#1B64DA">저장하기</button>
+        </div>
+      </div>
+
+      <!-- ===================== 일지 상세 SCREEN ===================== -->
+      <div style="{{ styleDetail }}">
+        <div style="flex-shrink:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(242,244,246,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #ECEFF2">
+          <div onClick="{{ goHome }}" style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #ECEFF2;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4E5968;cursor:pointer" style-hover="background:#F2F4F6">←</div>
+          <span style="font-size:15px;font-weight:700;color:#191F28">기록 상세</span>
+          <div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#8B95A1">⋯</div>
+        </div>
+        <div class="scr" style="flex:1;overflow-y:auto;padding:16px 20px 24px;display:flex;flex-direction:column;gap:18px">
+          <!-- title + date -->
+          <div style="background:#fff;border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;font-weight:600;color:#8B95A1;white-space:nowrap">투자 기록</span>
+              <span style="font-size:12px;color:#B0B8C1;white-space:nowrap">2026.06.28</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:42px;height:42px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#4E5968">SK</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:20px;font-weight:800;color:#191F28;letter-spacing:-0.02em">SK하이닉스</span>
+                <div style="display:flex;gap:6px">
+                  <span style="font-size:12px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:4px 9px;border-radius:7px">관심</span>
+                  <span style="font-size:12px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:4px 9px;border-radius:7px">확신</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- original question -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:12px;font-weight:600;color:#8B95A1">당시 질문</span>
+            <div style="background:#fff;border-radius:16px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="width:4px;align-self:stretch;border-radius:2px;background:#3182F6;flex-shrink:0"></div>
+              <span style="font-size:18px;font-weight:600;color:#333D4B;line-height:1.45">하이닉스 요즘 어때?</span>
+            </div>
+          </div>
+          <!-- AI checklist -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;font-weight:600;color:#8B95A1;white-space:nowrap">AI 체크리스트</span>
+              <span style="font-size:12px;color:#3182F6;font-weight:600;white-space:nowrap">4개 항목</span>
+            </div>
+            <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="padding:14px 16px;display:flex;gap:11px;border-bottom:1px solid #F4F6F8"><span style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;color:#1B64DA;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</span><span style="font-size:14px;color:#333D4B;line-height:1.5">반도체 업황 — HBM·AI 수요 기대가 유지되는지</span></div>
+              <div style="padding:14px 16px;display:flex;gap:11px;border-bottom:1px solid #F4F6F8"><span style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;color:#1B64DA;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</span><span style="font-size:14px;color:#333D4B;line-height:1.5">외국인 수급 — 하루짜리인지 누적 흐름인지</span></div>
+              <div style="padding:14px 16px;display:flex;gap:11px;border-bottom:1px solid #F4F6F8"><span style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;color:#1B64DA;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</span><span style="font-size:14px;color:#333D4B;line-height:1.5">월말 리밸런싱 — 기관 수급 변동성 구간인지</span></div>
+              <div style="padding:14px 16px;display:flex;gap:11px"><span style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;color:#1B64DA;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</span><span style="font-size:14px;color:#333D4B;line-height:1.5">실적 기대 — 이미 가격에 반영됐는지</span></div>
+            </div>
+          </div>
+          <!-- my record -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:12px;font-weight:600;color:#8B95A1">내 기록</span>
+            <div style="background:#fff;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <p style="font-size:15px;color:#333D4B;line-height:1.65">HBM 수요 기대가 꺾이지 않았고, 외국인 누적 매수가 며칠째 이어지고 있어서 지켜보기로 했다.</p>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:12px;font-weight:600;color:#8B95A1">감정</span>
+                <span style="font-size:12px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:4px 10px;border-radius:7px">확신</span>
+              </div>
+            </div>
+          </div>
+          <!-- checklist status -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;font-weight:600;color:#8B95A1;white-space:nowrap">체크 완료</span>
+              <span style="font-size:12px;font-weight:600;color:#3182F6;white-space:nowrap">2 / 3</span>
+            </div>
+            <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+              <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:11px;border-bottom:1px solid #F4F6F8">
+                <div style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;border:1.5px solid #3182F6;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#3182F6;font-size:12px;font-weight:700">✓</div>
+                <span style="font-size:14px;color:#333D4B;line-height:1.5">외국인 수급이 누적 흐름인지 확인했다</span>
+              </div>
+              <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:11px;border-bottom:1px solid #F4F6F8">
+                <div style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;border:1.5px solid #3182F6;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#3182F6;font-size:12px;font-weight:700">✓</div>
+                <span style="font-size:14px;color:#333D4B;line-height:1.5">반도체 업황 지속 여부를 점검했다</span>
+              </div>
+              <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:11px">
+                <div style="width:22px;height:22px;border-radius:7px;background:#F2F4F6;border:1.5px solid #E5E8EB;flex-shrink:0"></div>
+                <span style="font-size:14px;color:#8B95A1;line-height:1.5">월말 리밸런싱 구간 여부를 확인했다</span>
+              </div>
+            </div>
+          </div>
+          <!-- CTAs -->
+          <div style="display:flex;flex-direction:column;gap:10px;padding-top:4px">
+            <button onClick="{{ showToast }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;letter-spacing:-0.01em;box-shadow:0 6px 18px -4px rgba(49,130,246,0.38);display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#1B64DA"><span>✦</span><span>AI와 복기하기</span></button>
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ goSave }}" style="flex:1;height:46px;border:1px solid #E5E8EB;border-radius:14px;background:#fff;color:#4E5968;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">수정</button>
+              <button style="flex:1;height:46px;border:1px solid #FAD4D8;border-radius:14px;background:#FEF6F7;color:#D6303D;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#FDE9EC">삭제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB BAR (always) -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-top:1px solid #ECEFF2;padding:10px 0 26px;display:flex;justify-content:space-around;z-index:20">
+        <div onClick="{{ goHome }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ tabHome }};transition:color .15s">
+          <span style="font-size:21px;line-height:1">{{ tabHomeIcon }}</span>
+          <span style="font-size:11px;font-weight:{{ tabHomeWeight }}">홈</span>
+        </div>
+        <div onClick="{{ goAsk }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ tabAsk }}">
+          <span style="font-size:21px;line-height:1">✦</span>
+          <span style="font-size:11px;font-weight:{{ tabAskWeight }}">질문</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ tabRecord }}">
+          <span style="font-size:21px;line-height:1">▤</span>
+          <span style="font-size:11px;font-weight:{{ tabRecordWeight }}">기록</span>
+        </div>
+      </div>
+
+      <!-- HOME INDICATOR (always) -->
+      <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#191F28;opacity:0.85;z-index:25;pointer-events:none"></div>
+
+      <!-- TOAST -->
+      <div style="{{ styleToast }}">복기 기능은 준비 중입니다 ☕</div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'home', toast: false };
+
+  go(s) {
+    this.setState({ screen: s, toast: false });
+  }
+
+  showToast() {
+    this.setState({ toast: true });
+    setTimeout(() => this.setState({ toast: false }), 2500);
+  }
+
+  renderVals() {
+    const s = this.state.screen;
+    const show = (name) => ({
+      display: s === name ? 'flex' : 'none',
+      flexDirection: 'column',
+      position: 'absolute',
+      top: '54px',
+      left: 0,
+      right: 0,
+      bottom: '80px',
+    });
+
+    const tabColor = (name) => s === name ? '#3182F6' : '#B0B8C1';
+    const tabWeight = (name) => s === name ? '700' : '600';
+
+    return {
+      styleHome: show('home'),
+      styleAsk: show('ask'),
+      styleSave: show('save'),
+      styleDetail: show('detail'),
+      goHome: () => this.go('home'),
+      goAsk: () => this.go('ask'),
+      goSave: () => this.go('save'),
+      goDetail: () => this.go('detail'),
+      showToast: () => this.showToast(),
+      // tab bar
+      tabHome: tabColor('home'),
+      tabAsk: tabColor('ask'),
+      tabRecord: (s === 'save' || s === 'detail') ? '#3182F6' : '#B0B8C1',
+      tabHomeIcon: s === 'home' ? '●' : '○',
+      tabHomeWeight: tabWeight('home'),
+      tabAskWeight: tabWeight('ask'),
+      tabRecordWeight: (s === 'save' || s === 'detail') ? '700' : '600',
+      // toast
+      styleToast: {
+        display: this.state.toast ? 'flex' : 'none',
+        position: 'absolute',
+        bottom: '96px',
+        left: '20px',
+        right: '20px',
+        background: 'rgba(25,31,40,0.9)',
+        color: '#fff',
+        borderRadius: '14px',
+        padding: '14px 20px',
+        fontSize: '14px',
+        fontWeight: '600',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 60,
+        boxShadow: '0 8px 24px rgba(20,30,50,0.25)',
+        backdropFilter: 'blur(8px)',
+      },
+    };
+  }
+}
+</script>
+<script>
+(async () => {
+  if (!document.title || !document.title.trim()) document.title = "프로토타입";
+  // Prepend so page-supplied @page / break rules (deck-stage's margin:0,
+  // author CSS) keep source-order precedence over the baseline.
+  const baseCss = document.createElement('style');
+  baseCss.textContent = "@media print {\n  figure, table { break-inside: avoid; }\n  *, *::before, *::after {\n    print-color-adjust: exact; -webkit-print-color-adjust: exact;\n    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\n    animation-delay: -99s !important; animation-duration: .001s !important;\n    animation-iteration-count: 1 !important; animation-fill-mode: both !important;\n    animation-play-state: running !important; transition-duration: 0s !important;\n  }\n}";
+  document.head.prepend(baseCss);
+  if (document.readyState === 'loading') {
+    await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  }
+  let ds = document.querySelector('deck-stage');
+  // whenDefined never resolves when nothing registers the element, so only
+  // await it when a <deck-stage> tag exists (and race a timeout regardless).
+  if (ds && !customElements.get('deck-stage')) {
+    try {
+      await Promise.race([
+        customElements.whenDefined('deck-stage'),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]);
+    } catch (e) {}
+    ds = document.querySelector('deck-stage');
+  }
+  // dc-runtime assigns window.DCLogic at init and mounts into #dc-root on
+  // DOMContentLoaded; settle on that subtree so React has rendered before
+  // print(). Non-DC pages fall through to weighing body.
+  const isDc = !ds && 'DCLogic' in window;
+  const settleRoot = ds || (isDc ? document.getElementById('dc-root') : null) || document.body;
+  if (settleRoot) {
+    // Weigh only content children — skip script/style/template so inline
+    // Babel/CSS doesn't register as stable "content" before the framework
+    // has mounted anything.
+    const MEDIA = 'img,svg,canvas,video,picture,iframe,embed,object';
+    const weigh = () => {
+      let text = 0, media = 0;
+      for (const c of settleRoot.children) {
+        const t = c.tagName;
+        if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+        text += (c.textContent || '').trim().length;
+        media += c.querySelectorAll(MEDIA).length + (c.matches(MEDIA) ? 1 : 0);
+      }
+      return text + media * 100;
+    };
+    // "Non-zero and stable" alone is not sufficient to mean rendered: generic
+    // body can carry a static shell while async main content is pending, and
+    // #dc-root can carry the root DC's static text while child refs are still
+    // .sc-placeholder boxes. Gate generic on readyState 'complete', and never
+    // accept stability while a dc-runtime placeholder is present.
+    const isGeneric = settleRoot === document.body;
+    const deadline = Date.now() + 15000;
+    let last = -1, stable = 0;
+    while (Date.now() < deadline) {
+      const n = weigh();
+      const ready =
+        (!isGeneric || document.readyState === 'complete') &&
+        !settleRoot.querySelector('.sc-placeholder');
+      if (n > 0 && n === last && ready) { if (++stable >= 2) break; } else { stable = 0; }
+      last = n;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  // Project support.js may predate runtime default-seeding; push via bridge.
+  if (isDc && window.__dcSetProps && window.__dcRootName) {
+    try {
+      const dpEl = document.querySelector('script[data-dc-script]');
+      const meta = JSON.parse((dpEl && dpEl.getAttribute('data-props')) || '{}');
+      const bag = {};
+      for (const k in meta)
+        if (k[0] !== '$' && meta[k] && meta[k].default !== undefined)
+          bag[k] = meta[k].default;
+      if (Object.keys(bag).length) {
+        window.__dcSetProps(window.__dcRootName(), bag);
+        await new Promise((r) => setTimeout(r, 50));
+      }
+    } catch (e) {}
+  }
+  // Reveal content gated on scroll or visibility before printing. Lazy <img>,
+  // IntersectionObserver fade-ins, and collapsed <details> don't render while
+  // off-screen, so a long page would print with them blank or closed. Open
+  // every <details>, force native-lazy images eager, and scroll the document
+  // through its full height to trip lazy-load + IO; then wait (bounded) for the
+  // newly-triggered images. Inert for deck-stage (slides aren't scroll-gated).
+  try {
+    for (const d of document.querySelectorAll('details')) d.open = true;
+    for (const img of document.querySelectorAll('img[loading="lazy"]'))
+      img.loading = 'eager';
+    const scroller = document.scrollingElement || document.documentElement;
+    const full = Math.max(scroller.scrollHeight, document.body.scrollHeight);
+    const step = window.innerHeight || 800;
+    for (let y = 0; y <= full; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, 0);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.addEventListener('load', res, { once: true });
+                img.addEventListener('error', res, { once: true });
+              })
+        )
+      ),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {}
+  try { await document.fonts.ready; } catch (e) {}
+  // Jump every animation to its end state so print() never captures a slide
+  // mid-entrance. Ordering matters: the 0s-transition style must be live
+  // BEFORE data-deck-active is set so attribute-keyed transitions don't
+  // start a (now-0s) run from the pre-active base.
+  const st = document.createElement('style');
+  st.textContent = '*,*::before,*::after{animation-delay:-99s !important;animation-duration:.001s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:running !important;transition-duration:0s !important}';
+  document.head.appendChild(st);
+  for (const d of document.querySelectorAll('deck-stage')) {
+    for (const c of d.children) {
+      const t = c.tagName;
+      if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+      c.setAttribute('data-deck-active', '');
+    }
+  }
+  // Re-append deck-stage's @page last so no author @page can add a margin and
+  // spill each full-bleed slide onto two sheets. Backstop for old copies.
+  if (ds) {
+    let pg = document.getElementById('deck-stage-print-page');
+    if (!pg) {
+      pg = document.createElement('style');
+      pg.textContent = '@page{size:' + (+ds.getAttribute('width') || 1920) +
+        'px ' + (+ds.getAttribute('height') || 1080) + 'px;margin:0}';
+    }
+    document.body.appendChild(pg);
+  }
+  try {
+    const sweep = () => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) {
+          try { a.currentTime = (a.effect && a.effect.getComputedTiming().duration) || 0; a.pause(); } catch (e2) {}
+        }
+      }
+    };
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+  } catch (e) {}
+  // Size the PDF page to the rendered design unless the file opted into
+  // standard paper via @page{size:letter|A4|…}. Decks own their own @page.
+  // Wrappers (body, …) lose padding+margin so the frame sits at (0,0); the
+  // frame itself loses only margin — its padding is INSIDE the measured
+  // rect and must stay, or content shifts and leaves a gap at bottom/right.
+  var __m = null;
+  try { __m = (() => {
+  var STAMP = true;
+  var docEl = document.documentElement;
+  var doc = { width: docEl.scrollWidth, height: docEl.scrollHeight };
+
+  var ds = document.querySelector('deck-stage');
+  if (ds) {
+    var dw = Number(ds.getAttribute('width')) || 1920;
+    var dh = Number(ds.getAttribute('height')) || 1080;
+    var n = typeof ds.length === 'number' ? ds.length : ds.children.length;
+    var idx = typeof ds.index === 'number' ? ds.index : 0;
+    var frames = [];
+    for (var i = 0; i < n; i++) frames.push({ left: 0, top: 0, width: dw, height: dh });
+    return { kind: 'deck', source: 'declared', doc: doc, frames: frames,
+      authored: frames.map(function(){return{width:true,height:true}}),
+      deck: { width: dw, height: dh, slideCount: n, index: idx },
+      signals: { paperPage: false, pxPage: false } };
+  }
+
+  // Declared kind: a doc-page tag names the kind outright, so no signal
+  // heuristics run (like the deck branch above, signals report false —
+  // they describe inferred classifications only). The tag alone is not
+  // trusted: the element must have upgraded (shadowRoot present), so a
+  // leftover tag whose script was deleted falls through to the heuristics
+  // that handle plain markup.
+  var stageSx = window.scrollX || 0, stageSy = window.scrollY || 0;
+  var dp = document.querySelector('doc-page');
+  if (dp && dp.shadowRoot) {
+    // Crop to the sheet, not the host — the desk around it is screen-only
+    // chrome that must not land in PNG exports.
+    var sheet = dp.shadowRoot.querySelector('.sheet');
+    var sr = (sheet || dp).getBoundingClientRect();
+    return { kind: 'paper-doc', source: 'declared', doc: doc,
+      frames: [{ left: sr.left + stageSx, top: sr.top + stageSy,
+        width: sr.width, height: sr.height }],
+      authored: [{ width: false, height: false }],
+      signals: { paperPage: false, pxPage: false } };
+  }
+  var paperPage = false, pxPage = false;
+  var eachRule = function (fn) {
+    for (var s = 0; s < document.styleSheets.length; s++) {
+      var rs; try { rs = document.styleSheets[s].cssRules; } catch (e) { continue; }
+      for (var r = 0; r < rs.length; r++) {
+        fn(rs[r]);
+        if (rs[r].cssRules) for (var n = 0; n < rs[r].cssRules.length; n++) fn(rs[r].cssRules[n]);
+      }
+    }
+  };
+  eachRule(function (r) {
+    if (r.type !== 6) return;
+    var m = /\bsize\s*:\s*([^;}]+)/i.exec(r.cssText || '');
+    if (!m) return;
+    if (/\b(letter|a[3-5]|legal|ledger)\b/i.test(m[1])) paperPage = true;
+    if (/\d+(?:\.\d+)?px\b/i.test(m[1])) pxPage = true;
+  });
+  var signals = { paperPage: paperPage, pxPage: pxPage };
+
+  var pxVal = function (v) {
+    var m = /^(\d+(?:\.\d+)?)px$/.exec(v || ''); return m ? +m[1] : 0;
+  };
+  var authoredPx = function (el, prop) {
+    if (pxVal(el.style[prop])) return true;
+    var attr = el.getAttribute(prop);
+    if (attr && /^\d+$/.test(attr)) return true;
+    var hit = false;
+    eachRule(function (r) {
+      if (hit || r.type !== 1 || !r.style) return;
+      try { if (el.matches(r.selectorText) && pxVal(r.style[prop])) hit = true; } catch (e) {}
+    });
+    return hit;
+  };
+
+  var el = document.body, rootPxW = false;
+  for (;;) {
+    var kids = [];
+    for (var c = 0; c < el.children.length; c++) {
+      var t = el.children[c].tagName;
+      if (t !== 'SCRIPT' && t !== 'STYLE' && t !== 'TEMPLATE') kids.push(el.children[c]);
+    }
+    if (kids.length !== 1 || !(kids[0] instanceof HTMLElement)) break;
+    if (STAMP) el.setAttribute('data-om-frame-wrap', '');
+    el = kids[0];
+    rootPxW = authoredPx(el, 'width');
+    if (rootPxW) break;
+  }
+  if (!rootPxW) rootPxW = authoredPx(el, 'width');
+
+  // @page{size:letter} alone is a flowing doc; with a px-width root it's a
+  // fixed sheet pretending to be paper — fall through and size to render.
+  if (paperPage && !rootPxW) {
+    return { kind: 'paper-doc', source: 'inferred', doc: doc, signals: signals,
+      frames: [{ left: 0, top: 0, width: doc.width, height: doc.height }],
+      authored: [{ width: false, height: false }] };
+  }
+
+  var sx = window.scrollX || 0, sy = window.scrollY || 0;
+  var rectOf = function (e) {
+    var r = e.getBoundingClientRect();
+    var oy; try { oy = getComputedStyle(e).overflowY; } catch (err) {}
+    var h = oy === 'visible' ? Math.max(r.height, e.scrollHeight || 0) : r.height;
+    return { left: r.left + sx, top: r.top + sy, width: r.width, height: h };
+  };
+
+  // Multi-frame: ≥2 visible non-fixed children, each with authored px width
+  // AND height, all within ±2px of each other. Off unless the page opts in
+  // via data-om-multi-frame on the stop element — guards against card grids
+  // and pricing tables that match the geometry but aren't separate canvases.
+  if (el.hasAttribute('data-om-multi-frame')) {
+    var cands = [];
+    for (var k = 0; k < el.children.length; k++) {
+      var ch = el.children[k];
+      var cs; try { cs = getComputedStyle(ch); } catch (e) { continue; }
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'fixed') continue;
+      var rc = rectOf(ch);
+      if (rc.width < 2 || rc.height < 2) continue;
+      if (!authoredPx(ch, 'width') || !authoredPx(ch, 'height')) continue;
+      cands.push(rc);
+    }
+    if (cands.length >= 2) {
+      var w0 = cands[0].width, h0 = cands[0].height, ok = true;
+      for (var q = 1; q < cands.length; q++)
+        if (Math.abs(cands[q].width - w0) > 2 || Math.abs(cands[q].height - h0) > 2) ok = false;
+      if (ok) return { kind: 'multi-frame', source: 'inferred', doc: doc, signals: signals,
+        frames: cands, authored: cands.map(function(){return{width:true,height:true}}) };
+    }
+  }
+
+  if (STAMP) el.setAttribute('data-om-frame', '');
+  return { kind: 'single-canvas', source: 'inferred', doc: doc, signals: signals,
+    frames: [rectOf(el)],
+    authored: [{ width: rootPxW, height: authoredPx(el, 'height') }] };
+})(); } catch (e) {}
+  var frame = null;
+  if (__m && __m.kind === 'single-canvas') {
+    var f = __m.frames && __m.frames[0];
+    if (f && f.width >= 200 && f.height >= 200) {
+      frame = f;
+      var fst = document.createElement('style');
+      fst.textContent = '@media print{@page{size:' + Math.ceil(f.width) + 'px ' +
+        Math.ceil(f.height) + 'px;margin:0}' +
+        'html,body,[data-om-frame-wrap]{padding:0!important;margin:0!important;background:none!important}' +
+        '[data-om-frame]{margin:0!important}}';
+      document.body.appendChild(fst);
+    }
+  }
+  // Relax break-inside on oversized elements. An element taller than a
+  // printable page can't honor break-inside: avoid — browsers either overflow
+  // it or push it whole to the next page, leaving a blank gap, then break it
+  // anyway at an arbitrary point. After the final layout (content revealed,
+  // animations jumped), find elements taller than a page that still compute
+  // break-inside: avoid and reset them to auto, so the browser breaks them at
+  // their children's boundaries instead (children keep their own avoid). PAGE_PX
+  // is a conservative portrait estimate at 96 CSS px/in — Letter/A4 usable
+  // height minus our 0.5in margins — so only clearly-oversized elements are
+  // touched and under-page elements still stay whole. Skipped for decks (slides
+  // are sized to the page) and for fixed-size canvases (frame set, or an author
+  // px-based @page) — runs as before for flowing docs on letter/A4.
+  try {
+    if (!ds && !frame && !(__m && __m.signals && __m.signals.pxPage)) {
+      const PAGE_PX = 1024;
+      // Our print defaults add a real @page margin only when the source has
+      // no @page of its own; computed style can't tell us (it reports screen
+      // media), so read the injected rule directly.
+      const defaults = document.querySelector('style[data-omelette-print-defaults]');
+      const pageInset = /@page\s*\{[^}]*margin/.test(defaults ? defaults.textContent || '' : '');
+      const SEL = 'section,article,figure,table,pre,blockquote,[class~="card" i],[class~="page" i],[class~="sheet" i]';
+      for (const el of document.body.querySelectorAll(SEL)) {
+        if (el instanceof HTMLElement && el.offsetHeight > PAGE_PX) {
+          el.setAttribute('data-om-oversized', '');
+          // Fake-paged docs simulate sheets with over-tall break-after:page
+          // boxes; honoring the break spills half-blank pages and ends a
+          // colored box mid-sheet. Flow them, and (only when we own the page
+          // inset) drop the redundant padding/background via the rule below.
+          const cs = getComputedStyle(el);
+          if (cs.breakAfter === 'page' || cs.pageBreakAfter === 'always') {
+            el.setAttribute('data-om-fakepage', '');
+          }
+        }
+      }
+      const ost = document.createElement('style');
+      ost.textContent = '@media print{' +
+        '[data-om-oversized]{break-inside:auto !important;page-break-inside:auto !important}' +
+        '[data-om-fakepage]{break-after:auto !important;page-break-after:auto !important}' +
+        (pageInset ? '[data-om-fakepage]{padding:0 !important;background:none !important}' : '') +
+        '}';
+      document.head.appendChild(ost);
+    }
+  } catch (e) {}
+  // macOS Preview renders Skia-PDF Luminosity soft-masks as opaque grey boxes;
+  // swap the CSS that triggers them for Preview-safe forms.
+  try {
+    for (const el of document.body.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+
+      if (cs.boxShadow !== 'none' && cs.filter === 'none') {
+        const outs = [], kept = [];
+        for (const s of cs.boxShadow.split(/,(?![^(]*[)])/)) {
+          const t = s.trim();
+          const m = t.match(/^(rgba?[(][^)]+[)]) (-?[0-9.]+px) (-?[0-9.]+px) ([0-9.]+px) -?[0-9.]+px$/);
+          if (m && parseFloat(m[4]) > 0) outs.push('drop-shadow(' + m[2] + ' ' + m[3] + ' ' + m[4] + ' ' + m[1] + ')');
+          else kept.push(t);
+        }
+        if (outs.length) {
+          el.style.setProperty('filter', outs.join(' '), 'important');
+          el.style.setProperty('box-shadow', kept.join(', ') || 'none', 'important');
+        }
+      }
+
+      const mask = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+      if (mask && mask !== 'none' && cs.filter === 'none') el.style.setProperty('filter', 'opacity(1)', 'important');
+    }
+  } catch (e) {}
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 200);
+})();
+</script>
+</body>
+</html>

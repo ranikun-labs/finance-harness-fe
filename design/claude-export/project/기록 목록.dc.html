@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E9EBEE}
+  ::selection{background:#3182F6;color:#fff}
+  .scr::-webkit-scrollbar{display:none}
+  input{outline:none;font-family:Pretendard,-apple-system,sans-serif}
+</style>
+</helmet>
+
+<div style="font-family:Pretendard,-apple-system,sans-serif;background:#E9EBEE;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased">
+
+  <div style="width:393px;height:830px;background:#000;border-radius:54px;padding:11px;box-shadow:0 40px 80px -20px rgba(20,30,50,0.4),0 0 0 1px rgba(0,0,0,0.05)">
+    <div style="position:relative;width:100%;height:100%;background:#F2F4F6;border-radius:44px;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- status bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:0 32px;pointer-events:none">
+        <span style="font-size:15px;font-weight:600;color:#191F28">9:41</span>
+        <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px">📶</span><span style="font-size:13px">🔋</span></div>
+      </div>
+      <!-- notch -->
+      <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:18px;z-index:30"></div>
+
+      <!-- SCROLL CONTENT -->
+      <div class="scr" style="flex:1;overflow-y:auto;padding:62px 20px 100px;display:flex;flex-direction:column;gap:16px">
+
+        <!-- 1. 헤더 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 2px 4px">
+          <h1 style="font-size:27px;font-weight:800;letter-spacing:-0.03em;color:#191F28">기록</h1>
+          <div style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #ECEFF2;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4E5968;cursor:pointer" style-hover="background:#F2F4F6">🔍</div>
+        </div>
+
+        <!-- 2. 타입 필터 탭 -->
+        <div style="display:flex;gap:8px;padding:0 2px">
+          <button style="height:36px;padding:0 16px;border:none;border-radius:11px;background:#191F28;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">전체</button>
+          <button style="height:36px;padding:0 16px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#6B7684;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F9FAFB">투자 기록</button>
+          <button style="height:36px;padding:0 16px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#6B7684;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F9FAFB">공부 노트</button>
+        </div>
+
+        <!-- 3. 검색창 -->
+        <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 16px;height:48px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px;color:#B0B8C1;flex-shrink:0">🔍</span>
+          <input type="text" placeholder="종목명, 질문, 메모 검색" style="flex:1;border:none;background:transparent;font-size:15px;color:#191F28" />
+        </div>
+
+        <!-- 4. 기록 카드 목록 -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+
+          <!-- 카드 1: SK하이닉스 · 투자 기록 -->
+          <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(20,30,50,0.05);cursor:pointer" style-hover="background:#FAFBFC">
+            <!-- top row -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:17px;font-weight:700;color:#191F28;letter-spacing:-0.01em">SK하이닉스</span>
+                  <span style="font-size:11px;font-weight:600;color:#4E5968;background:#F2F4F6;padding:4px 8px;border-radius:7px;white-space:nowrap">투자 기록</span>
+                  <span style="font-size:11px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:4px 8px;border-radius:7px;white-space:nowrap">관심</span>
+                </div>
+                <span style="font-size:12px;color:#B0B8C1">2026.06.28</span>
+              </div>
+              <span style="font-size:18px;color:#D4D9DF;flex-shrink:0">›</span>
+            </div>
+            <!-- question -->
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div style="width:3px;height:16px;border-radius:2px;background:#3182F6;flex-shrink:0;margin-top:3px"></div>
+              <span style="font-size:13px;color:#6B7684;line-height:1.45;font-style:italic">하이닉스 요즘 어때?</span>
+            </div>
+            <!-- memo -->
+            <p style="font-size:14px;color:#4E5968;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">HBM 수요 기대가 꺾이지 않았고, 외국인 누적 매수가 며칠째 이어지고 있어서 지켜보기로 했다.</p>
+            <!-- bottom row -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:600;color:#8B95A1">감정</span>
+                <span style="font-size:12px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:4px 9px;border-radius:7px">확신</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:18px;color:#3182F6">☑</span>
+                <span style="font-size:12px;font-weight:600;color:#4E5968">체크 완료 <span style="color:#3182F6">2/3</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 카드 2: 월말 리밸런싱 · 공부 노트 -->
+          <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(20,30,50,0.05);cursor:pointer" style-hover="background:#FAFBFC">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:17px;font-weight:700;color:#191F28;letter-spacing:-0.01em">월말 리밸런싱</span>
+                  <span style="font-size:11px;font-weight:600;color:#6B7684;background:#F2F4F6;padding:4px 8px;border-radius:7px;white-space:nowrap">공부 노트</span>
+                </div>
+                <span style="font-size:12px;color:#B0B8C1">2026.06.27</span>
+              </div>
+              <span style="font-size:18px;color:#D4D9DF;flex-shrink:0">›</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div style="width:3px;height:16px;border-radius:2px;background:#8B95A1;flex-shrink:0;margin-top:3px"></div>
+              <span style="font-size:13px;color:#6B7684;line-height:1.45;font-style:italic">월말·분기말에 기관은 왜 리밸런싱하나?</span>
+            </div>
+            <p style="font-size:14px;color:#4E5968;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">펀드 벤치마크 대비 비중 조정이 필요해 월말에 기관 수급이 크게 튀는 경향이 있다. 단기 수급 왜곡으로 오해할 수 있음.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px">
+              <span style="font-size:12px;color:#B0B8C1">감정 태그 없음</span>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:18px;color:#B0B8C1">☑</span>
+                <span style="font-size:12px;font-weight:600;color:#4E5968">체크 완료 <span style="color:#4E5968">3/3</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 카드 3: 에코프로 · 투자 기록 -->
+          <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(20,30,50,0.05);cursor:pointer" style-hover="background:#FAFBFC">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:17px;font-weight:700;color:#191F28;letter-spacing:-0.01em">에코프로</span>
+                  <span style="font-size:11px;font-weight:600;color:#4E5968;background:#F2F4F6;padding:4px 8px;border-radius:7px;white-space:nowrap">투자 기록</span>
+                  <span style="font-size:11px;font-weight:600;color:#8B95A1;background:#F2F4F6;padding:4px 8px;border-radius:7px;white-space:nowrap">관망</span>
+                </div>
+                <span style="font-size:12px;color:#B0B8C1">2026.06.24</span>
+              </div>
+              <span style="font-size:18px;color:#D4D9DF;flex-shrink:0">›</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div style="width:3px;height:16px;border-radius:2px;background:#3182F6;flex-shrink:0;margin-top:3px"></div>
+              <span style="font-size:13px;color:#6B7684;line-height:1.45;font-style:italic">에코프로 지금 들어가도 될까?</span>
+            </div>
+            <p style="font-size:14px;color:#4E5968;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">2차전지 정책 불확실성이 아직 남아 있어 지금은 지켜보기로 했다. 추가 체크 후 재검토 예정.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:600;color:#8B95A1">감정</span>
+                <span style="font-size:12px;font-weight:600;color:#6B7684;background:#F2F4F6;padding:4px 9px;border-radius:7px">불안</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:18px;color:#F04452">☑</span>
+                <span style="font-size:12px;font-weight:600;color:#4E5968">체크 완료 <span style="color:#F04452">1/4</span></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 구분선 + empty hint -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 0 8px">
+          <div style="width:40px;height:4px;border-radius:2px;background:#E5E8EB"></div>
+          <span style="font-size:13px;color:#B0B8C1">3개의 기록</span>
+        </div>
+
+      </div>
+
+      <!-- TAB BAR -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-top:1px solid #ECEFF2;padding:10px 0 26px;display:flex;justify-content:space-around;z-index:20">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer"><span style="font-size:21px;line-height:1">○</span><span style="font-size:11px;font-weight:600">홈</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer"><span style="font-size:21px;line-height:1">✦</span><span style="font-size:11px;font-weight:600">질문</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#3182F6;cursor:pointer"><span style="font-size:21px;line-height:1">▤</span><span style="font-size:11px;font-weight:700">기록</span></div>
+      </div>
+
+      <!-- home indicator -->
+      <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#191F28;opacity:0.85;z-index:25"></div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

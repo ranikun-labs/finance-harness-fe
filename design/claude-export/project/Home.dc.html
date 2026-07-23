@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E9EBEE}
+  ::selection{background:#3182F6;color:#fff}
+  .scr::-webkit-scrollbar{width:0;display:none}
+</style>
+</helmet>
+<div style="font-family:Pretendard,-apple-system,sans-serif;background:#E9EBEE;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased">
+
+  <!-- ===== PHONE ===== -->
+  <div style="width:393px;height:830px;background:#000;border-radius:54px;padding:11px;box-shadow:0 40px 80px -20px rgba(20,30,50,0.4),0 0 0 1px rgba(0,0,0,0.05)">
+    <div style="position:relative;width:100%;height:100%;background:#F2F4F6;border-radius:44px;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- status bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:0 32px;pointer-events:none">
+        <span style="font-size:15px;font-weight:600;color:#191F28;letter-spacing:-0.01em">9:41</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:13px">📶</span><span style="font-size:13px">🔋</span>
+        </div>
+      </div>
+      <!-- notch -->
+      <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:18px;z-index:30"></div>
+
+      <!-- ===== SCROLL CONTENT ===== -->
+      <div class="scr" style="flex:1;overflow-y:auto;padding:62px 20px 110px;display:flex;flex-direction:column;gap:22px">
+
+        <!-- top row -->
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:30px;height:30px;border-radius:10px;background:#3182F6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px">✓</div>
+            <span style="font-size:15px;font-weight:700;color:#191F28">체크리스트</span>
+          </div>
+          <div style="width:36px;height:36px;border-radius:50%;background:#E5E8EB;display:flex;align-items:center;justify-content:center;font-size:15px">🙂</div>
+        </div>
+
+        <!-- ===== HERO QUESTION BAR ===== -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <h1 style="font-size:27px;font-weight:800;letter-spacing:-0.03em;line-height:1.3;color:#191F28">무엇이<br/>궁금하세요?</h1>
+          <div style="background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px -8px rgba(49,130,246,0.22),0 2px 8px rgba(20,30,50,0.05);border:1.5px solid #DCE7FB;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11px;font-weight:700;color:#1B64DA;background:#EBF3FE;padding:5px 9px;border-radius:8px;display:flex;align-items:center;gap:4px">✦ AI에게 질문</span>
+            </div>
+            <span style="font-size:20px;font-weight:500;color:#B0B8C1;line-height:1.4;letter-spacing:-0.02em">하이닉스 요즘 어때?</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px">
+              <span style="font-size:13px;color:#8B95A1">질문이 체크리스트로 바뀌어요</span>
+              <button style="width:48px;height:48px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(49,130,246,0.35)" style-hover="background:#1B64DA">→</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== QUICK CHIPS ===== -->
+        <div style="display:flex;gap:10px">
+          <button style="flex:1;height:48px;border:1px solid #E5E8EB;border-radius:15px;background:#fff;color:#333D4B;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#F9FAFB">📊 지금 시장 체크</button>
+          <button style="flex:1;height:48px;border:1px solid #E5E8EB;border-radius:15px;background:#fff;color:#333D4B;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#F9FAFB">⭐ 관심종목 체크</button>
+        </div>
+
+        <!-- ===== TODAY'S QUESTION (곱씹는 톤) ===== -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:16px;font-weight:700;color:#191F28;padding:0 2px">오늘의 질문</span>
+          <div style="background:#fff;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 1px 3px rgba(20,30,50,0.05);border:1px solid #ECEFF2">
+            <span style="font-family:Georgia,serif;font-size:34px;line-height:0.6;color:#C9E0FC">“</span>
+            <span style="font-size:19px;font-weight:600;color:#333D4B;line-height:1.55;letter-spacing:-0.02em;margin-top:-8px">나는 실적을 보고 있는가,<br/>가격 상승에 반응하고 있는가?</span>
+            <div style="height:1px;background:#F2F4F6"></div>
+            <button style="align-self:flex-start;height:38px;padding:0 16px;border:none;border-radius:11px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#DCE7FB">짚어보기 →</button>
+          </div>
+        </div>
+
+        <!-- ===== WATCHLIST ===== -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+            <span style="font-size:16px;font-weight:700;color:#191F28">관심종목</span>
+            <span style="font-size:13px;font-weight:600;color:#8B95A1">전체</span>
+          </div>
+
+          <!-- card: SK하이닉스 -->
+          <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#4E5968">SK</div>
+              <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                <span style="font-size:16px;font-weight:700;color:#191F28">SK하이닉스</span>
+                <span style="font-size:12px;color:#8B95A1">마지막 체크 6.28</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#4E5968;background:#F2F4F6;padding:5px 10px;border-radius:8px">관심</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button style="flex:1;height:40px;border:none;border-radius:12px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#DCE7FB">질문하기</button>
+              <button style="flex:1;height:40px;border:1px solid #E5E8EB;border-radius:12px;background:#fff;color:#4E5968;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">기록하기</button>
+            </div>
+          </div>
+
+          <!-- card: SK스퀘어 -->
+          <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#4E5968">SK</div>
+              <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                <span style="font-size:16px;font-weight:700;color:#191F28">SK스퀘어</span>
+                <span style="font-size:12px;color:#8B95A1">마지막 체크 6.21</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#8B95A1;background:#F2F4F6;padding:5px 10px;border-radius:8px">관망</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button style="flex:1;height:40px;border:none;border-radius:12px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#DCE7FB">질문하기</button>
+              <button style="flex:1;height:40px;border:1px solid #E5E8EB;border-radius:12px;background:#fff;color:#4E5968;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">기록하기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RECENT RECORDS ===== -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+            <span style="font-size:16px;font-weight:700;color:#191F28">최근 기록</span>
+            <span style="font-size:13px;font-weight:600;color:#8B95A1">전체</span>
+          </div>
+          <div style="background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,0.05)">
+            <div style="padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F2F4F6">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:15px;font-weight:600;color:#191F28">SK하이닉스</span>
+                <span style="font-size:12px;color:#8B95A1">2026.06.28</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:5px 10px;border-radius:8px">관심</span>
+            </div>
+            <div style="padding:16px 18px;display:flex;align-items:center;gap:12px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:15px;font-weight:600;color:#191F28">에코프로</span>
+                <span style="font-size:12px;color:#8B95A1">2026.06.24</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#8B95A1;background:#F2F4F6;padding:5px 10px;border-radius:8px">관망</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== TAB BAR ===== -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-top:1px solid #ECEFF2;padding:10px 0 26px;display:flex;justify-content:space-around;z-index:20">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#3182F6;cursor:pointer">
+          <span style="font-size:21px;line-height:1">●</span>
+          <span style="font-size:11px;font-weight:700">홈</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer">
+          <span style="font-size:21px;line-height:1">✦</span>
+          <span style="font-size:11px;font-weight:600">질문</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer">
+          <span style="font-size:21px;line-height:1">▤</span>
+          <span style="font-size:11px;font-weight:600">기록</span>
+        </div>
+      </div>
+
+      <!-- home indicator -->
+      <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#191F28;opacity:0.85;z-index:25"></div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
