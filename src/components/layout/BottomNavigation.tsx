@@ -16,12 +16,23 @@ export function BottomNavigation() {
           end={tab.path === '/'}
           className={({ isActive }) =>
             cn(
-              'flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-medium',
-              isActive ? 'text-primary' : 'text-text-tertiary',
+              'relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs',
+              isActive ? 'text-primary font-semibold' : 'text-text-tertiary font-medium',
             )
           }
         >
-          {tab.label}
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  data-testid="bottom-tab-active-indicator"
+                  className="bg-primary absolute top-0 h-0.5 w-6 rounded-full"
+                />
+              )}
+              {tab.label}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>
