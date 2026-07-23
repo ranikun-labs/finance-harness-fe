@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+pnpm-workspace.yaml
+dist
+node_modules
+ios
+android
+coverage
+playwright-report
+test-results
+
+# 디자인팀에서 전달한 원본 핸드오프 문서 — 포맷 재정렬로 diff를 만들지 않는다.
+docs/nav-map.md
