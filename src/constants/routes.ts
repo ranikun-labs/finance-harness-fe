@@ -46,10 +46,27 @@ export function buildJournalNewPath(type: JournalEntryType): string {
   return `${ROUTE_PATHS.journalNew}?${params.toString()}`;
 }
 
+const JOURNAL_ID_PLACEHOLDER = ':id';
+
+/**
+ * ROUTE_PATHS의 동적 라우트 패턴에서 `:id` placeholder를 인코딩된 값으로 치환한다.
+ * placeholder가 정확히 한 번 존재하지 않으면 라우트 패턴이 예상과 달라졌다는 뜻이므로,
+ * 조용히 잘못된 URL을 반환하는 대신 즉시 에러를 던진다.
+ */
+function substituteJournalId(pattern: string, id: string): string {
+  const occurrences = pattern.split(JOURNAL_ID_PLACEHOLDER).length - 1;
+  if (occurrences !== 1) {
+    throw new Error(
+      `라우트 패턴 "${pattern}"에 "${JOURNAL_ID_PLACEHOLDER}" placeholder가 정확히 1개 있어야 합니다.`,
+    );
+  }
+  return pattern.replace(JOURNAL_ID_PLACEHOLDER, encodeJournalId(id));
+}
+
 export function buildJournalDetailPath(id: string): string {
-  return `/journal/${encodeJournalId(id)}`;
+  return substituteJournalId(ROUTE_PATHS.journalDetail, id);
 }
 
 export function buildJournalReviewPath(id: string): string {
-  return `/journal/${encodeJournalId(id)}/review`;
+  return substituteJournalId(ROUTE_PATHS.journalReview, id);
 }

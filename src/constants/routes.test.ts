@@ -81,4 +81,18 @@ describe('routes', () => {
       );
     });
   });
+
+  describe('derivation from ROUTE_PATHS', () => {
+    it('derives the detail path by substituting the :id placeholder in ROUTE_PATHS.journalDetail', () => {
+      const id = '일지 1/2?#';
+      const expected = ROUTE_PATHS.journalDetail.replace(':id', encodeURIComponent(id));
+      expect(buildJournalDetailPath(id)).toBe(expected);
+    });
+
+    it('derives the review path by substituting the :id placeholder in ROUTE_PATHS.journalReview', () => {
+      const id = '일지 1/2?#';
+      const expected = ROUTE_PATHS.journalReview.replace(':id', encodeURIComponent(id));
+      expect(buildJournalReviewPath(id)).toBe(expected);
+    });
+  });
 });
