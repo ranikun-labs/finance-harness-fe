@@ -3,6 +3,9 @@ import { expect, test } from '@playwright/test';
 import { ROUTE_PATHS } from '@/constants/routes';
 
 test.describe('모바일 세로 스크롤 계약', () => {
+  // Playwright는 첫 인자가 fixture 구조분해 패턴이어야 하므로, 사용하지 않더라도
+  // 빈 패턴 자체는 필요하다.
+  // eslint-disable-next-line no-empty-pattern
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'Mobile 375', '375×812 뷰포트에서만 검증한다');
   });
