@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E9EBEE}
+  ::selection{background:#3182F6;color:#fff}
+  .scr::-webkit-scrollbar{width:0;display:none}
+  textarea{resize:none;outline:none}
+  input{outline:none}
+</style>
+</helmet>
+<div style="font-family:Pretendard,-apple-system,sans-serif;background:#E9EBEE;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased">
+
+  <!-- ===== PHONE ===== -->
+  <div style="width:393px;height:830px;background:#000;border-radius:54px;padding:11px;box-shadow:0 40px 80px -20px rgba(20,30,50,0.4),0 0 0 1px rgba(0,0,0,0.05)">
+    <div style="position:relative;width:100%;height:100%;background:#F2F4F6;border-radius:44px;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- status bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:0 32px;pointer-events:none">
+        <span style="font-size:15px;font-weight:600;color:#191F28;letter-spacing:-0.01em">9:41</span>
+        <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px">📶</span><span style="font-size:13px">🔋</span></div>
+      </div>
+      <!-- notch -->
+      <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:18px;z-index:30"></div>
+
+      <!-- nav bar -->
+      <div style="position:absolute;top:46px;left:0;right:0;height:52px;z-index:15;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(242,244,246,0.92);backdrop-filter:blur(12px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #ECEFF2;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4E5968;cursor:pointer">←</div>
+        <span style="font-size:15px;font-weight:700;color:#191F28">기록 저장</span>
+        <div style="width:38px"></div>
+      </div>
+
+      <!-- ===== SCROLL CONTENT ===== -->
+      <div class="scr" style="flex:1;overflow-y:auto;padding:108px 20px 110px;display:flex;flex-direction:column;gap:20px">
+
+        <!-- type toggle -->
+        <div style="background:#E5E8EB;border-radius:16px;padding:4px;display:flex;gap:4px">
+          <button style="flex:1;height:42px;border:none;border-radius:13px;background:#fff;color:#191F28;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(20,30,50,0.1)">투자 기록</button>
+          <button style="flex:1;height:42px;border:none;border-radius:13px;background:transparent;color:#8B95A1;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">공부 노트</button>
+        </div>
+
+        <!-- form -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- 1. 종목 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">종목</label>
+            <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 16px;height:50px;display:flex;align-items:center">
+              <input type="text" placeholder="종목명 또는 티커" value="SK하이닉스" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:16px;font-weight:500;color:#191F28" />
+            </div>
+          </div>
+
+          <!-- 2. 행동 칩 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">내가 한 행동 <span style="font-size:12px;color:#B0B8C1;font-weight:400">기록용 선택</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="height:38px;padding:0 18px;border:1px solid #3182F6;border-radius:11px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">관심</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">관망</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">매수</button>
+              <button style="height:38px;padding:0 18px;border:1px solid #E5E8EB;border-radius:11px;background:#fff;color:#4E5968;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">매도</button>
+            </div>
+          </div>
+
+          <!-- 3+4. 가격 / 수량 optional -->
+          <div style="display:flex;gap:10px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">가격 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+              <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 14px;height:50px;display:flex;align-items:center;gap:6px">
+                <input type="text" placeholder="예: 185,000" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;color:#191F28;text-align:left" />
+                <span style="font-size:13px;color:#8B95A1;flex-shrink:0">원</span>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">수량 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+              <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:0 14px;height:50px;display:flex;align-items:center;gap:6px">
+                <input type="text" placeholder="예: 5" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;color:#191F28" />
+                <span style="font-size:13px;color:#8B95A1;flex-shrink:0">주</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. 판단 이유 / 메모 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">판단 이유 / 메모</label>
+            <div style="background:#fff;border:1.5px solid #E5E8EB;border-radius:14px;padding:14px 16px">
+              <textarea placeholder="이 시점에 이 행동을 한 이유를 적어보세요." style="width:100%;height:88px;border:none;background:transparent;font-family:inherit;font-size:15px;color:#191F28;line-height:1.6"></textarea>
+            </div>
+          </div>
+
+          <!-- 6. 감정 태그 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">감정 태그 <span style="font-size:12px;color:#B0B8C1;font-weight:400">선택</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">FOMO</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">불안</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #3182F6;border-radius:10px;background:#EBF3FE;color:#1B64DA;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">확신</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">관망</button>
+              <button style="height:36px;padding:0 14px;border:1px solid #E5E8EB;border-radius:10px;background:#fff;color:#6B7684;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">혼란</button>
+            </div>
+          </div>
+
+          <!-- 7. 체크리스트 확인 항목 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600;color:#4E5968;padding:0 2px">체크리스트 확인 <span style="font-size:12px;color:#B0B8C1;font-weight:400">AI 항목 기반</span></label>
+            <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECEFF2">
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #F2F4F6">
+                <div style="width:22px;height:22px;border-radius:7px;background:#EBF3FE;border:1.5px solid #3182F6;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;color:#3182F6;font-size:13px;font-weight:700">✓</div>
+                <span style="font-size:14px;color:#333D4B;line-height:1.5">외국인 수급이 누적 흐름인지 확인했다</span>
+              </div>
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #F2F4F6">
+                <div style="width:22px;height:22px;border-radius:7px;background:#F2F4F6;border:1.5px solid #E5E8EB;flex-shrink:0;margin-top:1px"></div>
+                <span style="font-size:14px;color:#6B7684;line-height:1.5">실적 기대가 이미 가격에 반영됐는지 점검했다</span>
+              </div>
+              <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
+                <div style="width:22px;height:22px;border-radius:7px;background:#F2F4F6;border:1.5px solid #E5E8EB;flex-shrink:0;margin-top:1px"></div>
+                <span style="font-size:14px;color:#6B7684;line-height:1.5">월말 리밸런싱 구간 여부를 확인했다</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 8. save CTA -->
+        <button style="width:100%;height:54px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px -4px rgba(49,130,246,0.4);letter-spacing:-0.01em" style-hover="background:#1B64DA">저장하기</button>
+
+      </div>
+
+      <!-- ===== TAB BAR ===== -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-top:1px solid #ECEFF2;padding:10px 0 26px;display:flex;justify-content:space-around;z-index:20">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer"><span style="font-size:21px;line-height:1">○</span><span style="font-size:11px;font-weight:600">홈</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#B0B8C1;cursor:pointer"><span style="font-size:21px;line-height:1">✦</span><span style="font-size:11px;font-weight:600">질문</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#3182F6;cursor:pointer"><span style="font-size:21px;line-height:1">▤</span><span style="font-size:11px;font-weight:700">기록</span></div>
+      </div>
+
+      <!-- home indicator -->
+      <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#191F28;opacity:0.85;z-index:25"></div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

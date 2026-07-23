@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#F2F4F6}
+  ::selection{background:#3182F6;color:#fff}
+</style>
+</helmet>
+<div style="font-family:Pretendard,-apple-system,sans-serif;background:#F2F4F6;min-height:100vh;color:#191F28;padding:48px 20px 96px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased">
+  <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:28px">
+
+    <!-- Masthead -->
+    <header style="display:flex;flex-direction:column;gap:12px;padding:8px 4px 4px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:11px;background:#3182F6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px">✓</div>
+        <span style="font-size:15px;font-weight:600;color:#4E5968">투자 체크리스트</span>
+      </div>
+      <h1 style="font-size:34px;font-weight:800;letter-spacing:-0.03em;line-height:1.15">디자인 시스템 <span style="color:#8B95A1;font-weight:600">v1</span></h1>
+      <p style="font-size:15px;line-height:1.6;color:#6B7684;max-width:520px">Pretendard · 단정한 금융/생산성 톤 · 모바일 우선(375px) · 단일 blue 강조색 + 위험 1색 · shadcn 스타일 rounded-2xl 카드/버튼.</p>
+    </header>
+
+    <!-- ============ COLOR ============ -->
+    <section style="background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8B95A1">01 · COLOR</span>
+        <h2 style="font-size:21px;font-weight:700;letter-spacing:-0.02em">컬러 팔레트</h2>
+      </div>
+
+      <!-- Accent -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;font-weight:600;color:#6B7684">Accent · Blue (단일 강조색)</span>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#EBF3FE;border:1px solid #E5E8EB"></div><div style="font-size:11px;color:#8B95A1">50</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#EBF3FE</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#C9E0FC"></div><div style="font-size:11px;color:#8B95A1">100</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#C9E0FC</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#3182F6;box-shadow:0 4px 14px rgba(49,130,246,0.3)"></div><div style="font-size:11px;color:#191F28;font-weight:600">500 ★</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#3182F6</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#1B64DA"></div><div style="font-size:11px;color:#8B95A1">600</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#1B64DA</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#1957B8"></div><div style="font-size:11px;color:#8B95A1">700</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#1957B8</div></div>
+        </div>
+      </div>
+
+      <!-- Danger -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;font-weight:600;color:#6B7684">Danger · Red (경고 / 위험, 단일)</span>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#FDECEE;border:1px solid #E5E8EB"></div><div style="font-size:11px;color:#8B95A1">50</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#FDECEE</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#FAC7CD"></div><div style="font-size:11px;color:#8B95A1">100</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#FAC7CD</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#F04452;box-shadow:0 4px 14px rgba(240,68,82,0.28)"></div><div style="font-size:11px;color:#191F28;font-weight:600">500 ★</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#F04452</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#D6303D"></div><div style="font-size:11px;color:#8B95A1">600</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#D6303D</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:14px;background:#B3242F"></div><div style="font-size:11px;color:#8B95A1">700</div><div style="font-family:ui-monospace,monospace;font-size:11px;color:#4E5968">#B3242F</div></div>
+        </div>
+      </div>
+
+      <!-- Neutrals -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;font-weight:600;color:#6B7684">Neutral · Gray (쿨 뉴트럴, 텍스트/표면/보더)</span>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#FFFFFF;border:1px solid #E5E8EB"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#FFFFFF</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#F9FAFB;border:1px solid #E5E8EB"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#F9FAFB</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#F2F4F6"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#F2F4F6</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#E5E8EB"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#E5E8EB</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#8B95A1"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#8B95A1</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:12px;background:#4E5968"></div><div style="font-family:ui-monospace,monospace;font-size:10px;color:#4E5968">#4E5968</div></div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;padding-top:4px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:5px;background:#191F28"></span><span style="font-size:12px;color:#6B7684">Text 1 <span style="font-family:ui-monospace,monospace;color:#8B95A1">#191F28</span></span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:5px;background:#4E5968"></span><span style="font-size:12px;color:#6B7684">Text 2 <span style="font-family:ui-monospace,monospace;color:#8B95A1">#4E5968</span></span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:5px;background:#8B95A1"></span><span style="font-size:12px;color:#6B7684">Text 3 <span style="font-family:ui-monospace,monospace;color:#8B95A1">#8B95A1</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TYPE ============ -->
+    <section style="background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:22px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8B95A1">02 · TYPE</span>
+        <h2 style="font-size:21px;font-weight:700;letter-spacing:-0.02em">타이포그래피 — Pretendard</h2>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid #F2F4F6"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Display</span><span style="font-size:34px;font-weight:800;letter-spacing:-0.03em;line-height:1.2">월간 복기</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">34 / 800</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid #F2F4F6"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Title</span><span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">새 체크리스트</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">24 / 700</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid #F2F4F6"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Heading</span><span style="font-size:19px;font-weight:600;letter-spacing:-0.01em">진입 근거 점검</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">19 / 600</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid #F2F4F6"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Body</span><span style="font-size:16px;font-weight:400;line-height:1.6;color:#333D4B">이 투자의 손절 기준을 미리 정했나요?</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">16 / 400</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid #F2F4F6"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Label</span><span style="font-size:14px;font-weight:600;color:#4E5968">보유 기간</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">14 / 600</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:14px 0"><span style="width:88px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:11px;color:#8B95A1">Caption</span><span style="font-size:12px;font-weight:500;color:#8B95A1">2026.06.30 작성</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#B0B8C1">12 / 500</span></div>
+      </div>
+      <!-- Tabular numbers -->
+      <div style="background:#F9FAFB;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:12px;font-weight:600;color:#8B95A1">숫자 — tabular-nums (정렬 보장)</span>
+        <div style="display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums">
+          <div style="display:flex;justify-content:space-between;font-size:16px"><span style="color:#4E5968">평가손익</span><span style="font-weight:700;color:#3182F6">+1,284,000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:16px"><span style="color:#4E5968">수익률</span><span style="font-weight:700;color:#F04452">-12.40%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:16px"><span style="color:#4E5968">평단가</span><span style="font-weight:600;color:#191F28">68,500원</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BUTTONS ============ -->
+    <section style="background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:22px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8B95A1">03 · BUTTON</span>
+        <h2 style="font-size:21px;font-weight:700;letter-spacing:-0.02em">버튼 · 큰 터치 타깃</h2>
+      </div>
+      <!-- Full width primary -->
+      <button style="width:100%;height:54px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;transition:background .15s" style-hover="background:#1B64DA">체크리스트 시작하기</button>
+      <!-- variant row -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button style="height:46px;padding:0 20px;border:none;border-radius:14px;background:#3182F6;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#1B64DA">Primary</button>
+        <button style="height:46px;padding:0 20px;border:1px solid #E5E8EB;border-radius:14px;background:#fff;color:#333D4B;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#F9FAFB">Secondary</button>
+        <button style="height:46px;padding:0 20px;border:none;border-radius:14px;background:#F2F4F6;color:#4E5968;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#E5E8EB">Subtle</button>
+        <button style="height:46px;padding:0 20px;border:none;border-radius:14px;background:transparent;color:#3182F6;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#EBF3FE">Ghost</button>
+        <button style="height:46px;padding:0 20px;border:none;border-radius:14px;background:#F04452;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#D6303D">Danger</button>
+        <button disabled style="height:46px;padding:0 20px;border:none;border-radius:14px;background:#F2F4F6;color:#C0C6CE;font-family:inherit;font-size:15px;font-weight:600;cursor:not-allowed">Disabled</button>
+      </div>
+      <!-- sizes -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button style="height:36px;padding:0 14px;border:none;border-radius:11px;background:#3182F6;color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Small · 36</button>
+        <button style="height:46px;padding:0 18px;border:none;border-radius:14px;background:#3182F6;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer">Medium · 46</button>
+        <button style="height:54px;padding:0 22px;border:none;border-radius:16px;background:#3182F6;color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer">Large · 54</button>
+      </div>
+    </section>
+
+    <!-- ============ CARDS ============ -->
+    <section style="background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8B95A1">04 · CARD</span>
+        <h2 style="font-size:21px;font-weight:700;letter-spacing:-0.02em">카드 — rounded-2xl</h2>
+      </div>
+
+      <!-- checklist item card -->
+      <div style="border:1px solid #EDF0F2;border-radius:18px;padding:18px;display:flex;gap:14px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:9px;background:#3182F6;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700">✓</div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+          <span style="font-size:16px;font-weight:600;color:#191F28;line-height:1.45">손절 기준을 숫자로 정했나요?</span>
+          <span style="font-size:13px;color:#8B95A1;line-height:1.5">예: 진입가 대비 -8% 도달 시 매도</span>
+        </div>
+      </div>
+
+      <!-- record card -->
+      <div style="border:1px solid #EDF0F2;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:17px;font-weight:700;color:#191F28">삼성전자 추가매수</span>
+            <span style="font-size:12px;color:#8B95A1">2026.06.30 · 체크 7/9</span>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:#1B64DA;background:#EBF3FE;padding:5px 10px;border-radius:8px">검토중</span>
+        </div>
+        <div style="height:1px;background:#F2F4F6"></div>
+        <div style="display:flex;justify-content:space-between;font-variant-numeric:tabular-nums">
+          <span style="font-size:13px;color:#6B7684">진입가</span>
+          <span style="font-size:13px;font-weight:600;color:#191F28">68,500원</span>
+        </div>
+      </div>
+
+      <!-- warning card -->
+      <div style="border:1px solid #FAD4D8;background:#FEF6F7;border-radius:18px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start">
+        <div style="width:22px;height:22px;border-radius:7px;background:#F04452;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">!</div>
+        <span style="font-size:14px;color:#B3242F;line-height:1.5;font-weight:500">미체크 항목이 2개 있어요. 진입 전에 확인하세요.</span>
+      </div>
+    </section>
+
+    <!-- ============ DARK ============ -->
+    <section style="background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8B95A1">05 · DARK</span>
+        <h2 style="font-size:21px;font-weight:700;letter-spacing:-0.02em">다크 모드 대응</h2>
+      </div>
+      <div style="background:#17171C;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:5px"><div style="width:60px;height:42px;border-radius:10px;background:#191F28;border:1px solid #2A2F38"></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:#6B7684">#191F28</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><div style="width:60px;height:42px;border-radius:10px;background:#242A32"></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:#6B7684">#242A32</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><div style="width:60px;height:42px;border-radius:10px;background:#4A90F7"></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:#6B7684">#4A90F7</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><div style="width:60px;height:42px;border-radius:10px;background:#FF6B76"></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:#6B7684">#FF6B76</span></div>
+        </div>
+        <div style="background:#242A32;border-radius:16px;padding:18px;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:26px;height:26px;border-radius:9px;background:#4A90F7;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700">✓</div>
+          <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+            <span style="font-size:16px;font-weight:600;color:#F2F4F6;line-height:1.45">손절 기준을 숫자로 정했나요?</span>
+            <span style="font-size:13px;color:#8B95A1;line-height:1.5">예: 진입가 대비 -8% 도달 시 매도</span>
+          </div>
+        </div>
+        <button style="width:100%;height:50px;border:none;border-radius:15px;background:#4A90F7;color:#fff;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">체크리스트 시작하기</button>
+      </div>
+    </section>
+
+    <p style="text-align:center;font-size:12px;color:#B0B8C1;padding-top:4px">확정되면 이 위에 실제 화면을 만들게요 · 설계 기준 폭 375px</p>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
