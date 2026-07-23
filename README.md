@@ -6,6 +6,8 @@ SSR/Next.js/React Router Framework Mode는 사용하지 않는다.
 이 시점은 **빌드 · 라우팅 · 모바일 레이아웃 골격**까지만 구현된 단계다. 실제
 와이어프레임 UI, API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
 
+단계별 실행 순서와 PR 경계는 [`docs/frontend-roadmap.md`](./docs/frontend-roadmap.md)를 따른다.
+
 ## ⚠️ P0 — 출시 전 반드시 처리해야 할 항목
 
 1. **공식 Capacitor `appId`(reverse-domain) 확정.** 확정 전까지 `ios/`,
