@@ -41,23 +41,29 @@ shim/심볼릭을 만들 수 있기 때문이다. 대신 Corepack을 매번 직�
 
 ## Scripts
 
-| 목적                  | 명령                    |
-| --------------------- | ----------------------- |
-| 개발 서버             | `pnpm dev`              |
-| 프로덕션 build        | `pnpm build`            |
-| build 결과 미리보기   | `pnpm preview`          |
-| lint                  | `pnpm lint`             |
-| 포맷 적용             | `pnpm format`           |
-| 포맷 검사만           | `pnpm format:check`     |
-| 타입체크              | `pnpm typecheck`        |
-| 유닛 테스트 (1회)     | `pnpm test`             |
-| 유닛 테스트 (watch)   | `pnpm test:watch`       |
-| E2E 테스트            | `pnpm test:e2e`         |
-| 전체 검증 (E2E 제외)  | `pnpm verify`           |
-| 전체 검증 (E2E 포함)  | `pnpm verify:full`      |
-| Capacitor sync        | `pnpm cap:sync`         |
-| iOS 프로젝트 열기     | `pnpm cap:open:ios`     |
-| Android 프로젝트 열기 | `pnpm cap:open:android` |
+| 목적                           | 명령                    |
+| ------------------------------ | ----------------------- |
+| 개발 서버                      | `pnpm dev`              |
+| 프로덕션 build                 | `pnpm build`            |
+| build 결과 미리보기            | `pnpm preview`          |
+| lint                           | `pnpm lint`             |
+| 포맷 적용                      | `pnpm format`           |
+| 포맷 검사만                    | `pnpm format:check`     |
+| 타입체크                       | `pnpm typecheck`        |
+| 유닛 테스트 (1회)              | `pnpm test`             |
+| 유닛 테스트 (watch)            | `pnpm test:watch`       |
+| E2E 테스트                     | `pnpm test:e2e`         |
+| 전체 검증 (E2E 제외)           | `pnpm verify`           |
+| 전체 검증 (E2E 포함)           | `pnpm verify:full`      |
+| iOS 네이티브 프로젝트 생성     | `pnpm cap:add:ios`      |
+| Android 네이티브 프로젝트 생성 | `pnpm cap:add:android`  |
+| Capacitor sync                 | `pnpm cap:sync`         |
+| iOS 프로젝트 열기              | `pnpm cap:open:ios`     |
+| Android 프로젝트 열기          | `pnpm cap:open:android` |
+
+`cap:add:ios`/`cap:add:android`는 공식 reverse-domain `appId` 확정과 각 플랫폼
+개발 도구(Xcode/Android SDK) 설치 이후에만 실행한다 — 위 P0 항목 참고. `cap:sync`는
+표준 `build` 스크립트(`tsc -b && vite build`, 타입체크 포함)를 재사용한 뒤 sync한다.
 
 `verify`는 `format:check → lint → typecheck → test → build` 순으로 실행한다.
 `verify:full`은 여기에 Playwright E2E를 더한다.
