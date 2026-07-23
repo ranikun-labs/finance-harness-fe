@@ -4,6 +4,9 @@ dist-ssr/
 *.local
 *.tsbuildinfo
 
+# macOS
+.DS_Store
+
 # logs
 npm-debug.log*
 pnpm-debug.log*
