@@ -111,3 +111,21 @@ src/
 | `/journal/:id`        | 일지 상세          | 없음    |
 | `/journal/:id/review` | 복기               | 없음    |
 | `*`                   | NotFound           | 없음    |
+
+## 배포 시 SPA Fallback 계약
+
+이 앱은 `BrowserRouter`(`src/main.tsx`)를 사용한다. SSR도, 사전 렌더링도 하지
+않으므로 배포 환경(정적 호스팅)이 다음을 반드시 보장해야 한다:
+
+- `/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침하면,
+  호스팅이 해당 요청을 `index.html`로 rewrite하지 않는 한 **404가 발생한다.**
+- rewrite 규칙은 정적 asset 경로(`/assets/*`, 파비콘, 폰트 등 실제 파일이 존재하는
+  경로)는 제외하고, 그 외 비정적 경로만 `index.html`로 보내야 한다.
+- `pnpm preview`(`vite preview`)가 로컬에서 성공적으로 동작하는 것은 이 rewrite
+  설정이 실제 운영 호스팅에도 있다는 것을 보장하지 않는다 — `vite preview`는
+  자체적으로 SPA fallback을 처리하기 때문이다. 실제 배포 대상 호스팅에서 직접
+  경로 새로고침을 확인해야 한다.
+- 특정 클라우드/호스팅 업체의 설정 파일은 이 저장소에 두지 않는다. 배포 대상이
+  정해지면 그 업체의 rewrite 설정 문서를 따로 참고할 것.
+- 향후 SSR, Pre-render, React Router Framework Mode 등으로 렌더링 아키텍처가
+  바뀌면 이 fallback 계약도 함께 갱신해야 한다.
