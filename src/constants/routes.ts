@@ -14,6 +14,27 @@ export const ROUTE_PATHS = {
 
 export type JournalEntryType = 'investment' | 'study';
 
+/**
+ * AppRouter의 중첩 `<Route>`는 부모(AppShell) 기준 상대 경로를 받는다.
+ * ROUTE_PATHS는 절대 경로(`/`로 시작)로 정의되어 있으므로, 라우터 트리 정의에서
+ * 이 헬퍼로 선행 슬래시를 제거해 재사용한다.
+ */
+export function toRelativeRoutePath(absolutePath: string): string {
+  return absolutePath.replace(/^\//, '');
+}
+
+/**
+ * 동적 id 경로 세그먼트를 만든다. id는 인코딩되지 않은 원본 값을 전달해야 한다 —
+ * 이 함수가 내부적으로 encodeURIComponent를 적용하므로, 호출부에서 미리 인코딩된
+ * 값을 넘기면 이중 인코딩된다. 빈 문자열이거나 공백만 있는 id는 명시적으로 거부한다.
+ */
+function encodeJournalId(id: string): string {
+  if (id.trim() === '') {
+    throw new Error('journal id는 빈 문자열이거나 공백만으로 구성될 수 없습니다.');
+  }
+  return encodeURIComponent(id);
+}
+
 export function buildAskPath(query?: string): string {
   if (!query) return ROUTE_PATHS.ask;
   const params = new URLSearchParams({ q: query });
@@ -26,9 +47,9 @@ export function buildJournalNewPath(type: JournalEntryType): string {
 }
 
 export function buildJournalDetailPath(id: string): string {
-  return `/journal/${id}`;
+  return `/journal/${encodeJournalId(id)}`;
 }
 
 export function buildJournalReviewPath(id: string): string {
-  return `/journal/${id}/review`;
+  return `/journal/${encodeJournalId(id)}/review`;
 }

@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TabLayout } from '@/components/layout/TabLayout';
+import { ROUTE_PATHS, toRelativeRoutePath } from '@/constants/routes';
 import { AskPage } from '@/pages/AskPage';
 import { HomePage } from '@/pages/HomePage';
 import { JournalDetailPage } from '@/pages/JournalDetailPage';
@@ -18,14 +19,23 @@ export function AppRouter() {
       <Route element={<AppShell />}>
         <Route element={<TabLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="ask" element={<AskPage />} />
-          <Route path="journal" element={<JournalListPage />} />
+          <Route path={toRelativeRoutePath(ROUTE_PATHS.ask)} element={<AskPage />} />
+          <Route
+            path={toRelativeRoutePath(ROUTE_PATHS.journalList)}
+            element={<JournalListPage />}
+          />
         </Route>
 
-        <Route path="onboarding" element={<OnboardingPage />} />
-        <Route path="journal/new" element={<JournalNewPage />} />
-        <Route path="journal/:id" element={<JournalDetailPage />} />
-        <Route path="journal/:id/review" element={<JournalReviewPage />} />
+        <Route path={toRelativeRoutePath(ROUTE_PATHS.onboarding)} element={<OnboardingPage />} />
+        <Route path={toRelativeRoutePath(ROUTE_PATHS.journalNew)} element={<JournalNewPage />} />
+        <Route
+          path={toRelativeRoutePath(ROUTE_PATHS.journalDetail)}
+          element={<JournalDetailPage />}
+        />
+        <Route
+          path={toRelativeRoutePath(ROUTE_PATHS.journalReview)}
+          element={<JournalReviewPage />}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
