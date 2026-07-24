@@ -101,28 +101,47 @@ src/
 
 ## 라우트
 
-라우트 목록의 기준 문서는 [`docs/nav-map.md`](./docs/nav-map.md)다.
+라우트 목록의 기준 문서는 [`docs/nav-map.md`](./docs/nav-map.md), 공개 웹/앱 경계 설계는
+[`docs/route-architecture.md`](./docs/route-architecture.md)다. 경로 정의 단일 소스는
+[`src/constants/routes.ts`](./src/constants/routes.ts)다.
 
-| Path                  | 화면               | 하단 탭 |
-| --------------------- | ------------------ | ------- |
-| `/onboarding`         | 온보딩             | 없음    |
-| `/`                   | Home               | 있음    |
-| `/ask`                | Ask 결과           | 있음    |
-| `/journal`            | 기록 목록          | 있음    |
-| `/journal/new`        | 일지/공부노트 저장 | 없음    |
-| `/journal/:id`        | 일지 상세          | 없음    |
-| `/journal/:id/review` | 복기               | 없음    |
-| `*`                   | NotFound           | 없음    |
+URL은 공개 웹(`/:locale/*`)과 웹앱(`/app/*`)으로 분리된다. 루트 `/`는 콘텐츠 없이
+기본 로케일 `/ko`로 redirect된다.
+
+**공개 웹 (`/:locale`, `locale` ∈ `ko`·`en`)**
+
+| Path                | 화면            | 비고                              |
+| ------------------- | --------------- | --------------------------------- |
+| `/`                 | (redirect)      | `/ko`로 replace redirect          |
+| `/:locale`          | 공개 웹 홈      | placeholder (실제 UI는 후속 STEP) |
+| `/:locale/features` | 기능 소개       | placeholder                       |
+| `/:locale/learn/*`  | 학습            | placeholder                       |
+| `/:locale/*`        | Public NotFound | 미지원 locale도 여기로 처리       |
+
+**웹앱 (`/app/*`)**
+
+| Path                      | 화면               | 하단 탭 |
+| ------------------------- | ------------------ | ------- |
+| `/app`                    | Home               | 있음    |
+| `/app/ask`                | Ask 결과           | 있음    |
+| `/app/journal`            | 기록 목록          | 있음    |
+| `/app/onboarding`         | 온보딩             | 없음    |
+| `/app/journal/new`        | 일지/공부노트 저장 | 없음    |
+| `/app/journal/:id`        | 일지 상세          | 없음    |
+| `/app/journal/:id/review` | 복기               | 없음    |
+| `/app/*`                  | App NotFound       | 없음    |
 
 ## 배포 시 SPA Fallback 계약
 
-이 앱은 `BrowserRouter`(`src/main.tsx`)를 사용한다. SSR도, 사전 렌더링도 하지
-않으므로 배포 환경(정적 호스팅)이 다음을 반드시 보장해야 한다:
+이 앱은 `BrowserRouter`(`src/main.tsx`)를 사용한다. 현재(STEP 5)는 SSR도, 사전 렌더링도
+하지 않으므로 배포 환경(정적 호스팅)이 다음을 반드시 보장해야 한다. 공개 웹(`/ko`·`/en`)의
+정적 Pre-render와 호스팅 rewrite 설정은 STEP 6에서 확정한다.
 
-- `/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침하면,
+- `/app/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침하면,
   호스팅이 해당 요청을 `index.html`로 rewrite하지 않는 한 **404가 발생한다.**
 - rewrite 규칙은 정적 asset 경로(`/assets/*`, 파비콘, 폰트 등 실제 파일이 존재하는
-  경로)는 제외하고, 그 외 비정적 경로만 `index.html`로 보내야 한다.
+  경로)는 제외하고, 그 외 비정적 경로(`/app/*`, `/`, 아직 Pre-render되지 않은 `/:locale/*`)만
+  `index.html`로 보내야 한다.
 - `pnpm preview`(`vite preview`)가 로컬에서 성공적으로 동작하는 것은 이 rewrite
   설정이 실제 운영 호스팅에도 있다는 것을 보장하지 않는다 — `vite preview`는
   자체적으로 SPA fallback을 처리하기 때문이다. 실제 배포 대상 호스팅에서 직접

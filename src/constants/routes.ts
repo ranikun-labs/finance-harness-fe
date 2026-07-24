@@ -1,26 +1,66 @@
 /**
- * 유일한 라우트 정의처. 경로 문자열을 다른 곳에 하드코딩하지 말고 이 모듈을 통해서만 참조한다.
- * 라우트 목록의 기준 문서: docs/nav-map.md
+ * 유일한 라우트 정의처. 경로 문자열을 다른 곳에 하드코딩하지 말고 이 모듈을 통해서만
+ * 참조한다. 라우트 목록 기준 문서: docs/nav-map.md, 라우팅 경계 설계: docs/route-architecture.md
+ *
+ * URL은 두 소유 도메인으로 나뉜다.
+ * - 공개 웹:  `/:locale` (ko|en) — 정적 Pre-render 목표(STEP 6)
+ * - 웹앱/Capacitor: `/app/*` — SPA
+ * 프리픽스 없는 콘텐츠 경로는 없다. 루트 `/`는 기본 로케일로 redirect 전용이다.
  */
-export const ROUTE_PATHS = {
-  onboarding: '/onboarding',
-  home: '/',
-  ask: '/ask',
-  journalList: '/journal',
-  journalNew: '/journal/new',
-  journalDetail: '/journal/:id',
-  journalReview: '/journal/:id/review',
+
+// ── 로케일 단일 원본 ────────────────────────────────────────────────
+export const SUPPORTED_LOCALES = ['ko', 'en'] as const;
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
+export const DEFAULT_LOCALE: Locale = 'ko';
+
+/** 지원 로케일 판별의 유일한 검증 원본. i18n 라이브러리·언어 감지는 도입하지 않는다. */
+export function isSupportedLocale(value: string | undefined): value is Locale {
+  return value !== undefined && (SUPPORTED_LOCALES as readonly string[]).includes(value);
+}
+
+// ── 앱 URL 프리픽스 단일 원본 ───────────────────────────────────────
+export const APP_BASE = '/app';
+
+// ── 공개 웹 라우트 (locale 파라미터 패턴) ───────────────────────────
+export const PUBLIC_ROUTE_PATHS = {
+  localeHome: '/:locale',
+  features: '/:locale/features',
+  learn: '/:locale/learn/*',
+} as const;
+
+// ── 웹앱 라우트 (APP_BASE 프리픽스, 단일 정의) ──────────────────────
+export const APP_ROUTE_PATHS = {
+  appHome: APP_BASE,
+  onboarding: `${APP_BASE}/onboarding`,
+  ask: `${APP_BASE}/ask`,
+  journalList: `${APP_BASE}/journal`,
+  journalNew: `${APP_BASE}/journal/new`,
+  journalDetail: `${APP_BASE}/journal/:id`,
+  journalReview: `${APP_BASE}/journal/:id/review`,
 } as const;
 
 export type JournalEntryType = 'investment' | 'study';
 
 /**
- * AppRouter의 중첩 `<Route>`는 부모(AppShell) 기준 상대 경로를 받는다.
- * ROUTE_PATHS는 절대 경로(`/`로 시작)로 정의되어 있으므로, 라우터 트리 정의에서
- * 이 헬퍼로 선행 슬래시를 제거해 재사용한다.
+ * AppRouter의 최상위 `<Route>`는 절대 경로를 받지만, 중첩 `<Route>`는 부모 기준 상대
+ * 경로를 받는다. ROUTE 상수는 절대 경로이므로 이 헬퍼로 선행 슬래시를 제거해 재사용한다.
  */
 export function toRelativeRoutePath(absolutePath: string): string {
   return absolutePath.replace(/^\//, '');
+}
+
+/**
+ * `base`(예: `/app`, `/:locale`) 아래 중첩 `<Route>`에 넘길 상대 경로를 만든다.
+ * `absolutePath`가 `base`와 정확히 같으면 index 라우트를 뜻하는 빈 문자열을 반환한다.
+ * `base` 하위가 아니면 라우트 트리 정의가 예상과 어긋났다는 뜻이므로 즉시 에러를 던진다.
+ */
+export function toRelativeUnder(base: string, absolutePath: string): string {
+  if (absolutePath === base) return '';
+  const prefix = `${base}/`;
+  if (!absolutePath.startsWith(prefix)) {
+    throw new Error(`"${absolutePath}"는 base "${base}" 아래 경로가 아닙니다.`);
+  }
+  return absolutePath.slice(prefix.length);
 }
 
 /**
@@ -35,21 +75,10 @@ function encodeJournalId(id: string): string {
   return encodeURIComponent(id);
 }
 
-export function buildAskPath(query?: string): string {
-  if (!query) return ROUTE_PATHS.ask;
-  const params = new URLSearchParams({ q: query });
-  return `${ROUTE_PATHS.ask}?${params.toString()}`;
-}
-
-export function buildJournalNewPath(type: JournalEntryType): string {
-  const params = new URLSearchParams({ type });
-  return `${ROUTE_PATHS.journalNew}?${params.toString()}`;
-}
-
 const JOURNAL_ID_PLACEHOLDER = ':id';
 
 /**
- * ROUTE_PATHS의 동적 라우트 패턴에서 `:id` placeholder를 인코딩된 값으로 치환한다.
+ * ROUTE 패턴의 동적 라우트에서 `:id` placeholder를 인코딩된 값으로 치환한다.
  * placeholder가 정확히 한 번 존재하지 않으면 라우트 패턴이 예상과 달라졌다는 뜻이므로,
  * 조용히 잘못된 URL을 반환하는 대신 즉시 에러를 던진다.
  */
@@ -63,10 +92,45 @@ function substituteJournalId(pattern: string, id: string): string {
   return pattern.replace(JOURNAL_ID_PLACEHOLDER, encodeJournalId(id));
 }
 
-export function buildJournalDetailPath(id: string): string {
-  return substituteJournalId(ROUTE_PATHS.journalDetail, id);
+// ── 공개 웹 path builder ────────────────────────────────────────────
+function assertSupportedLocale(locale: Locale): Locale {
+  if (!isSupportedLocale(locale)) {
+    throw new Error(`지원하지 않는 locale입니다: "${locale}"`);
+  }
+  return locale;
 }
 
-export function buildJournalReviewPath(id: string): string {
-  return substituteJournalId(ROUTE_PATHS.journalReview, id);
+export function buildLocaleHomePath(locale: Locale): string {
+  return `/${assertSupportedLocale(locale)}`;
+}
+
+export function buildFeaturesPath(locale: Locale): string {
+  return `/${assertSupportedLocale(locale)}/features`;
+}
+
+export function buildLearnPath(locale: Locale, ...segments: string[]): string {
+  const base = `/${assertSupportedLocale(locale)}/learn`;
+  if (segments.length === 0) return base;
+  const suffix = segments.map((segment) => encodeURIComponent(segment)).join('/');
+  return `${base}/${suffix}`;
+}
+
+// ── 웹앱 path builder (기존 쿼리·인코딩 계약 보존) ─────────────────
+export function buildAppAskPath(query?: string): string {
+  if (!query) return APP_ROUTE_PATHS.ask;
+  const params = new URLSearchParams({ q: query });
+  return `${APP_ROUTE_PATHS.ask}?${params.toString()}`;
+}
+
+export function buildAppJournalNewPath(type: JournalEntryType): string {
+  const params = new URLSearchParams({ type });
+  return `${APP_ROUTE_PATHS.journalNew}?${params.toString()}`;
+}
+
+export function buildAppJournalDetailPath(id: string): string {
+  return substituteJournalId(APP_ROUTE_PATHS.journalDetail, id);
+}
+
+export function buildAppJournalReviewPath(id: string): string {
+  return substituteJournalId(APP_ROUTE_PATHS.journalReview, id);
 }

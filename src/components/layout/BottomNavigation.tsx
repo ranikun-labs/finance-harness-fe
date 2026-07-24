@@ -13,7 +13,7 @@ export function BottomNavigation() {
         <NavLink
           key={tab.id}
           to={tab.path}
-          end={tab.path === '/'}
+          end={tab.end ?? false}
           className={({ isActive }) =>
             cn(
               'relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs',
