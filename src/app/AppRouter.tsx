@@ -16,7 +16,7 @@ import { OnboardingPage } from '@/pages/OnboardingPage';
 import { FeaturesPage } from '@/pages/public/FeaturesPage';
 import { LearnPage } from '@/pages/public/LearnPage';
 import { PublicHomePage } from '@/pages/public/PublicHomePage';
-import { PublicNotFoundPage } from '@/pages/public/PublicNotFoundPage';
+import { PublicNotFoundFallback, PublicNotFoundPage } from '@/pages/public/PublicNotFoundPage';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -87,8 +87,10 @@ export function AppRouter() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리 */}
-      <Route path="*" element={<PublicNotFoundPage />} />
+      {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리(DEFAULT_LOCALE
+          provider를 스스로 소유하는 PublicNotFoundFallback — 여기엔 유효한 URL locale이
+          없다) */}
+      <Route path="*" element={<PublicNotFoundFallback />} />
     </Routes>
   );
 }

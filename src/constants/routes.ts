@@ -137,6 +137,23 @@ export function buildLearnPath(locale: Locale, ...segments: string[]): string {
   return `${base}/${suffix}`;
 }
 
+/**
+ * 공개 웹(`/:locale/*`) pathname의 첫 세그먼트(locale)만 `targetLocale`로 치환하고
+ * 나머지(`/features`, `/learn/basics` 등)는 그대로 보존한다. `LocaleSwitcher`
+ * 전용 helper — query string·hash는 이 함수의 책임이 아니다(pathname만 다룬다,
+ * 호출부가 `useLocation()`의 `search`/`hash`를 별도로 유지해야 한다).
+ */
+export function buildLocalePeerPath(pathname: string, targetLocale: Locale): string {
+  assertPathnamePattern('absolutePath', pathname);
+  assertSupportedLocale(targetLocale);
+  const segments = pathname.split('/');
+  if (segments.length < 2 || segments[1] === '') {
+    throw new Error(`buildLocalePeerPath: "${pathname}"에서 locale 세그먼트를 찾을 수 없습니다.`);
+  }
+  segments[1] = targetLocale;
+  return segments.join('/');
+}
+
 // ── 웹앱 path builder (기존 쿼리·인코딩 계약 보존) ─────────────────
 export function buildAppAskPath(query?: string): string {
   if (!query) return APP_ROUTE_PATHS.ask;
