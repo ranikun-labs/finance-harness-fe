@@ -1,6 +1,8 @@
 pnpm-lock.yaml
 pnpm-workspace.yaml
 dist
+dist-ssr
+.prerender-manifest.json
 node_modules
 ios
 android

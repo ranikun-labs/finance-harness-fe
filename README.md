@@ -3,8 +3,9 @@
 Capacitor 기반 iOS/Android 출시를 목표로 하는 Vite + React + TypeScript SPA.
 SSR/Next.js/React Router Framework Mode는 사용하지 않는다.
 
-이 시점은 **빌드 · 라우팅 · 모바일 레이아웃 골격**까지만 구현된 단계다. 실제
-와이어프레임 UI, API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
+이 시점은 **빌드 · 라우팅(공개 웹/앱 URL 경계) · 모바일 레이아웃 골격 · 공개 웹
+Pre-render/SPA fallback 계약**까지 구현된 단계다. 실제 와이어프레임 UI, i18n,
+API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
 
 단계별 실행 순서와 PR 경계는 [`docs/frontend-roadmap.md`](./docs/frontend-roadmap.md)를 따른다.
 
@@ -43,32 +44,39 @@ shim/심볼릭을 만들 수 있기 때문이다. 대신 Corepack을 매번 직�
 
 ## Scripts
 
-| 목적                           | 명령                    |
-| ------------------------------ | ----------------------- |
-| 개발 서버                      | `pnpm dev`              |
-| 프로덕션 build                 | `pnpm build`            |
-| build 결과 미리보기            | `pnpm preview`          |
-| lint                           | `pnpm lint`             |
-| 포맷 적용                      | `pnpm format`           |
-| 포맷 검사만                    | `pnpm format:check`     |
-| 타입체크                       | `pnpm typecheck`        |
-| 유닛 테스트 (1회)              | `pnpm test`             |
-| 유닛 테스트 (watch)            | `pnpm test:watch`       |
-| E2E 테스트                     | `pnpm test:e2e`         |
-| 전체 검증 (E2E 제외)           | `pnpm verify`           |
-| 전체 검증 (E2E 포함)           | `pnpm verify:full`      |
-| iOS 네이티브 프로젝트 생성     | `pnpm cap:add:ios`      |
-| Android 네이티브 프로젝트 생성 | `pnpm cap:add:android`  |
-| Capacitor sync                 | `pnpm cap:sync`         |
-| iOS 프로젝트 열기              | `pnpm cap:open:ios`     |
-| Android 프로젝트 열기          | `pnpm cap:open:android` |
+| 목적                            | 명령                            |
+| ------------------------------- | ------------------------------- |
+| 개발 서버                       | `pnpm dev`                      |
+| 프로덕션 build                  | `pnpm build`                    |
+| build 결과 미리보기             | `pnpm preview`                  |
+| lint                            | `pnpm lint`                     |
+| 포맷 적용                       | `pnpm format`                   |
+| 포맷 검사만                     | `pnpm format:check`             |
+| 타입체크                        | `pnpm typecheck`                |
+| 유닛 테스트 (1회)               | `pnpm test`                     |
+| 유닛 테스트 (watch)             | `pnpm test:watch`               |
+| E2E 테스트                      | `pnpm test:e2e`                 |
+| 전체 검증 (E2E 제외)            | `pnpm verify`                   |
+| 전체 검증 (E2E 포함)            | `pnpm verify:full`              |
+| build 2회 실행 stale 검증(별도) | `pnpm verify:build-idempotency` |
+| iOS 네이티브 프로젝트 생성      | `pnpm cap:add:ios`              |
+| Android 네이티브 프로젝트 생성  | `pnpm cap:add:android`          |
+| Capacitor sync                  | `pnpm cap:sync`                 |
+| iOS 프로젝트 열기               | `pnpm cap:open:ios`             |
+| Android 프로젝트 열기           | `pnpm cap:open:android`         |
 
 `cap:add:ios`/`cap:add:android`는 공식 reverse-domain `appId` 확정과 각 플랫폼
 개발 도구(Xcode/Android SDK) 설치 이후에만 실행한다 — 위 P0 항목 참고. `cap:sync`는
-표준 `build` 스크립트(`tsc -b && vite build`, 타입체크 포함)를 재사용한 뒤 sync한다.
+표준 `build` 스크립트를 재사용한 뒤 sync한다.
 
 `verify`는 `format:check → lint → typecheck → test → build` 순으로 실행한다.
-`verify:full`은 여기에 Playwright E2E를 더한다.
+`verify:full`은 여기에 Playwright E2E를 더한다. `build`는 타입체크·클라이언트
+빌드에 더해 공개 웹 Pre-render 파이프라인(SSR 빌드 → 정적 HTML 생성 → 자동 산출물
+검증)까지 실행한다 — 자세한 단계는
+[`docs/route-architecture.md`](./docs/route-architecture.md) §5.1 참고.
+`verify:build-idempotency`는 `build`를 두 번 연속 실행해 stale 산출물이 없는지
+확인하는 **별도** 명령이며, `verify`/`verify:full` 기본 체인에는 포함하지 않는다
+(build를 반복 호출하는 코드를 이 명령 하나로 한정하기 위함).
 
 ## E2E 테스트 준비
 
@@ -83,15 +91,24 @@ pnpm exec playwright install chromium
 ```
 src/
 ├── app/          # 라우터(AppRouter.tsx) — 유일한 라우트 트리 정의처
-├── pages/        # 라우트 단위 페이지 컴포넌트 (현재는 전부 스켈레톤)
+├── entry-server.tsx  # SSR 전용 렌더 엔트리(Vite --ssr 빌드 대상, 신규 dependency 없음)
+├── pages/        # 라우트 단위 페이지 컴포넌트 (현재는 전부 스켈레톤/placeholder)
+├── prerender/    # Pre-render 매니페스트(manifest.ts) + hydrate 판별(shouldHydrate.ts), 순수 모듈
 ├── components/
 │   ├── ui/       # shadcn/ui 컴포넌트
-│   └── layout/   # AppShell, TabLayout, BottomNavigation 등
-├── constants/    # routes, navigation(하단 탭), policy(감정 태그)
+│   └── layout/   # AppShell, TabLayout, BottomNavigation, PublicLayout 등
+├── constants/    # routes(공개/앱 분리), navigation(하단 탭), policy(감정 태그)
 ├── lib/          # 공통 utility (cn 등)
 ├── styles/       # globals.css(Tailwind v4 + 토큰), fonts.css
 ├── assets/fonts/ # Pretendard 가변 폰트(self-host)
 └── test/         # Vitest 셋업
+
+scripts/          # build 파이프라인 스크립트(전부 순수 Node, 신규 dependency 없음)
+├── prerender.mjs                  # SSR 결과 → 정적 HTML 조립, dist-ssr 정리
+├── verify-prerender-output.mjs    # 현재 dist/ 산출물만 검증(build 재호출 없음)
+└── verify-build-idempotency.mjs   # build 2회 실행 후 stale 여부 확인(별도 명령)
+
+e2e/support/fixtureServer.ts  # provider-neutral SPA fallback 계약을 구현한 테스트 전용 정적 서버
 ```
 
 ## 정책
@@ -131,26 +148,40 @@ URL은 공개 웹(`/:locale/*`)과 웹앱(`/app/*`)으로 분리된다. 루트 `
 | `/app/journal/:id/review` | 복기               | 없음    |
 | `/app/*`                  | App NotFound       | 없음    |
 
-## 배포 시 SPA Fallback 계약
+## Pre-render + 배포 시 SPA Fallback 계약 (STEP 6)
 
-이 앱은 `BrowserRouter`(`src/main.tsx`)를 사용한다. 현재(STEP 5)는 SSR도, 사전 렌더링도
-하지 않으므로 배포 환경(정적 호스팅)이 다음을 반드시 보장해야 한다. 공개 웹(`/ko`·`/en`)의
-정적 Pre-render와 호스팅 rewrite 설정은 STEP 6에서 확정한다.
+공개 웹 고정 경로(`/ko`, `/en`, `/ko/features`, `/en/features`, `/ko/learn`,
+`/en/learn`)는 `pnpm build` 시점에 정적 HTML로 생성된다(`scripts/prerender.mjs`,
+Vite 코어 `--ssr` 빌드 + `renderToString`, 신규 dependency 없음). `/app/*`는 여전히
+`BrowserRouter`(`src/main.tsx`) 기반 SPA다. Pre-render된 결과는 클라이언트가
+`hydrateRoot`로 재사용하고(root의 `data-render-mode="prerender"` marker 기준), 그 외
+(`/app/*` 포함)는 `createRoot`로 렌더한다. 자세한 파이프라인·계약은
+[`docs/route-architecture.md`](./docs/route-architecture.md) §5 참고.
 
-- **정적 asset과 정확히 생성된 Pre-render 결과물**(예: STEP 6 이후의 `/ko`, `/en` 등
-  실제 산출된 파일)은 항상 우선 제공한다.
-- **그 외 모든 프론트엔드 document 요청**은 `BrowserRouter`가 클라이언트에서 처리할 수
-  있도록 `index.html`로 rewrite해야 한다. 여기에는 `/app/*`, `/`, 미지원 locale
-  (`/fr` 등), 아직 Pre-render되지 않은 `/:locale/*` 하위 경로가 모두 포함된다.
-- `/app/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침했을 때, 위
-  rewrite가 없으면 호스팅 자체 404로 끝나 앱의 `PublicNotFoundPage`/`NotFoundPage`
-  계약이 무너진다 — rewrite 규칙은 정적 asset 경로(`/assets/*`, 파비콘, 폰트 등 실제
-  파일이 존재하는 경로)만 제외하고 그 외는 전부 `index.html`로 보내야 한다.
+배포 환경(정적 호스팅)은 다음 우선순위를 반드시 보장해야 한다:
+
+1. **실제 정적 파일**(`/assets/*` 등)은 그대로 제공.
+2. **`<path>/index.html`**이 존재하면 그 파일을 제공(trailing slash 포함 — `/ko`와
+   `/ko/` 모두 `dist/ko/index.html`로 resolve).
+3. **asset으로 판별된 요청인데 파일이 없으면 404** — `index.html`로 새지 않는다(MIME
+   오류 방지).
+4. **그 외 HTML document 요청**(`Accept: text/html`)만 `dist/index.html`로 fallback —
+   `/app/*`, `/`, 미지원 locale(`/fr` 등), 아직 Pre-render되지 않은 `/:locale/*` 하위
+   경로가 모두 여기 포함된다. 이 rewrite가 없으면 `/app/journal/123`처럼 정적 파일이
+   아닌 경로를 직접 열거나 새로고침할 때 호스팅 자체 404로 끝나 앱의
+   `PublicNotFoundPage`/`NotFoundPage` 계약이 무너진다.
+5. **그 밖의 요청**(예: `Accept: application/json`)은 404 — SPA fallback을 적용하지
+   않는다.
+
+- 루트 `/`는 **JavaScript 활성 환경에서만** `/ko`로 이동한다(`RootRedirect`). JS 실행
+  전/비활성 환경의 redirect는 이번 STEP 범위 밖이며, hosting provider 확정 후
+  provider-specific 설정으로 보강한다(`docs/route-architecture.md` §5.3).
 - `pnpm preview`(`vite preview`)가 로컬에서 성공적으로 동작하는 것은 이 rewrite
   설정이 실제 운영 호스팅에도 있다는 것을 보장하지 않는다 — `vite preview`는
-  자체적으로 SPA fallback을 처리하기 때문이다. 실제 배포 대상 호스팅에서 직접
-  경로 새로고침을 확인해야 한다.
+  자체적으로 SPA fallback을 처리하기 때문이다. 위 규칙은
+  `e2e/support/fixtureServer.ts`(provider-neutral, 신규 dependency 없음)로 별도
+  검증한다(`e2e/prerender.spec.ts`). 실제 배포 대상 호스팅에서도 직접 경로
+  새로고침을 확인해야 한다.
 - 특정 클라우드/호스팅 업체의 설정 파일은 이 저장소에 두지 않는다. 배포 대상이
-  정해지면 그 업체의 rewrite 설정 문서를 따로 참고할 것.
-- 향후 SSR, Pre-render, React Router Framework Mode 등으로 렌더링 아키텍처가
-  바뀌면 이 fallback 계약도 함께 갱신해야 한다.
+  정해지면 그 업체의 rewrite 설정 문서를 따로 참고할 것(provider 자체는 아직
+  미확정).
