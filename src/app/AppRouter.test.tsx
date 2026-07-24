@@ -33,29 +33,31 @@ describe('AppRouter', () => {
   });
 
   describe('public web ownership (/:locale)', () => {
-    it.each([buildLocaleHomePath('ko'), buildLocaleHomePath('en')])(
-      'renders the public home at %s',
-      (path) => {
-        renderAt(path);
-        expect(screen.getByRole('heading', { name: /공개 웹 홈/ })).toBeInTheDocument();
-      },
-    );
+    // STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이
+    // 더 이상 같은(한국어) heading을 공유하지 않으므로 locale별로 기대 문구를 따로 둔다.
+    it.each([
+      [buildLocaleHomePath('ko'), /공개 웹 홈/],
+      [buildLocaleHomePath('en'), /Public Home/],
+    ])('renders the public home at %s', (path, heading) => {
+      renderAt(path);
+      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    });
 
-    it.each([buildFeaturesPath('ko'), buildFeaturesPath('en')])(
-      'renders features at %s',
-      (path) => {
-        renderAt(path);
-        expect(screen.getByRole('heading', { name: /기능 소개/ })).toBeInTheDocument();
-      },
-    );
+    it.each([
+      [buildFeaturesPath('ko'), /기능 소개/],
+      [buildFeaturesPath('en'), /Features/],
+    ])('renders features at %s', (path, heading) => {
+      renderAt(path);
+      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    });
 
-    it.each([buildLearnPath('ko', 'basics'), buildLearnPath('en', 'basics')])(
-      'renders learn at %s',
-      (path) => {
-        renderAt(path);
-        expect(screen.getByRole('heading', { name: /학습/ })).toBeInTheDocument();
-      },
-    );
+    it.each([
+      [buildLearnPath('ko', 'basics'), /학습/],
+      [buildLearnPath('en', 'basics'), /Learn/],
+    ])('renders learn at %s', (path, heading) => {
+      renderAt(path);
+      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    });
 
     it('renders public NotFound for an unsupported locale (no redirect)', () => {
       renderAt('/fr');
@@ -70,6 +72,26 @@ describe('AppRouter', () => {
     it('renders public NotFound for an unknown sub-path under a supported locale', () => {
       renderAt('/ko/nope');
       expect(screen.getByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeInTheDocument();
+    });
+  });
+
+  describe('PublicNotFound provider boundary', () => {
+    it('renders /fr (unsupported locale) without throwing, using the DEFAULT_LOCALE (ko) copy', () => {
+      expect(() => renderAt('/fr')).not.toThrow();
+      expect(screen.getByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeInTheDocument();
+    });
+
+    it('renders the true top-level "*" catch-all without throwing, using the DEFAULT_LOCALE (ko) copy', () => {
+      // "//nope"는 첫 세그먼트가 빈 문자열이라 ":locale"(비어있지 않은 세그먼트 요구)에도
+      // "/app"에도 매칭되지 않고, AppRouter.tsx 최상위 <Route path="*"> 안전망에만
+      // 도달한다(구현 시 react-router 매칭으로 직접 확인한 유일한 도달 경로).
+      expect(() => renderAt('//nope')).not.toThrow();
+      expect(screen.getByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeInTheDocument();
+    });
+
+    it('renders /en (supported locale) using the en dictionary via the normal PublicLayout provider, not the fallback', () => {
+      renderAt(buildLocaleHomePath('en'));
+      expect(screen.getByRole('heading', { name: /Public Home/ })).toBeInTheDocument();
     });
   });
 

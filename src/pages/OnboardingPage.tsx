@@ -1,5 +1,7 @@
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
+import { useTranslation } from '@/i18n/I18nContext';
 
 export function OnboardingPage() {
-  return <PageSkeleton title="온보딩" />;
+  const { t } = useTranslation();
+  return <PageSkeleton title={t('app.onboarding.title')} />;
 }

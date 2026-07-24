@@ -1,13 +1,26 @@
 import { NavLink } from 'react-router';
 
-import { BOTTOM_TABS } from '@/constants/navigation';
+import { BOTTOM_TABS, type BottomTabConfig } from '@/constants/navigation';
+import type { MessageKey } from '@/i18n/dictionary';
+import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
 
+/**
+ * 번역 키 조회는 렌더 지점(여기)의 책임이다 — `navigation.ts`에는 번역된 문구나
+ * 키를 두지 않는다.
+ */
+const NAV_LABEL_KEY: Record<BottomTabConfig['id'], MessageKey> = {
+  home: 'nav.home',
+  ask: 'nav.ask',
+  journal: 'nav.journal',
+};
+
 export function BottomNavigation() {
+  const { t } = useTranslation();
   return (
     <nav
       className="border-border bg-background flex shrink-0 border-t pb-[env(safe-area-inset-bottom)]"
-      aria-label="주요 화면 이동"
+      aria-label={t('nav.ariaLabel')}
     >
       {BOTTOM_TABS.map((tab) => (
         <NavLink
@@ -30,7 +43,7 @@ export function BottomNavigation() {
                   className="bg-primary absolute top-0 h-0.5 w-6 rounded-full"
                 />
               )}
-              {tab.label}
+              {t(NAV_LABEL_KEY[tab.id])}
             </>
           )}
         </NavLink>
