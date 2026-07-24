@@ -134,8 +134,17 @@ function handleRequest(distRoot: string, req: IncomingMessage, res: ServerRespon
     return;
   }
 
-  const url = new URL(req.url ?? '/', 'http://internal');
-  const pathname = decodeURIComponent(url.pathname);
+  let pathname: string;
+  try {
+    const url = new URL(req.url ?? '/', 'http://internal');
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    // malformed percent-encoding(예: `/%`, `/%zz`, `/%E0%A4`)은 URIError를 던진다.
+    // request listener 밖으로 전파되면 Playwright worker가 죽을 수 있으므로 여기서
+    // 흡수하고 400을 응답한다 — 다시 throw하지 않는다.
+    respond(req, res, 400, 'text/plain; charset=utf-8', 'Bad Request', 'invalid-path');
+    return;
+  }
 
   const exactPath = resolveSafely(distRoot, pathname);
   if (exactPath === null) {

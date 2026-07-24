@@ -4,6 +4,8 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { request as httpRequest } from 'node:http';
+import type { IncomingHttpHeaders } from 'node:http';
 
 import { expect, test } from '@playwright/test';
 
@@ -16,6 +18,37 @@ import { startFixtureServer } from './support/fixtureServer';
 
 const DIST_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const PRERENDER_MARKER = `${PRERENDER_MARKER_ATTRIBUTE}="${PRERENDER_MARKER_VALUE}"`;
+
+interface RawResponse {
+  status: number;
+  headers: IncomingHttpHeaders;
+  body: string;
+}
+
+/**
+ * Playwright의 `request`/`fetch`는 malformed `%` 시퀀스를 클라이언트 단에서 사전
+ * 인코딩하거나 거부할 수 있어, 서버까지 raw path가 그대로 도달하는지 검증하려면
+ * `node:http`로 직접 요청 라인을 구성해야 한다. `http.request`의 `path` 옵션은
+ * 별도 인코딩 없이 그대로 전송된다.
+ */
+function rawGet(baseURL: string, rawPath: string): Promise<RawResponse> {
+  const { hostname, port } = new URL(baseURL);
+  return new Promise((resolvePromise, reject) => {
+    const req = httpRequest({ hostname, port, path: rawPath, method: 'GET' }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        resolvePromise({
+          status: res.statusCode ?? 0,
+          headers: res.headers,
+          body: Buffer.concat(chunks).toString('utf-8'),
+        });
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
 
 let fixture: FixtureServerHandle;
 
@@ -172,5 +205,29 @@ test.describe('provider-neutral fixture: 브라우저 hydration 검증', () => {
     await page.goto(`${fixture.baseURL}${APP_ROUTE_PATHS.appHome}`);
     await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
     expect(pageErrors).toEqual([]);
+  });
+});
+
+test.describe('provider-neutral fixture: malformed percent-encoding 방어', () => {
+  const MALFORMED_PATHS = ['/%', '/%zz', '/%E0%A4'];
+
+  for (const rawPath of MALFORMED_PATHS) {
+    test(`GET ${rawPath} returns 400 with invalid-path source, not the SPA shell`, async () => {
+      const response = await rawGet(fixture.baseURL, rawPath);
+
+      expect(response.status).toBe(400);
+      expect(response.headers['x-finance-harness-source']).toBe('invalid-path');
+      expect(response.body).not.toContain(PRERENDER_MARKER);
+      expect(response.body).not.toContain('<html');
+    });
+  }
+
+  test('a malformed request does not crash the server — a subsequent /ko request still succeeds', async () => {
+    const malformedResponse = await rawGet(fixture.baseURL, '/%');
+    expect(malformedResponse.status).toBe(400);
+
+    const followUpResponse = await rawGet(fixture.baseURL, '/ko');
+    expect(followUpResponse.status).toBe(200);
+    expect(followUpResponse.headers['x-finance-harness-source']).toBe('directory-index');
   });
 });
