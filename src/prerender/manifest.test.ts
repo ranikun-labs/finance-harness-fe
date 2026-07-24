@@ -58,4 +58,12 @@ describe('PRERENDER_MANIFEST', () => {
       expect(outFile.endsWith('index.html')).toBe(true);
     }
   });
+
+  it('carries an explicit locale field matching the path and outFile', () => {
+    for (const { path, outFile, locale } of PRERENDER_MANIFEST) {
+      expect(path.split('/')[1]).toBe(locale);
+      expect(outFile.startsWith(`${locale}/`)).toBe(true);
+      expect(SUPPORTED_LOCALES).toContain(locale);
+    }
+  });
 });

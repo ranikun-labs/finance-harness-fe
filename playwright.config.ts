@@ -11,6 +11,11 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
+    // 앱(`/app/*`) locale은 저장값이 없으면 navigator.language로 폴백한다
+    // (src/i18n/appLocale.ts). 브라우저 컨텍스트 locale을 명시적으로 고정하지
+    // 않으면 실행 환경마다 기본 navigator.language가 달라 앱 화면 텍스트가
+    // 예측 불가능해진다 — DEFAULT_LOCALE(ko)과 맞춰 결정적으로 고정한다.
+    locale: 'ko-KR',
   },
   webServer: {
     // `pnpm`/`npx`가 PATH에 shim으로 없는 환경(예: corepack을 직접 경유하는 설정)에서도

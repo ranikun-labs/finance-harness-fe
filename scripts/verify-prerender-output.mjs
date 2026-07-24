@@ -46,16 +46,23 @@ function main() {
   }
   const actualAssetFiles = existsSync(ASSETS_DIR) ? new Set(readdirSync(ASSETS_DIR)) : new Set();
 
-  // 1) SPA shell: marker 없어야 함
+  // 1) SPA shell: marker 없어야 함, 공유 shell의 기본 lang(ko)도 그대로 유지돼야 함
+  //    (개별 로케일 치환은 로케일별 산출물에만 적용되고, 공유 shell을 오염시키면
+  //    /app/*·미지원 locale 등 다른 fallback 대상까지 잘못된 lang을 물려받는다).
   const shellHtml = readDist('index.html');
   if (shellHtml === null) {
     fail(`${CLIENT_SHELL_PATH}(SPA shell)가 존재하지 않습니다.`);
-  } else if (shellHtml.includes(PRERENDER_MARKER)) {
-    fail(`${CLIENT_SHELL_PATH}(SPA shell)에 prerender marker가 들어있으면 안 됩니다.`);
+  } else {
+    if (shellHtml.includes(PRERENDER_MARKER)) {
+      fail(`${CLIENT_SHELL_PATH}(SPA shell)에 prerender marker가 들어있으면 안 됩니다.`);
+    }
+    if (!shellHtml.includes('<html lang="ko">')) {
+      fail(`${CLIENT_SHELL_PATH}(SPA shell)의 기본 lang="ko"가 변경되면 안 됩니다.`);
+    }
   }
 
-  // 2) 매니페스트의 각 산출물: 존재 + marker 포함 + asset 경로 일치
-  for (const { path, outFile } of manifest) {
+  // 2) 매니페스트의 각 산출물: 존재 + marker 포함 + lang 일치 + asset 경로 일치
+  for (const { path, outFile, locale } of manifest) {
     const html = readDist(outFile);
     if (html === null) {
       fail(`매니페스트 경로 "${path}"의 산출물 dist/${outFile}이 존재하지 않습니다.`);
@@ -63,6 +70,9 @@ function main() {
     }
     if (!html.includes(PRERENDER_MARKER)) {
       fail(`dist/${outFile}에 prerender marker가 없습니다(경로: ${path}).`);
+    }
+    if (!html.includes(`<html lang="${locale}">`)) {
+      fail(`dist/${outFile}의 <html lang>이 "${locale}"와 일치하지 않습니다(경로: ${path}).`);
     }
 
     const referencedAssets = [...html.matchAll(ASSET_TAG_PATTERN)].map((m) => m[1]);

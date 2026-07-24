@@ -63,7 +63,7 @@ test.afterAll(async () => {
 });
 
 test.describe('provider-neutral fixture: Pre-render 계약', () => {
-  for (const { path: routePath } of PRERENDER_MANIFEST) {
+  for (const { path: routePath, locale } of PRERENDER_MANIFEST) {
     test(`${routePath} is served from the directory-index (real Pre-render file, not SPA fallback)`, async ({
       request,
     }) => {
@@ -73,6 +73,10 @@ test.describe('provider-neutral fixture: Pre-render 계약', () => {
 
       const body = await response.text();
       expect(body).toContain(PRERENDER_MARKER);
+      // STEP 7: 각 산출물의 <html lang>은 자신의 locale과 정확히 일치해야 한다 —
+      // 빌드 타임 게이트(scripts/verify-prerender-output.mjs)와 별개로 실제 HTTP
+      // 응답 기준으로도 재확인한다.
+      expect(body).toContain(`<html lang="${locale}">`);
     });
   }
 
