@@ -4,8 +4,8 @@ Capacitor 기반 iOS/Android 출시를 목표로 하는 Vite + React + TypeScrip
 SSR/Next.js/React Router Framework Mode는 사용하지 않는다.
 
 이 시점은 **빌드 · 라우팅(공개 웹/앱 URL 경계) · 모바일 레이아웃 골격 · 공개 웹
-Pre-render/SPA fallback 계약**까지 구현된 단계다. 실제 와이어프레임 UI, i18n,
-API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
+Pre-render/SPA fallback 계약 · 한국어·영어 i18n 기반**까지 구현된 단계다. 실제
+와이어프레임 UI, API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
 
 단계별 실행 순서와 PR 경계는 [`docs/frontend-roadmap.md`](./docs/frontend-roadmap.md)를 따른다.
 
@@ -185,3 +185,41 @@ Vite 코어 `--ssr` 빌드 + `renderToString`, 신규 dependency 없음). `/app/
 - 특정 클라우드/호스팅 업체의 설정 파일은 이 저장소에 두지 않는다. 배포 대상이
   정해지면 그 업체의 rewrite 설정 문서를 따로 참고할 것(provider 자체는 아직
   미확정).
+
+## i18n 기반 (STEP 7)
+
+지원 언어는 `ko`·`en` 두 개뿐이다(`src/constants/routes.ts`의 `SUPPORTED_LOCALES`가
+단일 원본). 구현은 신규 dependency 없이 React Context + 타입 안전 로컬 dictionary로
+한다(`src/i18n/`) — `i18next` 등은 도입하지 않았다.
+
+- **공개 웹(`/:locale`):** URL의 `:locale`이 유일한 source of truth다.
+  `PublicLayout`이 locale을 검증한 뒤 `I18nProvider`로 주입하고, 하위 페이지는
+  `useTranslation()`만 사용한다(반복 `useParams` 없음). 저장된 앱 locale이나
+  `navigator.language`로 URL locale을 대체하지 않는다. `LocaleSwitcher`
+  (`src/components/layout/LocaleSwitcher.tsx`)가 최소 텍스트 링크 2개로 현재
+  route의 대응 locale 경로로 이동한다(query string·hash·learn 하위 slug 보존,
+  `aria-current`로 현재 locale 표시). 미지원 locale(`/fr` 등)은 여전히 redirect
+  없이 `PublicNotFoundPage`를 렌더하되, 유효한 URL locale이 없는 두 지점
+  (`PublicLayout`의 unsupported-locale 분기, `AppRouter`의 최상위 `*` catch-all)은
+  `PublicNotFoundFallback`이 `DEFAULT_LOCALE`(ko) provider를 스스로 소유해 렌더한다
+  — 저장된 앱 locale이나 `navigator.language`로 추측하지 않는다.
+- **앱(`/app/*`):** URL에는 locale prefix가 없다. `AppShell`이 제공하는
+  `AppLocaleProvider`(`src/i18n/AppLocaleProvider.tsx`)가 `localStorage`(검증된 값만
+  신뢰) → 정규화된 `navigator.language` → `DEFAULT_LOCALE` 우선순위로 초기 locale을
+  동기 계산한다(원격 로딩이 없어 별도 loading shell 불필요). 서버 세션·cookie에는
+  의존하지 않아 Capacitor WebView에서도 동일하게 동작한다. `useAppLocale()`이
+  `{ locale, setLocale }` API를 제공하며, 같은 탭에서 즉시 반영되고 best-effort로
+  저장된다(저장 실패해도 크래시하지 않고 세션 내 상태만 유지). 공개 URL locale과는
+  완전히 독립적이다 — `/en` 방문이 앱 저장 locale을 바꾸지 않고, 앱 locale 변경도
+  공개 URL에 영향을 주지 않는다.
+- **루트 `/`:** 여전히 `/ko` 고정이다. 브라우저 언어 자동 감지는 이번 STEP에서
+  도입하지 않았다 — hosting provider 확정 이후 서버/엣지 레벨에서 다루기로
+  명시적으로 미뤘다.
+- **`document.documentElement.lang` 동기화:** 초기 Pre-render HTML의 `lang`은 빌드
+  시점에 로케일별로 정확히 생성된다(`scripts/prerender.mjs`). 이후 클라이언트에서
+  locale이 바뀌는 모든 경로(LocaleSwitcher 전환, 앱 locale 복원/변경)는
+  `I18nProvider` 하나가 `useEffect`로 `document.documentElement.lang`을 동기화한다 —
+  SSR/Pre-render 중에는 `document`/`window`를 참조하지 않는다.
+- **번역 리소스:** `src/i18n/messages/{ko,en}.ts`가 `src/i18n/dictionary.ts`의
+  `Messages` 인터페이스를 각각 만족해야 하므로, 키 누락·shape 불일치는
+  `pnpm typecheck`에서 컴파일 에러로 즉시 잡힌다.

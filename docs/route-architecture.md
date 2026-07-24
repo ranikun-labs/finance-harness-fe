@@ -54,8 +54,10 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 - **결정:** `/`는 콘텐츠 없이 canonical 기본 로케일 `/ko`로 `<Navigate replace>` 한다.
 - **근거:** 바 도메인은 검색·공유 유입(마케팅) 표면. 앱은 `/app` 뒤에 둔다. 로케일은 URL에
   항상 명시(프리픽스 없는 콘텐츠 경로 없음).
-- **후속:** 정적 redirect 산출(호스팅)은 STEP 6, `navigator.language` 감지는 STEP 7,
-  native 시작경로 `/app`은 STEP 13.
+- **후속:** 정적 redirect 산출(호스팅)은 STEP 6. STEP 7에서 루트 `/`의 브라우저 언어
+  자동 감지 도입 여부를 검토했으나 **도입하지 않기로 명시적으로 결정**했다(§6.1) —
+  hosting provider 확정 후 서버/엣지 레벨에서 다루는 편이 낫다고 판단. native
+  시작경로 `/app`은 STEP 13.
 
 ### 3.2 기존 프리픽스 없는 경로 (clean cutover)
 
@@ -72,7 +74,10 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 - **결정:** 지원 로케일은 `ko`, `en` 두 개뿐. `SUPPORTED_LOCALES`(as const)·`Locale` 타입·
   `isSupportedLocale`·`DEFAULT_LOCALE`이 단일 원본(`src/constants/routes.ts`).
 - **미지원 locale:** `PublicLayout`에서 검증해 `PublicNotFoundPage` 렌더(redirect 아님).
-- **비도입:** i18n 라이브러리, `navigator.language` 감지(STEP 7 범위).
+- **STEP 5 시점 비도입, STEP 7에서 결정됨:** i18n 라이브러리(§6.4 — 결과적으로도
+  도입하지 않음, 신규 dependency 0개), `navigator.language` 감지(§6.2 — 결과적으로
+  앱(`/app/*`) locale 우선순위에만 도입, 공개 웹 URL locale·루트 `/`에는 적용하지
+  않음).
 
 ### 3.4 라우트 상수·path builder
 
@@ -183,3 +188,71 @@ dist/
 ├─ en/{index,features/index,learn/index}.html   ← Pre-render, marker 포함
 └─ assets/*                   ← 해시 파일명, 절대경로(`/assets/...`) 참조 — base 미변경
 ```
+
+## 6. i18n 계약 (STEP 7 산출물)
+
+> §1~~5는 STEP 5·6 산출물이다. §6은 그 위에 얹은 STEP 7(i18n 기반) 계약이며, §1~~5의
+> 어떤 라우트 트리·Pre-render·hydration·fallback 계약도 변경하지 않는다.
+
+### 6.1 공개 웹(`/:locale`) — URL이 유일한 source of truth
+
+**루트 `/` 정책(변경 없음):** `/`는 여전히 §3.1 그대로 `/ko` 고정 redirect다.
+브라우저 언어 자동 감지 도입 여부를 STEP 7에서 검토했으나 도입하지 않기로
+명시적으로 결정했다 — hosting provider가 아직 미확정이라 서버 사이드로 제대로
+할 수 없고, 클라이언트 전용 휴리스틱은 canonical URL의 예측 가능성만 낮춘다.
+필요해지면 hosting provider 확정 이후 서버/엣지 레벨에서 다시 검토한다.
+
+`PublicLayout`(`src/components/layout/PublicLayout.tsx`)이 §3.3의 locale 검증
+choke point 역할에 더해 `I18nProvider`(`src/i18n/I18nContext.tsx`) 주입 지점도
+겸한다: 검증을 통과하면 그 locale로 하위 트리(`LocaleSwitcher` + `Outlet`)를
+감싸고, 실패하면 `PublicNotFoundFallback`을 렌더한다. 저장된 앱 locale이나
+`navigator.language`가 URL locale을 대체하는 경로는 없다.
+
+`PublicNotFoundFallback`(`src/pages/public/PublicNotFoundPage.tsx`)은 유효한 URL
+locale이 없는 두 지점 전용이다 — `PublicLayout`의 unsupported-locale 분기, 그리고
+`AppRouter.tsx` 최상위 `<Route path="*">`(어느 브랜치에도 속하지 않는 경로, 예:
+빈 첫 세그먼트를 만드는 `//nope` 같은 malformed path). 이 두 곳은 `DEFAULT_LOCALE`
+provider를 스스로 소유해 렌더한다 — `useTranslation()`은 provider 없이 호출되면
+항상 throw하며, 암묵적 전역 fallback은 두지 않는다.
+
+`LocaleSwitcher`(`src/components/layout/LocaleSwitcher.tsx`)는 `SUPPORTED_LOCALES`를
+순회해 현재 pathname의 locale 세그먼트만 `buildLocalePeerPath`(`src/constants/
+routes.ts`)로 치환하고, `useLocation()`의 search·hash는 `<Link to={{...}}>` 객체로
+그대로 보존한다. 현재 locale 링크는 `aria-current="true"`. 스타일은 없다(STEP 8에서
+추가).
+
+### 6.2 앱(`/app/*`) — localStorage 기반, 공개 웹과 독립
+
+`AppShell`이 `AppLocaleProvider`(`src/i18n/AppLocaleProvider.tsx`)로 하위 전체를
+감싼다 — `PublicLayout`과 대칭 구조다. 초기 locale은 `resolveInitialAppLocale()`
+(`src/i18n/appLocale.ts`)이 동기적으로 `localStorage`(저장 키 소유,
+`isSupportedLocale` 검증) → 정규화된 `navigator.language`/`navigator.languages` →
+`DEFAULT_LOCALE` 순으로 계산한다. 서버 세션·cookie에 의존하지 않으므로 Capacitor
+WebView에서도 동일하게 동작한다(§2 "서버 전용 기능에 의존하지 않는다" 원칙 준수).
+`localStorage` 접근 실패(읽기/쓰기)는 예외를 던지지 않고 조용히 저하한다 — 읽기
+실패는 저장값 없음과 동일 취급, 쓰기 실패는 세션 내 state만 유지된다.
+
+`useAppLocale()`이 `{ locale, setLocale }` API를 제공한다. 공개 URL locale과는
+완전히 독립이다 — `/en` 방문이 앱 저장 locale을 바꾸지 않고, 앱 locale 변경이
+공개 URL을 바꾸지 않는다. 설정 화면은 아직 없다(STEP 8/9 UI 작업).
+
+### 6.3 `document.documentElement.lang` 동기화
+
+초기 Pre-render HTML의 `lang`은 `scripts/prerender.mjs`가 빌드 시점에 로케일별로
+정확히 생성한다(§5.1 파이프라인의 후처리 단계 — `PRERENDER_MANIFEST` 각 엔트리의
+`locale` 필드를 그대로 사용, 문자열 파싱 없음). 그 이후 클라이언트에서 locale이
+바뀌는 모든 경로(LocaleSwitcher 클라이언트 사이드 전환, 앱 locale 복원/변경)는
+`I18nProvider` **한 곳**의 `useEffect`가 `document.documentElement.lang`을
+동기화한다 — `PublicLayout`/`PublicNotFoundFallback`/`AppLocaleProvider`는 모두
+`locale`만 넘기고 위임한다. effect는 브라우저에서만 실행되므로
+`entry-server.tsx`/SSR 경로에서는 `document`/`window`를 참조하지 않는다.
+
+### 6.4 번역 리소스
+
+`src/i18n/messages/{ko,en}.ts`가 `src/i18n/dictionary.ts`의 `Messages` 인터페이스를
+각각 명시적으로 만족해야 한다(`typeof` 파생이 아님 — 리터럴 타입 widening 문제
+회피). 키 누락·shape 불일치는 `pnpm typecheck`에서 컴파일 에러로 즉시 잡힌다.
+`BOTTOM_TABS`(`src/constants/navigation.ts`)에는 번역된 문구나 키를 두지 않는다 —
+`id`/`path`/`end` 같은 구조적 metadata만 유지하고, label 번역 조회는
+`BottomNavigation`이 렌더 시점에 한다. route path·query key·journal type
+(`investment`/`study`) 같은 도메인 식별자는 번역 대상이 아니다.
