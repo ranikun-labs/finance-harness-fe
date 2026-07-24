@@ -12,6 +12,13 @@
 >
 > 이 문서는 **매핑·식별만** 한다. 라우트 변경, UI 구현, `/app/*` 전환, 원본 재설계는
 > 이번 단계 범위 밖이다.
+>
+> **⚠️ STEP 5 반영:** STEP 5(라우팅 경계 설계)에서 실제 경로가 `/app/*`로 이동하고 path
+> builder도 `buildApp*`(예: `buildAppAskPath`)로 바뀌었다. **현재 라우트 계약은
+> [`docs/route-architecture.md`](./route-architecture.md)와
+> [`src/constants/routes.ts`](../src/constants/routes.ts)가 원본**이다. 아래 2절 표는
+> **STEP 4 매핑 시점의 기록**(프리픽스 없는 경로·구 빌더명)이며, 화면↔라우트 매핑 관계
+> 자체는 그대로 유효하다.
 
 ## 1. 반입 화면 인벤토리 (`design/claude-export/project/`, 15개 `.dc.html`)
 

@@ -14,10 +14,10 @@
 
 ## 결론 먼저 — 현재 위치
 
-- **완료:** STEP 0~4 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 원본 반입·화면 매핑)
-- **현재:** **STEP 5 시작 전** — 공개 웹/앱 라우팅 경계 설계 대기
-- **아직 안 함:** 공개 웹·앱 라우팅 전환, Pre-render 구성, i18n, 실제 UI 구현, API 연동, 네이티브 프로젝트
-- **다음 행동:** 공개 웹·앱 라우팅 경계(`/app/*` 포함)를 별도 PR로 설계(STEP 5). STEP 4 매핑 결과는 [`docs/design-route-map.md`](./design-route-map.md) 참고.
+- **완료:** STEP 0~5 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 원본 반입·화면 매핑 / 공개 웹·앱 라우팅 경계 설계)
+- **현재:** **STEP 6 시작 전** — Pre-render + `/app/*` SPA 구성 대기
+- **아직 안 함:** Pre-render 구성, i18n, 실제 UI 구현, API 연동, 네이티브 프로젝트
+- **다음 행동:** 공개 웹 Pre-render + `/app/*` SPA 렌더링 설정을 별도 PR로 진행(STEP 6). 라우팅 경계 설계는 [`docs/route-architecture.md`](./route-architecture.md), STEP 4 매핑 결과는 [`docs/design-route-map.md`](./design-route-map.md) 참고.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -52,34 +52,35 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ---
 
-## 3. 현재 완료 상태 (PR #1 Merge 기준)
+## 3. 현재 완료 상태 (STEP 5 완료 기준)
 
 아래는 **실제 로컬 저장소에서 확인된 완료 사항만** 기록한다. 미구현 항목을 완료로 적지 않는다.
 
-| 영역        | 완료 내용                                                                                                                                                                | 상태              |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
-| 빌드 스택   | Vite 8 · React 19 · TypeScript 6                                                                                                                                         | ✅                |
-| 라우팅 골격 | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                            | ✅                |
-| 라우트 계약 | 라우트 정의 단일 소스 [`ROUTE_PATHS`](../src/constants/routes.ts) **7종**(`/onboarding`, `/`, `/ask`, `/journal`, `/journal/new`, `/journal/:id`, `/journal/:id/review`) | ✅                |
-| NotFound    | `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `ROUTE_PATHS`에는 포함되지 않는다                                                                                       | ✅                |
-| 하단 탭     | [`BOTTOM_TABS`](../src/constants/navigation.ts) 3개(홈/질문/기록) 단일 소스                                                                                              | ✅                |
-| 레이아웃    | 모바일 AppShell · TabLayout · BottomNavigation                                                                                                                           | ✅                |
-| 화면        | 각 라우트 페이지는 **전부 스켈레톤**(실 UI 아님)                                                                                                                         | ✅(스켈레톤 한정) |
-| 디자인 토큰 | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                       | ✅                |
-| Capacitor   | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                    | ✅(설정 한정)     |
-| 문서        | 제품 정책·화면/라우트 기준 문서, README의 SPA fallback 계약                                                                                                              | ✅                |
-| 검증        | Vitest 유닛 3종 + Playwright 2종(`e2e/`), `verify`/`verify:full` 스크립트                                                                                                | ✅                |
-| 품질 회귀   | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                   | ✅                |
+| 영역        | 완료 내용                                                                                                                                                                                                                                                                                           | 상태              |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| 빌드 스택   | Vite 8 · React 19 · TypeScript 6                                                                                                                                                                                                                                                                    | ✅                |
+| 라우팅 골격 | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                                                                                                                                                       | ✅                |
+| 라우트 계약 | 라우트 정의 단일 소스 [`routes.ts`](../src/constants/routes.ts) — 공개 웹 `PUBLIC_ROUTE_PATHS`(`/:locale`, `/:locale/features`, `/:locale/learn/*`)와 웹앱 `APP_ROUTE_PATHS`(`/app` 프리픽스 7종)로 분리. 루트 `/`는 `/ko` redirect. 경계 설계는 [`route-architecture.md`](./route-architecture.md) | ✅                |
+| NotFound    | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                            | ✅                |
+| 하단 탭     | [`BOTTOM_TABS`](../src/constants/navigation.ts) 3개(홈/질문/기록) 단일 소스                                                                                                                                                                                                                         | ✅                |
+| 레이아웃    | 모바일 AppShell · TabLayout · BottomNavigation                                                                                                                                                                                                                                                      | ✅                |
+| 화면        | 각 라우트 페이지는 **전부 스켈레톤**(실 UI 아님)                                                                                                                                                                                                                                                    | ✅(스켈레톤 한정) |
+| 디자인 토큰 | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                  | ✅                |
+| Capacitor   | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                               | ✅(설정 한정)     |
+| 문서        | 제품 정책·화면/라우트 기준 문서, README의 SPA fallback 계약                                                                                                                                                                                                                                         | ✅                |
+| 검증        | Vitest 유닛 3종 + Playwright 2종(`e2e/`), `verify`/`verify:full` 스크립트                                                                                                                                                                                                                           | ✅                |
+| 품질 회귀   | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                                                                                                                                              | ✅                |
 
-> **아직 완료가 아닌 것:** 실제 와이어프레임 UI, 공개 웹 라우팅, Pre-render, i18n,
-> 폼·상태·데이터 흐름, API 연동, 네이티브 프로젝트 생성, 출시 설정.
+> **아직 완료가 아닌 것:** 공개 웹 실제 UI(현재 placeholder), 앱 화면 실제 UI, Pre-render,
+> i18n, 폼·상태·데이터 흐름, API 연동, 네이티브 프로젝트 생성, 출시 설정. (공개 웹/앱
+> 라우팅 경계 자체는 STEP 5에서 완료됨 — 위 표 참고.)
 
 ---
 
 ## 4. 목표 아키텍처 (후속 단계 목표 — 현재 미구현)
 
-> ⚠️ 아래 라우트·렌더링 구조는 **확정 구현이 아니라 후속 단계에서 도달할 목표(제안)**다.
-> 현재 저장소에는 존재하지 않는다.
+> ⚠️ 아래 **라우트 트리는 STEP 5에서 구현**되었다(`BrowserRouter` SPA). **렌더링 방향
+> (Pre-render/SPA 설정)은 아직 목표(제안)**이며 STEP 6에서 구성한다.
 
 ```text
 공개 웹 (정적 Pre-render 목표)
@@ -106,8 +107,9 @@ React 기반 하나의 프론트엔드 코드베이스
 - **요청별 SSR 서버는 현재 범위 밖**이다. 향후 **필요성이 실제로 검증될 때만** 검토한다.
 - `/app/*`는 **Capacitor에서도 동작해야 하므로 서버 전용 기능에 의존하지 않는다.**
 
-> 현재 라우트(`ROUTE_PATHS` 7종)는 `/app` 프리픽스가 없는 상태다. 위 목표로의 전환은
-> STEP 5(라우팅 경계 설계)에서 별도로 다루며, 이 문서가 라우트를 미리 바꾸지 않는다.
+> STEP 5에서 라우트가 위 트리(`/app/*` + `/:locale`)로 전환되었고 `ROUTE_PATHS`는
+> `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`로 분리되었다. 렌더링 설정(Pre-render/fallback)은
+> STEP 6에서 이어간다.
 
 ---
 
@@ -117,24 +119,24 @@ React 기반 하나의 프론트엔드 코드베이스
 > 설계)** 과 **렌더링 설정** 책임을 구분해 기록한다. 모든 STEP의 규모가 동일하지 않으며,
 > **실제 개발량은 화면 구현(STEP 9)과 API 연동(STEP 11)에 집중**된다.
 
-| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태    | 예상 PR 경계                     | 이번 단계에서 하지 않는 것 |
-| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ------- | -------------------------------- | -------------------------- |
-| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅      | 정책 PR                          | 화면 구현                  |
-| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅      | 문서 PR                          | 실제 라우팅 코드           |
-| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅      | (외부 산출물)                    | 저장소 반입                |
-| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅      | PR #1                            | 실 UI·API                  |
-| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅      | 자산·매핑 문서 PR                | 실 UI 구현·라우팅 전환     |
-| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계(의사결정)       | STEP 4                   | 경계·라우트 계약 합의           | 🔶 현재 | 라우팅 설계 PR                   | Pre-render 설정            |
-| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | ⬜      | 렌더링 설정 PR(5와 묶일 수 있음) | 번역·실 UI                 |
-| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5                   | ko/en 전환 동작                 | ⬜      | i18n PR                          | 번역 SaaS·실 UI            |
-| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ⬜      | 디자인 시스템 PR                 | 화면별 로직                |
-| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ⬜      | **화면/흐름별 다수 PR**          | API 연동                   |
-| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태 설계                     | STEP 9                   | 흐름 동작(모의 데이터)          | ⬜      | 상태/폼 PR                       | 백엔드 연동                |
-| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜      | **API 연동 다수 PR**             | 범용 추상 계층 선구현      |
-| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜      | 품질 PR                          | 네이티브                   |
-| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒    | 네이티브 PR                      | 출시 설정과 혼재           |
-| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜      | 테스트 PR                        | 신규 기능                  |
-| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜      | 출시 설정 PR                     | 신규 기능                  |
+| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태    | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
+| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ------- | ----------------------- | -------------------------- |
+| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅      | 정책 PR                 | 화면 구현                  |
+| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅      | 문서 PR                 | 실제 라우팅 코드           |
+| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅      | (외부 산출물)           | 저장소 반입                |
+| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅      | PR #1                   | 실 UI·API                  |
+| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅      | 자산·매핑 문서 PR       | 실 UI 구현·라우팅 전환     |
+| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계 + 라우트 코드   | STEP 4                   | 경계·라우트 계약 합의·구현      | ✅      | 라우팅 경계 PR          | Pre-render 설정            |
+| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | 🔶 현재 | 렌더링 설정 PR          | 번역·실 UI                 |
+| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5                   | ko/en 전환 동작                 | ⬜      | i18n PR                 | 번역 SaaS·실 UI            |
+| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ⬜      | 디자인 시스템 PR        | 화면별 로직                |
+| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ⬜      | **화면/흐름별 다수 PR** | API 연동                   |
+| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태 설계                     | STEP 9                   | 흐름 동작(모의 데이터)          | ⬜      | 상태/폼 PR              | 백엔드 연동                |
+| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜      | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
+| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜      | 품질 PR                 | 네이티브                   |
+| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒    | 네이티브 PR             | 출시 설정과 혼재           |
+| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜      | 테스트 PR               | 신규 기능                  |
+| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜      | 출시 설정 PR            | 신규 기능                  |
 
 ---
 
@@ -163,8 +165,9 @@ React 기반 하나의 프론트엔드 코드베이스
 
 - ✅ **PR #1** — React SPA 초기 골격
 - ✅ **문서 PR** — 프론트엔드 로드맵 정리
-- 🔶 **와이어프레임 원본 반입·화면 매핑 (이 PR)**
-- ⬜ 공개 웹·앱 라우팅·렌더링 구조
+- ✅ **와이어프레임 원본 반입·화면 매핑**
+- ✅ **라우팅 경계 설계 (STEP 5, 이 PR)** — 공개 웹/앱 URL 경계·라우트 코드
+- ⬜ 공개 웹 Pre-render + `/app/*` SPA 렌더링 설정 (STEP 6)
 - ⬜ i18n 기반
 - ⬜ 디자인 시스템
 - ⬜ 화면 또는 사용자 흐름별 UI 구현(다수)
@@ -245,18 +248,20 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ## 11. 현재 위치와 다음 행동
 
-**STEP 4 완료 기준:**
+**STEP 5 완료 기준:**
 
-- ✅ STEP 0~4 완료
-- 🔶 STEP 5 시작 전
-- 다음 작업: **공개 웹/앱 라우팅 경계 설계(`/app/*` 포함)**
-- 렌더링·i18n·실제 UI는 **아직 구현하지 않음**
+- ✅ STEP 0~5 완료
+- 🔶 STEP 6 시작 전
+- 다음 작업: **공개 웹 Pre-render + `/app/*` SPA 렌더링 설정**
+- Pre-render·i18n·실제 UI는 **아직 구현하지 않음**
 
-**STEP 4 산출물:**
+**STEP 5 산출물:**
 
-- [x] Claude Design 원본 반입(`design/claude-export/`) — 출처·해시는 [`design/PROVENANCE.md`](../design/PROVENANCE.md)
-- [x] 화면 ↔ 라우트 매핑([`docs/design-route-map.md`](./design-route-map.md), `ROUTE_PATHS` 7종 전부 커버)
+- [x] 공개 웹(`/:locale`)·웹앱(`/app/*`) URL 경계 확정, 루트 `/`→`/ko` redirect
+- [x] `ROUTE_PATHS` → `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS` 분리, path builder·locale 검증 단일 원본
+- [x] public/app 레이아웃·NotFound 분리, 라우팅 경계 설계 문서([`docs/route-architecture.md`](./route-architecture.md))
+- [x] 라우트 우선순위·clean cutover·쿼리 계약 Vitest/Playwright 테스트
 
 **다음 실행 항목:**
 
-1. [ ] 공개 웹·앱 라우팅 경계·`/app/*`를 **별도 PR**로 설계(STEP 5)
+1. [ ] 공개 웹 Pre-render + `/app/*` SPA 렌더링 설정을 **별도 PR**로 진행(STEP 6). 입력 계약은 [`docs/route-architecture.md`](./route-architecture.md) §4

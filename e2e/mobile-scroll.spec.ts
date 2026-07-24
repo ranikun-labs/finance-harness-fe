@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { ROUTE_PATHS } from '@/constants/routes';
+import { APP_ROUTE_PATHS } from '@/constants/routes';
 
 test.describe('모바일 세로 스크롤 계약', () => {
   // Playwright는 첫 인자가 fixture 구조분해 패턴이어야 하므로, 사용하지 않더라도
@@ -13,7 +13,7 @@ test.describe('모바일 세로 스크롤 계약', () => {
   test('탭 화면(TabLayout)은 main만 스크롤하고 탭바는 viewport 하단에 유지된다', async ({
     page,
   }) => {
-    await page.goto(ROUTE_PATHS.home);
+    await page.goto(APP_ROUTE_PATHS.appHome);
     await page.evaluate(() => {
       const tall = document.createElement('div');
       tall.style.height = '3000px';
@@ -67,7 +67,7 @@ test.describe('모바일 세로 스크롤 계약', () => {
   });
 
   test('탭 없는 화면은 AppShell 콘텐츠 영역만 스크롤한다', async ({ page }) => {
-    await page.goto(ROUTE_PATHS.onboarding);
+    await page.goto(APP_ROUTE_PATHS.onboarding);
     await page.evaluate(() => {
       const tall = document.createElement('div');
       // PageSkeleton 루트가 flex-col이라 기본 flex-shrink(1)에 눌리지 않도록 고정한다.

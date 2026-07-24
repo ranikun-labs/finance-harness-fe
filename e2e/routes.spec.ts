@@ -2,40 +2,91 @@ import { expect, test } from '@playwright/test';
 
 import { BOTTOM_TABS } from '@/constants/navigation';
 import {
-  ROUTE_PATHS,
-  buildAskPath,
-  buildJournalDetailPath,
-  buildJournalNewPath,
-  buildJournalReviewPath,
+  APP_ROUTE_PATHS,
+  buildAppJournalDetailPath,
+  buildAppJournalNewPath,
+  buildAppJournalReviewPath,
+  buildAppAskPath,
+  buildFeaturesPath,
+  buildLearnPath,
+  buildLocaleHomePath,
 } from '@/constants/routes';
 
 const SAMPLE_ID = 'sample-id';
+const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
+const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
-const SCREENS: Array<{ path: string; heading: string | RegExp }> = [
-  { path: ROUTE_PATHS.onboarding, heading: '온보딩' },
-  { path: ROUTE_PATHS.home, heading: 'Home' },
-  { path: buildAskPath(), heading: 'Ask 결과' },
-  { path: ROUTE_PATHS.journalList, heading: '기록 목록' },
-  { path: buildJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
-  { path: buildJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
-  { path: buildJournalReviewPath(SAMPLE_ID), heading: /복기/ },
+const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
+  { path: APP_ROUTE_PATHS.onboarding, heading: '온보딩' },
+  { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
+  { path: buildAppAskPath(), heading: 'Ask 결과' },
+  { path: APP_ROUTE_PATHS.journalList, heading: '기록 목록' },
+  { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
+  { path: buildAppJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
+  { path: buildAppJournalReviewPath(SAMPLE_ID), heading: /복기/ },
 ];
 
-test.describe('nav-map 라우트 스모크 테스트', () => {
-  for (const screen of SCREENS) {
-    test(`renders ${screen.path}`, async ({ page }) => {
+const PUBLIC_SCREENS: Array<{ path: string; heading: RegExp }> = [
+  { path: buildLocaleHomePath('ko'), heading: /공개 웹 홈/ },
+  { path: buildLocaleHomePath('en'), heading: /공개 웹 홈/ },
+  { path: buildFeaturesPath('ko'), heading: /기능 소개/ },
+  { path: buildFeaturesPath('en'), heading: /기능 소개/ },
+  { path: buildLearnPath('ko', 'basics'), heading: /학습/ },
+  { path: buildLearnPath('en', 'basics'), heading: /학습/ },
+];
+
+test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
+  test('/ redirects to the default locale public home', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveURL(new RegExp(`${buildLocaleHomePath('ko')}$`));
+    await expect(page.getByRole('heading', { name: /공개 웹 홈/ })).toBeVisible();
+  });
+
+  for (const screen of PUBLIC_SCREENS) {
+    test(`renders public ${screen.path}`, async ({ page }) => {
       await page.goto(screen.path);
       await expect(page.getByRole('heading', { name: screen.heading })).toBeVisible();
     });
   }
 
-  test('renders NotFound for an undefined path', async ({ page }) => {
-    await page.goto('/this-route-does-not-exist');
-    await expect(page.getByRole('heading', { name: '페이지를 찾을 수 없어요' })).toBeVisible();
+  for (const screen of APP_SCREENS) {
+    test(`renders app ${screen.path}`, async ({ page }) => {
+      await page.goto(screen.path);
+      await expect(page.getByRole('heading', { name: screen.heading })).toBeVisible();
+    });
+  }
+
+  test('renders public NotFound for an unsupported locale (no redirect)', async ({ page }) => {
+    await page.goto('/fr');
+    await expect(page).toHaveURL(/\/fr$/);
+    await expect(page.getByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeVisible();
   });
 
-  test('bottom tabs navigate to the correct routes', async ({ page }) => {
-    await page.goto(ROUTE_PATHS.home);
+  test('renders app NotFound for an unknown /app sub-path', async ({ page }) => {
+    await page.goto(`${APP_ROUTE_PATHS.appHome}/this-route-does-not-exist`);
+    await expect(page.getByRole('heading', { name: APP_NOT_FOUND })).toBeVisible();
+  });
+
+  const LEGACY_PATHS = [
+    '/onboarding',
+    '/ask',
+    '/journal',
+    '/journal/new',
+    '/journal/example',
+    '/journal/example/review',
+  ];
+
+  for (const path of LEGACY_PATHS) {
+    test(`legacy ${path} is not redirected and renders no app screen`, async ({ page }) => {
+      await page.goto(path);
+      // URL이 그대로 유지되고(= redirect 없음) 공개 NotFound가 렌더된다(= 앱 화면 아님).
+      await expect(page).toHaveURL(new RegExp(`${path.replace(/[/]/g, '\\/')}$`));
+      await expect(page.getByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeVisible();
+    });
+  }
+
+  test('bottom tabs navigate to the correct app routes', async ({ page }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
 
     for (const tab of BOTTOM_TABS) {
       await page.getByRole('link', { name: tab.label }).click();
@@ -45,14 +96,16 @@ test.describe('nav-map 라우트 스모크 테스트', () => {
   });
 
   const OVERFLOW_CHECK_PATHS: Array<{ label: string; path: string }> = [
-    { label: 'Home', path: ROUTE_PATHS.home },
-    { label: 'Ask', path: buildAskPath() },
-    { label: 'Journal List', path: ROUTE_PATHS.journalList },
-    { label: 'Journal New', path: buildJournalNewPath('investment') },
-    { label: 'Journal Detail', path: buildJournalDetailPath(SAMPLE_ID) },
-    { label: 'Journal Review', path: buildJournalReviewPath(SAMPLE_ID) },
-    { label: 'Onboarding', path: ROUTE_PATHS.onboarding },
-    { label: 'NotFound', path: '/this-route-does-not-exist' },
+    { label: 'Public Home', path: buildLocaleHomePath('ko') },
+    { label: 'App Home', path: APP_ROUTE_PATHS.appHome },
+    { label: 'Ask', path: buildAppAskPath() },
+    { label: 'Journal List', path: APP_ROUTE_PATHS.journalList },
+    { label: 'Journal New', path: buildAppJournalNewPath('investment') },
+    { label: 'Journal Detail', path: buildAppJournalDetailPath(SAMPLE_ID) },
+    { label: 'Journal Review', path: buildAppJournalReviewPath(SAMPLE_ID) },
+    { label: 'Onboarding', path: APP_ROUTE_PATHS.onboarding },
+    { label: 'App NotFound', path: `${APP_ROUTE_PATHS.appHome}/this-route-does-not-exist` },
+    { label: 'Public NotFound', path: '/fr' },
   ];
 
   for (const { label, path } of OVERFLOW_CHECK_PATHS) {

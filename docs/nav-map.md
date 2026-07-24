@@ -17,17 +17,23 @@
 | 8 | 기록 목록 - 빈 상태 | 기록 0개일 때 |
 | 9 | 복기 | 과거 판단 성찰 |
 
-## 라우트 구조 (제안)
+## 라우트 구조
+
+> STEP 5(라우팅 경계 설계)에서 실제 경로가 `/app/*` 프리픽스로 확정되었다. 경계·소유권
+> 설계는 [`docs/route-architecture.md`](./route-architecture.md), 경로 정의 단일 소스는
+> [`src/constants/routes.ts`](../src/constants/routes.ts)다. 아래는 앱(`/app/*`) 화면
+> 이동 관계다. 공개 웹(`/:locale`)은 별도 표면이다.
 
 ```text
-/onboarding          → 온보딩 (최초 1회만, 이후 스킵)
-/                    → Home
-/ask?q={query}       → Ask 결과
-/journal/new?type=investment   → 일지 저장 (투자 기록)
-/journal/new?type=study        → 공부 노트 저장 (같은 라우트, type 쿼리로 토글)
-/journal/:id         → 일지 상세
-/journal             → 기록 목록 (기록 0개면 자동으로 빈 상태 UI 렌더)
-/journal/:id/review  → 복기
+/                              → /ko로 redirect (공개 웹 기본 로케일)
+/app/onboarding               → 온보딩 (최초 1회만, 이후 스킵)
+/app                          → Home
+/app/ask?q={query}            → Ask 결과
+/app/journal/new?type=investment → 일지 저장 (투자 기록)
+/app/journal/new?type=study      → 공부 노트 저장 (같은 라우트, type 쿼리로 토글)
+/app/journal/:id              → 일지 상세
+/app/journal                  → 기록 목록 (기록 0개면 자동으로 빈 상태 UI 렌더)
+/app/journal/:id/review       → 복기
 ```
 
 ## 네비게이션 매핑
@@ -53,7 +59,15 @@
 | 기록 목록(빈 상태) | "질문하러 가기" | Ask 결과 |
 | 복기 | "복기 내용 저장" | 일지 상세 |
 | 복기 | 뒤로 | 일지 상세 |
-| 전 화면 공통 | 하단 탭바 홈/질문/기록 | Home / Ask 결과 / 기록 목록 |
+| Home / Ask 결과 / 기록 목록 | 하단 탭바 홈/질문/기록 | Home / Ask 결과 / 기록 목록 |
+
+**하단 탭바 노출 범위 (전 화면 공통 아님):**
+
+- **노출:** Home, Ask 결과, 기록 목록
+- **미노출:** 온보딩, 일지 저장/공부 노트 저장, 일지 상세, 복기
+
+위 3개 화면에서만 탭 전환이 가능하고, 그 외 화면은 하단 탭 없이 별도 뒤로가기로
+이동한다(1절 네비게이션 매핑의 "뒤로" 행 참고).
 
 ## 정책 가드 (PolicyGuard) — 프론트 구현 시 유지할 것
 
