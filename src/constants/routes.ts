@@ -50,11 +50,33 @@ export function toRelativeRoutePath(absolutePath: string): string {
 }
 
 /**
+ * `toRelativeUnder`는 React Router의 pathname pattern(`/app`, `/:locale`, `:id`, `*` 등)
+ * 전용 helper다. 쿼리 문자열이나 fragment가 섞인 값을 받을 대상이 아니므로 명시적으로
+ * 거부한다.
+ */
+function assertPathnamePattern(label: 'base' | 'absolutePath', value: string): void {
+  if (value === '') {
+    throw new Error(`toRelativeUnder: "${label}"는 빈 문자열일 수 없습니다.`);
+  }
+  if (!value.startsWith('/')) {
+    throw new Error(`toRelativeUnder: "${label}" "${value}"는 "/"로 시작해야 합니다.`);
+  }
+  if (value.includes('?') || value.includes('#')) {
+    throw new Error(
+      `toRelativeUnder: "${label}" "${value}"에 "?" 또는 "#"를 포함할 수 없습니다 ` +
+        '(React Router pathname pattern 전용 helper입니다).',
+    );
+  }
+}
+
+/**
  * `base`(예: `/app`, `/:locale`) 아래 중첩 `<Route>`에 넘길 상대 경로를 만든다.
  * `absolutePath`가 `base`와 정확히 같으면 index 라우트를 뜻하는 빈 문자열을 반환한다.
  * `base` 하위가 아니면 라우트 트리 정의가 예상과 어긋났다는 뜻이므로 즉시 에러를 던진다.
  */
 export function toRelativeUnder(base: string, absolutePath: string): string {
+  assertPathnamePattern('base', base);
+  assertPathnamePattern('absolutePath', absolutePath);
   if (absolutePath === base) return '';
   const prefix = `${base}/`;
   if (!absolutePath.startsWith(prefix)) {

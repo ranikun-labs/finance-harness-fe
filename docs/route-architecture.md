@@ -100,8 +100,12 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 
 - **Pre-render 대상:** `SUPPORTED_LOCALES` × `PUBLIC_ROUTE_PATHS` 파생 — `/ko`, `/en`,
   `/ko/features`, `/en/features`, `/ko/learn`, `/en/learn`.
-- **SPA fallback:** `/app/*`, `/`는 `index.html`로 rewrite(정적 asset 제외). `/ko`·`/en`은
-  Pre-render.
+- **SPA fallback:** 정적 asset과 **정확히 생성된 Pre-render 결과물**(위 목록)은 항상
+  우선 제공한다. 그 외 모든 프론트엔드 document 요청 — `/app/*`, `/`, 미지원 locale
+  (`/fr` 등), Pre-render되지 않은 `/:locale/*` 하위 경로 포함 — 은 호스팅이 자체 404로
+  끝내지 않고 `index.html`로 rewrite해 `BrowserRouter`가 처리하게 한다. 이래야 직접
+  진입·새로고침에서도 `PublicNotFoundPage`/`NotFoundPage` 계약(호스팅 404가 아니라
+  앱이 렌더하는 NotFound)이 유지된다.
 - **`/` redirect:** STEP 6에서 정적 emit로 보강, canonical=`/ko`.
 - **로케일 계약:** `DEFAULT_LOCALE`·`SUPPORTED_LOCALES`·`isSupportedLocale`이 STEP 6/7 단일
   소스.

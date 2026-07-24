@@ -137,11 +137,15 @@ URL은 공개 웹(`/:locale/*`)과 웹앱(`/app/*`)으로 분리된다. 루트 `
 하지 않으므로 배포 환경(정적 호스팅)이 다음을 반드시 보장해야 한다. 공개 웹(`/ko`·`/en`)의
 정적 Pre-render와 호스팅 rewrite 설정은 STEP 6에서 확정한다.
 
-- `/app/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침하면,
-  호스팅이 해당 요청을 `index.html`로 rewrite하지 않는 한 **404가 발생한다.**
-- rewrite 규칙은 정적 asset 경로(`/assets/*`, 파비콘, 폰트 등 실제 파일이 존재하는
-  경로)는 제외하고, 그 외 비정적 경로(`/app/*`, `/`, 아직 Pre-render되지 않은 `/:locale/*`)만
-  `index.html`로 보내야 한다.
+- **정적 asset과 정확히 생성된 Pre-render 결과물**(예: STEP 6 이후의 `/ko`, `/en` 등
+  실제 산출된 파일)은 항상 우선 제공한다.
+- **그 외 모든 프론트엔드 document 요청**은 `BrowserRouter`가 클라이언트에서 처리할 수
+  있도록 `index.html`로 rewrite해야 한다. 여기에는 `/app/*`, `/`, 미지원 locale
+  (`/fr` 등), 아직 Pre-render되지 않은 `/:locale/*` 하위 경로가 모두 포함된다.
+- `/app/journal/123`처럼 정적 파일이 아닌 경로로 직접 접근하거나 새로고침했을 때, 위
+  rewrite가 없으면 호스팅 자체 404로 끝나 앱의 `PublicNotFoundPage`/`NotFoundPage`
+  계약이 무너진다 — rewrite 규칙은 정적 asset 경로(`/assets/*`, 파비콘, 폰트 등 실제
+  파일이 존재하는 경로)만 제외하고 그 외는 전부 `index.html`로 보내야 한다.
 - `pnpm preview`(`vite preview`)가 로컬에서 성공적으로 동작하는 것은 이 rewrite
   설정이 실제 운영 호스팅에도 있다는 것을 보장하지 않는다 — `vite preview`는
   자체적으로 SPA fallback을 처리하기 때문이다. 실제 배포 대상 호스팅에서 직접

@@ -180,4 +180,43 @@ describe('toRelativeUnder', () => {
   it('throws when the path is not under the base', () => {
     expect(() => toRelativeUnder(APP_BASE, '/ko/features')).toThrow();
   });
+
+  it('continues to allow route pattern tokens (:id, *, /:locale, /app)', () => {
+    expect(toRelativeUnder('/app', '/app/journal/:id/review')).toBe('journal/:id/review');
+    expect(toRelativeUnder('/:locale', '/:locale/learn/*')).toBe('learn/*');
+  });
+
+  describe('input contract (pathname pattern only)', () => {
+    it('rejects an empty base', () => {
+      expect(() => toRelativeUnder('', '/app')).toThrow();
+    });
+
+    it('rejects an empty absolutePath', () => {
+      expect(() => toRelativeUnder(APP_BASE, '')).toThrow();
+    });
+
+    it('rejects a base that does not start with "/"', () => {
+      expect(() => toRelativeUnder('app', '/app/ask')).toThrow();
+    });
+
+    it('rejects an absolutePath that does not start with "/"', () => {
+      expect(() => toRelativeUnder(APP_BASE, 'app/ask')).toThrow();
+    });
+
+    it('rejects a base containing "?"', () => {
+      expect(() => toRelativeUnder('/app?x=1', '/app?x=1/ask')).toThrow();
+    });
+
+    it('rejects an absolutePath containing "?"', () => {
+      expect(() => toRelativeUnder(APP_BASE, '/app/ask?q=1')).toThrow();
+    });
+
+    it('rejects a base containing "#"', () => {
+      expect(() => toRelativeUnder('/app#frag', '/app#frag/ask')).toThrow();
+    });
+
+    it('rejects an absolutePath containing "#"', () => {
+      expect(() => toRelativeUnder(APP_BASE, '/app/ask#frag')).toThrow();
+    });
+  });
 });
