@@ -26,10 +26,43 @@ export const ko: Messages = {
     },
     localeSwitcher: { ariaLabel: '언어 선택' },
   },
+  recordTags: {
+    entryType: { investment: '투자 기록', study: '공부 노트' },
+    action: { interest: '관심', watching: '관망', buy: '매수', sell: '매도' },
+    emotion: { FOMO: 'FOMO', 불안: '불안', 확신: '확신', 관망: '관망', 혼란: '혼란' },
+  },
   app: {
     home: { title: 'Home' },
     ask: { title: 'Ask 결과', titleWithQuery: 'Ask 결과 — {{query}}' },
-    journalList: { title: '기록 목록' },
+    journalList: {
+      title: '기록',
+      filters: {
+        groupLabel: '기록 유형 필터',
+        all: '전체',
+        investment: '투자 기록',
+        study: '공부 노트',
+      },
+      emotionLabel: '감정',
+      noEmotion: '감정 태그 없음',
+      checkedProgress: '체크 완료 {{checked}}/{{total}}',
+      countLabel: '{{count}}개의 기록',
+      emptyAll: {
+        title: '아직 저장된 기록이 없어요',
+        description: '질문을 체크리스트로 바꾸고 첫 기록을 남겨보세요.',
+        cta: '질문하러 가기',
+        hint: '질문 하나가 체크리스트가 되고, 체크리스트가 나만의 기록이 돼요.',
+      },
+      emptyFilter: {
+        title: '해당 유형의 기록이 아직 없어요',
+        description: '다른 유형을 선택하거나 전체 기록을 확인해보세요.',
+        resetAction: '전체 보기',
+      },
+      subjects: {
+        semiconductorCompanyA: '반도체 기업 A',
+        platformCompanyB: '플랫폼 기업 B',
+        batteryCompanyC: '배터리 기업 C',
+      },
+    },
     journalNew: {
       investment: '일지 저장 (투자 기록)',
       study: '공부 노트 저장',

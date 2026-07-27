@@ -21,7 +21,7 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: '온보딩' },
   { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
   { path: buildAppAskPath(), heading: 'Ask 결과' },
-  { path: APP_ROUTE_PATHS.journalList, heading: '기록 목록' },
+  { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
   { path: buildAppJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
   { path: buildAppJournalReviewPath(SAMPLE_ID), heading: /복기/ },
@@ -122,4 +122,34 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       expect(hasHorizontalOverflow).toBe(false);
     });
   }
+
+  test('journal list renders record cards and clicking one navigates to its encoded detail route', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    await expect(cards.first()).toBeVisible();
+
+    await cards.first().click();
+    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}/[^/]+$`));
+  });
+
+  test('journal list: the last record card is not covered by the bottom navigation', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    // main이 유일한 스크롤 표면이므로, 끝까지 스크롤한 뒤에도 마지막 카드가 탭바
+    // 위에서 완전히 보이는지 확인한다(스크롤 전 위치는 뷰포트 밖에 있는 게 정상).
+    await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      main.scrollTop = main.scrollHeight;
+    });
+    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const count = await cards.count();
+    const lastCard = cards.nth(count - 1);
+    const cardBox = (await lastCard.boundingBox())!;
+    const nav = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+    const navBox = (await nav.boundingBox())!;
+    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+  });
 });

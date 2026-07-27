@@ -103,7 +103,7 @@ describe('AppRouter', () => {
 
     it.each([
       [APP_ROUTE_PATHS.ask, 'Ask 결과'],
-      [APP_ROUTE_PATHS.journalList, '기록 목록'],
+      [APP_ROUTE_PATHS.journalList, '기록'],
       [APP_ROUTE_PATHS.onboarding, '온보딩'],
     ])('renders %s', (path, heading) => {
       renderAt(path);

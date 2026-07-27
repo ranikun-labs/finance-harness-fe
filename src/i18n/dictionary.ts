@@ -9,6 +9,12 @@ import { ko } from '@/i18n/messages/ko';
  * `typeof ko`로 파생하지 않는 이유: 리터럴 값 타입이 그대로 굳어버려 `en`이 다른
  * 문자열을 넣는 순간(정상적인 상황) 타입 에러가 나는 함정이 있기 때문이다.
  */
+/**
+ * mock 투자 대상 sample key. 실존 종목명·티커를 쓰지 않는 중립 샘플의 locale-independent
+ * 식별자 — 표시명은 `Messages.app.journalList.subjects`에서만 매핑한다.
+ */
+export type SampleSubjectKey = 'semiconductorCompanyA' | 'platformCompanyB' | 'batteryCompanyC';
+
 export interface Messages {
   common: {
     appName: string;
@@ -26,10 +32,29 @@ export interface Messages {
     notFound: { heading: string; description: string; backHome: string };
     localeSwitcher: { ariaLabel: string };
   };
+  /**
+   * `RecordTagBadge`(kind: emotion/action/entryType) 전용 label 사전. 이 컴포넌트는
+   * 화면·페이지 이름을 알지 못하므로 `app.*` 아래가 아니라 별도 top-level에 둔다.
+   */
+  recordTags: {
+    entryType: { investment: string; study: string };
+    action: { interest: string; watching: string; buy: string; sell: string };
+    emotion: { FOMO: string; 불안: string; 확신: string; 관망: string; 혼란: string };
+  };
   app: {
     home: { title: string };
     ask: { title: string; titleWithQuery: string };
-    journalList: { title: string };
+    journalList: {
+      title: string;
+      filters: { groupLabel: string; all: string; investment: string; study: string };
+      emotionLabel: string;
+      noEmotion: string;
+      checkedProgress: string;
+      countLabel: string;
+      emptyAll: { title: string; description: string; cta: string; hint: string };
+      emptyFilter: { title: string; description: string; resetAction: string };
+      subjects: Record<SampleSubjectKey, string>;
+    };
     journalNew: { investment: string; study: string };
     journalDetail: { title: string };
     journalReview: { title: string };
