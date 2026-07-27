@@ -50,4 +50,27 @@ describe('formatLocalizedDate', () => {
     expect(() => formatLocalizedDate('2026/07/20', 'ko')).toThrow();
     expect(() => formatLocalizedDate('not-a-date', 'ko')).toThrow();
   });
+
+  it.each([
+    ['2024-02-29', 'leap year Feb 29'],
+    ['2026-02-28', 'non-leap year Feb 28'],
+    ['2026-01-31', '31-day month'],
+  ])('accepts the valid calendar date %s (%s)', (dateOnly) => {
+    expect(() => formatLocalizedDate(dateOnly, 'ko')).not.toThrow();
+  });
+
+  it.each([
+    ['2025-02-29', 'Feb 29 in a non-leap year'],
+    ['2026-02-29', 'Feb 29 in a non-leap year'],
+    ['2026-02-31', 'Feb 31 does not exist'],
+    ['2026-04-31', 'April only has 30 days'],
+    ['2026-13-01', 'month 13 is invalid'],
+    ['2026-00-10', 'month 00 is invalid'],
+    ['2026-01-00', 'day 00 is invalid'],
+  ])(
+    'rejects the calendar-invalid date %s (%s) instead of silently rolling it over',
+    (dateOnly) => {
+      expect(() => formatLocalizedDate(dateOnly, 'ko')).toThrow();
+    },
+  );
 });

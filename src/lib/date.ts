@@ -14,8 +14,18 @@ export function formatLocalizedDate(dateOnly: string, locale: Locale): string {
   if (!match) {
     throw new Error(`formatLocalizedDate: "${dateOnly}"는 "YYYY-MM-DD" 형식이 아닙니다.`);
   }
-  const [, year, month, day] = match;
-  const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+  const [, yearStr, monthStr, dayStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const localDate = new Date(year, month - 1, day);
+  const isSameCalendarDate =
+    localDate.getFullYear() === year &&
+    localDate.getMonth() === month - 1 &&
+    localDate.getDate() === day;
+  if (!isSameCalendarDate) {
+    throw new Error(`formatLocalizedDate: "${dateOnly}"는 "YYYY-MM-DD" 형식이 아닙니다.`);
+  }
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: '2-digit',
