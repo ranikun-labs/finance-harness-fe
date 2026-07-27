@@ -1,3 +1,4 @@
+import type { Locale } from '@/constants/routes';
 import {
   SUPPORTED_LOCALES,
   buildFeaturesPath,
@@ -10,6 +11,12 @@ export interface PrerenderManifestEntry {
   path: string;
   /** `dist/` 기준 산출 파일 상대 경로. */
   outFile: string;
+  /**
+   * 이 산출물의 `<html lang>` 값. `SUPPORTED_LOCALES.flatMap` 순회 중에 이미 알고
+   * 있는 값을 그대로 담아두는 것 — `path`/`outFile` 문자열을 파싱해 역추출하지
+   * 않는다(`scripts/prerender.mjs`가 fragile한 문자열 파싱 없이 바로 쓸 수 있게).
+   */
+  locale: Locale;
 }
 
 /**
@@ -27,9 +34,9 @@ export interface PrerenderManifestEntry {
  */
 export function buildPrerenderManifest(): PrerenderManifestEntry[] {
   return SUPPORTED_LOCALES.flatMap((locale) => [
-    { path: buildLocaleHomePath(locale), outFile: `${locale}/index.html` },
-    { path: buildFeaturesPath(locale), outFile: `${locale}/features/index.html` },
-    { path: buildLearnPath(locale), outFile: `${locale}/learn/index.html` },
+    { path: buildLocaleHomePath(locale), outFile: `${locale}/index.html`, locale },
+    { path: buildFeaturesPath(locale), outFile: `${locale}/features/index.html`, locale },
+    { path: buildLearnPath(locale), outFile: `${locale}/learn/index.html`, locale },
   ]);
 }
 

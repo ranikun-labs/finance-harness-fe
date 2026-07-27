@@ -1,17 +1,17 @@
 import { useSearchParams } from 'react-router';
 
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
-import type { JournalEntryType } from '@/constants/routes';
+import { useTranslation } from '@/i18n/I18nContext';
 
-const TITLE_BY_TYPE: Record<JournalEntryType, string> = {
-  investment: '일지 저장 (투자 기록)',
-  study: '공부 노트 저장',
-};
-
+/**
+ * `type` 쿼리 값('investment'/'study')은 도메인 식별자이며 번역 대상이 아니다 —
+ * 표시 문구만 `t()`로 조회한다.
+ */
 export function JournalNewPage() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get('type');
-  const title = type === 'study' ? TITLE_BY_TYPE.study : TITLE_BY_TYPE.investment;
+  const { t } = useTranslation();
+  const title = type === 'study' ? t('app.journalNew.study') : t('app.journalNew.investment');
 
   return <PageSkeleton title={title} />;
 }

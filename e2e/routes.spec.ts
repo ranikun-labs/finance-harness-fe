@@ -11,6 +11,7 @@ import {
   buildLearnPath,
   buildLocaleHomePath,
 } from '@/constants/routes';
+import { ko } from '@/i18n/messages/ko';
 
 const SAMPLE_ID = 'sample-id';
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
@@ -26,13 +27,15 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: buildAppJournalReviewPath(SAMPLE_ID), heading: /복기/ },
 ];
 
+// STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이 더
+// 이상 같은(한국어) heading을 공유하지 않는다.
 const PUBLIC_SCREENS: Array<{ path: string; heading: RegExp }> = [
   { path: buildLocaleHomePath('ko'), heading: /공개 웹 홈/ },
-  { path: buildLocaleHomePath('en'), heading: /공개 웹 홈/ },
+  { path: buildLocaleHomePath('en'), heading: /Public Home/ },
   { path: buildFeaturesPath('ko'), heading: /기능 소개/ },
-  { path: buildFeaturesPath('en'), heading: /기능 소개/ },
+  { path: buildFeaturesPath('en'), heading: /Features/ },
   { path: buildLearnPath('ko', 'basics'), heading: /학습/ },
-  { path: buildLearnPath('en', 'basics'), heading: /학습/ },
+  { path: buildLearnPath('en', 'basics'), heading: /Learn/ },
 ];
 
 test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
@@ -89,7 +92,9 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
     for (const tab of BOTTOM_TABS) {
-      await page.getByRole('link', { name: tab.label }).click();
+      // 앱 locale은 playwright.config.ts에서 'ko-KR'로 고정되므로(저장값 없음 →
+      // navigator.language 폴백) ko 사전 값으로 매칭한다.
+      await page.getByRole('link', { name: ko.nav[tab.id] }).click();
       const url = new URL(page.url());
       expect(url.pathname).toBe(tab.path);
     }

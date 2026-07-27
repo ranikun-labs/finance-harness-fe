@@ -13,6 +13,7 @@ import {
   buildFeaturesPath,
   buildLearnPath,
   buildLocaleHomePath,
+  buildLocalePeerPath,
   isSupportedLocale,
   toRelativeUnder,
 } from '@/constants/routes';
@@ -58,6 +59,46 @@ describe('public path builders', () => {
   it('rejects an unsupported locale at build time', () => {
     // @ts-expect-error 런타임 방어를 위해 의도적으로 잘못된 locale을 전달
     expect(() => buildLocaleHomePath('fr')).toThrow();
+  });
+});
+
+describe('buildLocalePeerPath', () => {
+  it('swaps the locale segment on the home path', () => {
+    expect(buildLocalePeerPath('/ko', 'en')).toBe('/en');
+    expect(buildLocalePeerPath('/en', 'ko')).toBe('/ko');
+  });
+
+  it('swaps only the locale segment, preserving the rest of the path', () => {
+    expect(buildLocalePeerPath('/ko/features', 'en')).toBe('/en/features');
+    expect(buildLocalePeerPath('/ko/learn', 'en')).toBe('/en/learn');
+    expect(buildLocalePeerPath('/ko/learn/basics', 'en')).toBe('/en/learn/basics');
+    expect(buildLocalePeerPath('/en/learn/a/b', 'ko')).toBe('/ko/learn/a/b');
+  });
+
+  it('is a no-op when the target locale equals the current one', () => {
+    expect(buildLocalePeerPath('/ko/features', 'ko')).toBe('/ko/features');
+  });
+
+  it('does not touch query string or hash — that is the caller’s responsibility', () => {
+    // 이 함수는 pathname만 받는다; search/hash를 붙여 호출하면 그대로 세그먼트 취급된다는
+    // 계약을 명시하기 위해 pathname만 넘겨야 함을 보여준다.
+    expect(buildLocalePeerPath('/ko/learn/basics', 'en')).not.toContain('?');
+    expect(buildLocalePeerPath('/ko/learn/basics', 'en')).not.toContain('#');
+  });
+
+  it('rejects an unsupported target locale', () => {
+    // @ts-expect-error 런타임 방어를 위해 의도적으로 잘못된 locale을 전달
+    expect(() => buildLocalePeerPath('/ko', 'fr')).toThrow();
+  });
+
+  it('rejects a pathname without a locale segment', () => {
+    expect(() => buildLocalePeerPath('/', 'en')).toThrow();
+  });
+
+  it('rejects invalid pathname shapes (same guard as toRelativeUnder)', () => {
+    expect(() => buildLocalePeerPath('', 'en')).toThrow();
+    expect(() => buildLocalePeerPath('ko/features', 'en')).toThrow();
+    expect(() => buildLocalePeerPath('/ko?x=1', 'en')).toThrow();
   });
 });
 
