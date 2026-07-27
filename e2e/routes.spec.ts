@@ -122,4 +122,28 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       expect(hasHorizontalOverflow).toBe(false);
     });
   }
+
+  test('journal list renders record cards and clicking one navigates to its encoded detail route', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    await expect(cards.first()).toBeVisible();
+
+    await cards.first().click();
+    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}/[^/]+$`));
+  });
+
+  test('journal list: the last record card is not covered by the bottom navigation', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const count = await cards.count();
+    const lastCard = cards.nth(count - 1);
+    const cardBox = (await lastCard.boundingBox())!;
+    const nav = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+    const navBox = (await nav.boundingBox())!;
+    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+  });
 });
