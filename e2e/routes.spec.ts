@@ -11,6 +11,7 @@ import {
   buildLearnPath,
   buildLocaleHomePath,
 } from '@/constants/routes';
+import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 
 const SAMPLE_ID = 'sample-id';
@@ -18,7 +19,7 @@ const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
 const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
-  { path: APP_ROUTE_PATHS.onboarding, heading: '온보딩' },
+  { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
   { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
   { path: buildAppAskPath(), heading: 'Ask 결과' },
   { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
@@ -100,6 +101,20 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     }
   });
 
+  test('onboarding has no bottom navigation and its CTA navigates to app home', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.onboarding);
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.onboarding.hero.title }),
+    ).toBeVisible();
+    await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+
+    await page.getByRole('link', { name: ko.app.onboarding.cta }).click();
+    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.appHome}$`));
+  });
+
   const OVERFLOW_CHECK_PATHS: Array<{ label: string; path: string }> = [
     { label: 'Public Home', path: buildLocaleHomePath('ko') },
     { label: 'App Home', path: APP_ROUTE_PATHS.appHome },
@@ -151,5 +166,21 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     const nav = page.getByRole('navigation', { name: ko.nav.ariaLabel });
     const navBox = (await nav.boundingBox())!;
     expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+  });
+});
+
+test.describe('Onboarding English locale', () => {
+  test.use({ locale: 'en-US' });
+
+  test('renders the English content without horizontal overflow', async ({ page }) => {
+    await page.goto(APP_ROUTE_PATHS.onboarding);
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: en.app.onboarding.hero.title }),
+    ).toBeVisible();
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
   });
 });
