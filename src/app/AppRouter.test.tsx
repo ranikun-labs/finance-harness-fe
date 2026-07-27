@@ -12,6 +12,7 @@ import {
   buildLearnPath,
   buildLocaleHomePath,
 } from '@/constants/routes';
+import { ko } from '@/i18n/messages/ko';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
@@ -104,7 +105,7 @@ describe('AppRouter', () => {
     it.each([
       [APP_ROUTE_PATHS.ask, 'Ask 결과'],
       [APP_ROUTE_PATHS.journalList, '기록'],
-      [APP_ROUTE_PATHS.onboarding, '온보딩'],
+      [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
     ])('renders %s', (path, heading) => {
       renderAt(path);
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
@@ -180,7 +181,7 @@ describe('AppRouter', () => {
     );
 
     it.each([
-      [APP_ROUTE_PATHS.onboarding, '온보딩'],
+      [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
       [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
       [buildAppJournalDetailPath('sample-id'), /일지 상세/],
       [buildAppJournalReviewPath('sample-id'), /복기/],
