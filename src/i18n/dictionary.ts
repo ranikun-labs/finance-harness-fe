@@ -58,7 +58,33 @@ export interface Messages {
     journalNew: { investment: string; study: string };
     journalDetail: { title: string };
     journalReview: { title: string };
-    onboarding: { title: string };
+    onboarding: {
+      /** 기존 skeleton 라우트 호환용 제목. 실제 온보딩 h1은 `hero.title`을 사용한다. */
+      title: string;
+      productName: string;
+      tagline: string;
+      hero: { title: string; description: string };
+      notProvided: {
+        heading: string;
+        items: {
+          recommendation: { title: string; description: string };
+          priceGuidance: { title: string; description: string };
+          allocation: { title: string; description: string };
+          predictionOrDelegation: { title: string; description: string };
+        };
+      };
+      provided: {
+        heading: string;
+        items: {
+          questionContext: { title: string; description: string };
+          checklist: { title: string; description: string };
+          decisionRecord: { title: string; description: string };
+          review: { title: string; description: string };
+        };
+      };
+      cta: string;
+      disclaimer: string;
+    };
     notFound: { heading: string; description: string; backHome: string };
   };
 }
