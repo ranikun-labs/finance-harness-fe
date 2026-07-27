@@ -36,7 +36,7 @@ export const en: Messages = {
     home: { title: 'Home' },
     ask: { title: 'Ask Result', titleWithQuery: 'Ask Result — {{query}}' },
     journalList: {
-      title: 'Journal List',
+      title: 'Records',
       filters: {
         groupLabel: 'Filter by record type',
         all: 'All',

@@ -35,7 +35,7 @@ export const ko: Messages = {
     home: { title: 'Home' },
     ask: { title: 'Ask 결과', titleWithQuery: 'Ask 결과 — {{query}}' },
     journalList: {
-      title: '기록 목록',
+      title: '기록',
       filters: {
         groupLabel: '기록 유형 필터',
         all: '전체',

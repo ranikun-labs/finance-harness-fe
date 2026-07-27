@@ -21,7 +21,7 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: '온보딩' },
   { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
   { path: buildAppAskPath(), heading: 'Ask 결과' },
-  { path: APP_ROUTE_PATHS.journalList, heading: '기록 목록' },
+  { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
   { path: buildAppJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
   { path: buildAppJournalReviewPath(SAMPLE_ID), heading: /복기/ },

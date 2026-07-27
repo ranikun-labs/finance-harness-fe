@@ -1,7 +1,6 @@
-import { PageSkeleton } from '@/components/layout/PageSkeleton';
-import { useTranslation } from '@/i18n/I18nContext';
+import { JournalList } from '@/components/journal/JournalList';
+import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 export function JournalListPage() {
-  const { t } = useTranslation();
-  return <PageSkeleton title={t('app.journalList.title')} />;
+  return <JournalList entries={JOURNAL_ENTRIES} />;
 }
