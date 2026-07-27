@@ -138,6 +138,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
+    // main이 유일한 스크롤 표면이므로, 끝까지 스크롤한 뒤에도 마지막 카드가 탭바
+    // 위에서 완전히 보이는지 확인한다(스크롤 전 위치는 뷰포트 밖에 있는 게 정상).
+    await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      main.scrollTop = main.scrollHeight;
+    });
     const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
     const count = await cards.count();
     const lastCard = cards.nth(count - 1);
