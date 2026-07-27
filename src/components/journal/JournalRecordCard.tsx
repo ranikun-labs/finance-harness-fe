@@ -42,7 +42,9 @@ export function JournalRecordCard({ entry }: JournalRecordCardProps) {
 
         <div className="flex items-start gap-2">
           <span aria-hidden="true" className="bg-primary mt-1 h-4 w-[3px] shrink-0 rounded-full" />
-          <span className="text-muted-foreground text-[13px] leading-snug italic">{entry.question}</span>
+          <span className="text-muted-foreground text-[13px] leading-snug italic">
+            {entry.question}
+          </span>
         </div>
 
         <p className="text-foreground/80 line-clamp-2 text-sm leading-relaxed">{entry.memo}</p>

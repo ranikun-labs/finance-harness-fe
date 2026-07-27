@@ -15,7 +15,9 @@ describe('formatLocalizedDate', () => {
   });
 
   it('produces different output for ko and en', () => {
-    expect(formatLocalizedDate('2026-07-20', 'ko')).not.toBe(formatLocalizedDate('2026-07-20', 'en'));
+    expect(formatLocalizedDate('2026-07-20', 'ko')).not.toBe(
+      formatLocalizedDate('2026-07-20', 'en'),
+    );
   });
 
   it('keeps the same calendar date (year/month/day tokens) in both locales', () => {
