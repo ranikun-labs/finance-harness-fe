@@ -34,7 +34,78 @@ export const en: Messages = {
   },
   app: {
     home: { title: 'Home' },
-    ask: { title: 'Ask Result', titleWithQuery: 'Ask Result — {{query}}' },
+    ask: {
+      title: 'Ask Result',
+      titleWithQuery: 'Ask Result — {{query}}',
+      header: {
+        title: 'AI Check',
+        backLabel: 'Back to home',
+      },
+      empty: {
+        title: 'No question to review yet',
+        description: 'Ask a question to see example perspectives to check and questions to record.',
+        cta: 'Ask a question',
+      },
+      questionLabel: 'My question',
+      perspectives: {
+        heading: 'Example review perspectives',
+        items: {
+          businessContext: 'Business context',
+          industryTrends: 'Industry trends',
+          earningsAssumptions: 'Earnings assumptions',
+          pricedInExpectations: 'Expectations reflected in price',
+          currencyAndRates: 'Currency and interest rates',
+          biasAndCounterEvidence: 'Decision bias and counter-evidence',
+        },
+      },
+      checklist: {
+        heading: 'What to check',
+        count: '6 items',
+        items: {
+          businessContext: {
+            title: 'Business context',
+            description: 'Check the revenue model and the key assumptions about the business.',
+          },
+          industryTrends: {
+            title: 'Industry trends',
+            description: 'Check the direction of demand and supply in the industry.',
+          },
+          earningsAssumptions: {
+            title: 'Earnings assumptions',
+            description: 'Check which assumptions are included in the earnings expectations.',
+          },
+          pricedInExpectations: {
+            title: 'Expectations reflected in price',
+            description: 'Check how much of those expectations may already be reflected in price.',
+          },
+          currencyAndRates: {
+            title: 'Currency and interest rates',
+            description:
+              'Check how changes in currency and interest rates could affect the assumptions.',
+          },
+          biasAndCounterEvidence: {
+            title: 'Decision bias and counter-evidence',
+            description: 'Check your decision bias together with evidence against your view.',
+          },
+        },
+      },
+      fixtureNotice:
+        'This screen is a functional example only. It is not an analysis of your actual question or investment advice.',
+      recordQuestions: {
+        heading: 'Questions for your next record',
+        items: {
+          businessAssumption: 'Which business assumption mattered most to me?',
+          evidenceToCheck:
+            'What needs more checking: industry conditions or earnings expectations?',
+          counterEvidence: 'What counter-evidence could change my view?',
+        },
+      },
+      navigation: {
+        studyNote: 'Study note',
+        investmentRecord: 'Investment record',
+        askAgain: 'Ask another question',
+      },
+    },
     journalList: {
       title: 'Records',
       filters: {

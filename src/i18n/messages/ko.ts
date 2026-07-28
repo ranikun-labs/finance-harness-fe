@@ -33,7 +33,76 @@ export const ko: Messages = {
   },
   app: {
     home: { title: 'Home' },
-    ask: { title: 'Ask 결과', titleWithQuery: 'Ask 결과 — {{query}}' },
+    ask: {
+      title: 'Ask 결과',
+      titleWithQuery: 'Ask 결과 — {{query}}',
+      header: {
+        title: 'AI 체크',
+        backLabel: '홈으로 돌아가기',
+      },
+      empty: {
+        title: '아직 확인할 질문이 없어요',
+        description: '질문을 남기면 확인할 관점과 기록할 질문의 예시를 볼 수 있어요.',
+        cta: '질문하러 가기',
+      },
+      questionLabel: '내 질문',
+      perspectives: {
+        heading: '예시 체크 관점',
+        items: {
+          businessContext: '사업 맥락',
+          industryTrends: '산업 흐름',
+          earningsAssumptions: '실적 전제',
+          pricedInExpectations: '가격 반영 수준',
+          currencyAndRates: '환율·금리',
+          biasAndCounterEvidence: '판단 편향과 반대 근거',
+        },
+      },
+      checklist: {
+        heading: '확인할 항목',
+        count: '6개',
+        items: {
+          businessContext: {
+            title: '사업 맥락',
+            description: '수익 구조와 핵심 사업 전제가 무엇인지 확인하세요.',
+          },
+          industryTrends: {
+            title: '산업 흐름',
+            description: '산업의 수요와 공급 흐름이 어떤지 확인하세요.',
+          },
+          earningsAssumptions: {
+            title: '실적 전제',
+            description: '기대하는 실적에 어떤 가정이 포함됐는지 확인하세요.',
+          },
+          pricedInExpectations: {
+            title: '가격 반영 수준',
+            description: '현재 가격에 기대가 얼마나 반영되었는지 확인하세요.',
+          },
+          currencyAndRates: {
+            title: '환율·금리',
+            description: '환율과 금리 변화가 전제에 미치는 영향을 확인하세요.',
+          },
+          biasAndCounterEvidence: {
+            title: '판단 편향과 반대 근거',
+            description: '내 판단의 편향과 반대 근거가 무엇인지 함께 확인하세요.',
+          },
+        },
+      },
+      fixtureNotice:
+        '이 화면은 기능 확인용 예시이며, 실제 질문 분석이나 투자 자문 결과가 아닙니다.',
+      recordQuestions: {
+        heading: '다음 기록에 남길 질문',
+        items: {
+          businessAssumption: '내가 중요하게 본 사업 전제는 무엇인가?',
+          evidenceToCheck: '산업과 실적 기대 중 확인이 더 필요한 것은 무엇인가?',
+          counterEvidence: '내 판단을 바꿀 수 있는 반대 근거는 무엇인가?',
+        },
+      },
+      navigation: {
+        studyNote: '공부 노트',
+        investmentRecord: '투자 기록',
+        askAgain: '추가 질문',
+      },
+    },
     journalList: {
       title: '기록',
       filters: {
