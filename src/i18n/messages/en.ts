@@ -77,7 +77,7 @@ export const en: Messages = {
       hero: {
         title: 'This AI does not predict returns.',
         description:
-          'It helps you organize the questions to ask yourself before investing into a checklist and record.',
+          'It helps you organize your pre-investment questions into a checklist and keep a record of your reasoning.',
       },
       notProvided: {
         heading: 'What it does not provide',
