@@ -105,6 +105,13 @@ describe('AskPage', () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
+
+    const recordQuestions = headings.at(-1)!.closest('section')!;
+    const recordQuestionsList = within(recordQuestions).getByRole('list');
+    const ctaNavigation = screen.getByRole('navigation', { name: ko.app.ask.header.title });
+    expect(
+      recordQuestionsList.compareDocumentPosition(ctaNavigation) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('renders semantic six-item checklist and three record questions', () => {
