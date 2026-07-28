@@ -21,7 +21,7 @@ const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
   { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
-  { path: buildAppAskPath(), heading: 'Ask 결과' },
+  { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
   { path: buildAppJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
@@ -169,6 +169,89 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   });
 });
 
+test.describe('Ask empty and result states', () => {
+  for (const { label, path } of [
+    { label: 'missing q', path: APP_ROUTE_PATHS.ask },
+    { label: 'empty q', path: `${APP_ROUTE_PATHS.ask}?q=` },
+    { label: 'space-only q', path: `${APP_ROUTE_PATHS.ask}?q=%20%20%20` },
+  ]) {
+    test(`renders the empty state for ${label}`, async ({ page }) => {
+      await page.goto(path);
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
+      ).toBeVisible();
+      await expect(page.getByText(ko.app.ask.empty.description)).toBeVisible();
+      await expect(page.getByRole('link', { name: ko.app.ask.empty.cta })).toHaveAttribute(
+        'href',
+        APP_ROUTE_PATHS.appHome,
+      );
+    });
+  }
+
+  test('renders an encoded question with the static fixture notice', async ({ page }) => {
+    const question = '실적 전망 & 산업 흐름은 어떻게 확인할까?';
+    await page.goto(buildAppAskPath(question));
+
+    await expect(page.getByText(question)).toBeVisible();
+    await expect(page.getByRole('note')).toHaveText(ko.app.ask.fixtureNotice);
+    await expect(
+      page.getByRole('heading', { name: ko.app.ask.perspectives.heading }),
+    ).toBeVisible();
+  });
+
+  test('navigates through all three result CTAs without transferring the question', async ({
+    page,
+  }) => {
+    const question = 'CTA 경로 확인';
+    const cases = [
+      {
+        label: ko.app.ask.navigation.studyNote,
+        target: buildAppJournalNewPath('study'),
+      },
+      {
+        label: ko.app.ask.navigation.investmentRecord,
+        target: buildAppJournalNewPath('investment'),
+      },
+      {
+        label: ko.app.ask.navigation.askAgain,
+        target: APP_ROUTE_PATHS.appHome,
+      },
+    ];
+
+    for (const item of cases) {
+      await page.goto(buildAppAskPath(question));
+      await page.getByRole('link', { name: item.label }).click();
+      const url = new URL(page.url());
+      expect(`${url.pathname}${url.search}`).toBe(item.target);
+      expect(url.searchParams.has('q')).toBe(false);
+    }
+  });
+
+  test('keeps the Ask bottom tab active in the result state', async ({ page }) => {
+    await page.goto(buildAppAskPath('활성 탭 확인'));
+
+    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
+    await expect(askTab).toHaveAttribute('aria-current', 'page');
+    await expect(askTab.getByTestId('bottom-tab-active-indicator')).toBeVisible();
+  });
+
+  test('renders HTML-like input as inert text', async ({ page }) => {
+    const question = '<script>alert(1)</script>';
+    let dialogOpened = false;
+    page.on('dialog', async (dialog) => {
+      dialogOpened = true;
+      await dialog.dismiss();
+    });
+
+    await page.goto(buildAppAskPath(question));
+
+    await expect(page.getByText(question)).toBeVisible();
+    await expect(page.locator('main script')).toHaveCount(0);
+    expect(dialogOpened).toBe(false);
+  });
+});
+
 test.describe('Onboarding English locale', () => {
   test.use({ locale: 'en-US' });
 
@@ -182,5 +265,23 @@ test.describe('Onboarding English locale', () => {
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
     expect(hasHorizontalOverflow).toBe(false);
+  });
+});
+
+test.describe('Ask English locale', () => {
+  test.use({ locale: 'en-US' });
+
+  test('renders the English empty and result states', async ({ page }) => {
+    await page.goto(APP_ROUTE_PATHS.ask);
+    await expect(
+      page.getByRole('heading', { level: 1, name: en.app.ask.header.title }),
+    ).toBeVisible();
+    await expect(page.getByText(en.app.ask.empty.description)).toBeVisible();
+
+    const question = 'How should I review the business assumptions?';
+    await page.goto(buildAppAskPath(question));
+    await expect(page.getByText(question)).toBeVisible();
+    await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
+    await expect(page.getByRole('link', { name: en.app.ask.navigation.askAgain })).toBeVisible();
   });
 });
