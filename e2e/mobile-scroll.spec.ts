@@ -97,5 +97,10 @@ test.describe('모바일 세로 스크롤 계약', () => {
       return count;
     });
     expect(scrollableAncestorCount).toBe(1);
+
+    // 긴 실제 온보딩 콘텐츠의 끝까지 AppShell만 스크롤하며 CTA에 도달할 수 있어야 한다.
+    const cta = page.getByRole('link', { name: '동의하고 시작하기' });
+    await cta.scrollIntoViewIfNeeded();
+    await expect(cta).toBeVisible();
   });
 });

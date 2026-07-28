@@ -69,7 +69,60 @@ export const ko: Messages = {
     },
     journalDetail: { title: '일지 상세 — {{id}}' },
     journalReview: { title: '복기 — {{id}}' },
-    onboarding: { title: '온보딩' },
+    onboarding: {
+      title: '온보딩',
+      productName: 'AI 투자 체크리스트',
+      tagline: '질문 → 체크리스트 → 기록 → 복기',
+      hero: {
+        title: '수익률을 맞히는 AI가 아닙니다',
+        description: '투자 전에 스스로 물어야 할 것을 체크리스트로 정리하고 기록하게 돕습니다.',
+      },
+      notProvided: {
+        heading: '제공하지 않는 것',
+        items: {
+          recommendation: {
+            title: '매수·매도 추천',
+            description: '무엇을 사고팔지 대신 결정하지 않습니다.',
+          },
+          priceGuidance: {
+            title: '목표가·손절가 제시',
+            description: '가격 기준을 제시하거나 계산하지 않습니다.',
+          },
+          allocation: {
+            title: '수량·비중 추천',
+            description: '얼마를 담을지 또는 비중을 제안하지 않습니다.',
+          },
+          predictionOrDelegation: {
+            title: '수익률 예측·투자 판단 대행',
+            description: '투자 결과를 예측하거나 판단을 대신하지 않습니다.',
+          },
+        },
+      },
+      provided: {
+        heading: '대신 제공하는 것',
+        items: {
+          questionContext: {
+            title: '질문 맥락 정리',
+            description: '질문에서 스스로 확인할 관점을 정리합니다.',
+          },
+          checklist: {
+            title: '체크리스트',
+            description: '투자 전에 확인할 항목을 체크리스트로 만듭니다.',
+          },
+          decisionRecord: {
+            title: '판단 기록',
+            description: '그때의 판단과 이유를 기록으로 남깁니다.',
+          },
+          review: {
+            title: '사후 복기',
+            description: '시간이 지난 뒤 판단을 다시 돌아봅니다.',
+          },
+        },
+      },
+      cta: '동의하고 시작하기',
+      disclaimer:
+        '이 앱은 투자를 권유하거나 수익을 보장하지 않습니다. 모든 판단은 본인의 책임입니다.',
+    },
     notFound: {
       heading: '페이지를 찾을 수 없어요',
       description: '주소를 다시 확인해주세요.',

@@ -70,7 +70,61 @@ export const en: Messages = {
     },
     journalDetail: { title: 'Entry Detail — {{id}}' },
     journalReview: { title: 'Review — {{id}}' },
-    onboarding: { title: 'Onboarding' },
+    onboarding: {
+      title: 'Onboarding',
+      productName: 'AI Investment Checklist',
+      tagline: 'Question → Checklist → Record → Review',
+      hero: {
+        title: 'This AI does not predict returns.',
+        description:
+          'It helps you organize your pre-investment questions into a checklist and keep a record of your reasoning.',
+      },
+      notProvided: {
+        heading: 'What it does not provide',
+        items: {
+          recommendation: {
+            title: 'Buy or sell recommendations',
+            description: 'It does not decide what you should buy or sell.',
+          },
+          priceGuidance: {
+            title: 'Price targets or stop-loss levels',
+            description: 'It does not set or calculate price thresholds.',
+          },
+          allocation: {
+            title: 'Position-size or allocation recommendations',
+            description: 'It does not suggest how much to invest or allocate.',
+          },
+          predictionOrDelegation: {
+            title: 'Return predictions or investment decisions',
+            description: 'It does not predict outcomes or make investment decisions for you.',
+          },
+        },
+      },
+      provided: {
+        heading: 'What it provides instead',
+        items: {
+          questionContext: {
+            title: 'Question context',
+            description: 'It organizes the perspectives to examine in your question.',
+          },
+          checklist: {
+            title: 'Checklists',
+            description: 'It turns the points to review before investing into a checklist.',
+          },
+          decisionRecord: {
+            title: 'Decision records',
+            description: 'It helps you record your decisions and the reasons behind them.',
+          },
+          review: {
+            title: 'Post-hoc review',
+            description: 'It helps you revisit your past decisions after time has passed.',
+          },
+        },
+      },
+      cta: 'Agree and get started',
+      disclaimer:
+        'This app does not recommend investments or guarantee returns. You are responsible for every decision.',
+    },
     notFound: {
       heading: 'This page doesn’t exist',
       description: 'Please check the address and try again.',
