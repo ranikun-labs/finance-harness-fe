@@ -103,7 +103,7 @@ describe('AppRouter', () => {
     });
 
     it.each([
-      [APP_ROUTE_PATHS.ask, 'Ask 결과'],
+      [APP_ROUTE_PATHS.ask, ko.app.ask.header.title],
       [APP_ROUTE_PATHS.journalList, '기록'],
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
     ])('renders %s', (path, heading) => {
@@ -131,7 +131,7 @@ describe('AppRouter', () => {
 
     it('matches /app/ask as the app screen, not public', () => {
       renderAt(APP_ROUTE_PATHS.ask);
-      expect(screen.getByRole('heading', { name: 'Ask 결과' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: ko.app.ask.header.title })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeNull();
     });
   });
