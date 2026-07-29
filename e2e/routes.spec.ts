@@ -14,7 +14,9 @@ import {
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 
-const SAMPLE_ID = 'sample-id';
+const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
+const SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
+const STUDY_ID = 'journal-2026-06-27-01';
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
@@ -24,8 +26,11 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
-  { path: buildAppJournalDetailPath(SAMPLE_ID), heading: /일지 상세/ },
-  { path: buildAppJournalReviewPath(SAMPLE_ID), heading: /복기/ },
+  {
+    path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    heading: ko.app.journalDetail.headerTitle,
+  },
+  { path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID), heading: /복기/ },
 ];
 
 // STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이 더
@@ -121,8 +126,14 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     { label: 'Ask', path: buildAppAskPath() },
     { label: 'Journal List', path: APP_ROUTE_PATHS.journalList },
     { label: 'Journal New', path: buildAppJournalNewPath('investment') },
-    { label: 'Journal Detail', path: buildAppJournalDetailPath(SAMPLE_ID) },
-    { label: 'Journal Review', path: buildAppJournalReviewPath(SAMPLE_ID) },
+    {
+      label: 'Journal Detail',
+      path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    },
+    {
+      label: 'Journal Review',
+      path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+    },
     { label: 'Onboarding', path: APP_ROUTE_PATHS.onboarding },
     { label: 'App NotFound', path: `${APP_ROUTE_PATHS.appHome}/this-route-does-not-exist` },
     { label: 'Public NotFound', path: '/fr' },
@@ -146,8 +157,95 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(cards.first()).toBeVisible();
 
     await cards.first().click();
-    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}/[^/]+$`));
+    await expect(page).toHaveURL(
+      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
+    );
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
   });
+
+  for (const detail of [
+    {
+      label: 'primary investment',
+      id: PRIMARY_INVESTMENT_ID,
+      heading: ko.app.journalList.subjects.semiconductorCompanyA,
+    },
+    {
+      label: 'second investment',
+      id: SECOND_INVESTMENT_ID,
+      heading: ko.app.journalList.subjects.batteryCompanyC,
+    },
+    { label: 'study', id: STUDY_ID, heading: '월말 리밸런싱' },
+  ]) {
+    test(`renders the ${detail.label} detail fixture directly`, async ({ page }) => {
+      await page.goto(buildAppJournalDetailPath(detail.id));
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+      ).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: detail.heading })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+    });
+  }
+
+  test('journal detail navigates to the existing review route without transferring state', async ({
+    page,
+  }) => {
+    await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
+
+    await page.getByRole('link', { name: ko.app.journalDetail.navigation.review }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`${buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID)}$`),
+    );
+    await expect(page.getByRole('heading', { name: /복기/ })).toBeVisible();
+  });
+
+  test('journal detail resolves an encoded existing id and builds a canonical review href', async ({
+    page,
+  }) => {
+    const encodedPath = `${APP_ROUTE_PATHS.journalList}/journal%2D2026%2D06%2D28%2D01`;
+    await page.goto(encodedPath);
+
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
+    ).toHaveAttribute('href', buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+  });
+
+  for (const missing of [
+    {
+      label: 'unknown',
+      path: buildAppJournalDetailPath('unknown-record-id'),
+    },
+    {
+      label: 'malformed encoded',
+      path: `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A`,
+    },
+  ]) {
+    test(`journal detail renders its local Not Found for ${missing.label} id`, async ({ page }) => {
+      await page.goto(missing.path);
+
+      await expect(
+        page.getByRole('heading', {
+          level: 1,
+          name: ko.app.journalDetail.notFound.heading,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
+      ).toHaveCount(0);
+      await expect(page.getByRole('heading', { name: APP_NOT_FOUND })).toHaveCount(0);
+    });
+  }
 
   test('journal list: the last record card is not covered by the bottom navigation', async ({
     page,
@@ -283,5 +381,31 @@ test.describe('Ask English locale', () => {
     await expect(page.getByText(question)).toBeVisible();
     await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
     await expect(page.getByRole('link', { name: en.app.ask.navigation.askAgain })).toBeVisible();
+  });
+});
+
+test.describe('Journal detail English locale', () => {
+  test.use({ locale: 'en-US' });
+
+  test('renders English detail labels while preserving the fixture-authored record', async ({
+    page,
+  }) => {
+    await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: en.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: en.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: en.app.journalDetail.investment.questionHeading,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });

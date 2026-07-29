@@ -17,6 +17,8 @@ const INVESTMENT_ENTRY: JournalEntry = {
   emotion: '확신',
   checkedCount: 2,
   totalCount: 3,
+  aiChecklist: ['반도체 업황을 확인한다.'],
+  decisionChecks: [{ text: '반도체 업황을 확인했다.', checked: true }],
 };
 
 const STUDY_ENTRY: JournalEntry = {
@@ -28,6 +30,7 @@ const STUDY_ENTRY: JournalEntry = {
   memo: '펀드 벤치마크 대비 비중 조정이 필요하다.',
   checkedCount: 3,
   totalCount: 3,
+  nextChecks: [{ text: '기관 수급을 확인한다.', checked: true }],
 };
 
 function renderList(entries: JournalEntry[]) {

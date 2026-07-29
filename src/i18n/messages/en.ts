@@ -139,7 +139,42 @@ export const en: Messages = {
       investment: 'Save Entry (Investment)',
       study: 'Save Study Note',
     },
-    journalDetail: { title: 'Entry Detail — {{id}}' },
+    journalDetail: {
+      title: 'Entry Detail — {{id}}',
+      headerTitle: 'Record details',
+      backLabel: 'Back to records',
+      metadata: {
+        recordType: 'Record type',
+        recordedAt: 'Recorded on',
+        subject: 'Subject',
+        pastAction: 'Action at the time',
+        pastEmotion: 'Emotion at the time',
+      },
+      investment: {
+        questionHeading: 'Question at the time',
+        aiChecklistHeading: 'Past AI checklist',
+        recordHeading: 'My record',
+        checkedItemsHeading: 'Items checked',
+      },
+      study: {
+        questionHeading: 'Original question',
+        summaryHeading: 'What I learned',
+        nextChecksHeading: 'What to check next',
+      },
+      itemCount: '{{count}} items',
+      checkedProgress: '{{checked}} / {{total}}',
+      checkedStatus: 'Checked',
+      uncheckedStatus: 'Not checked',
+      navigation: {
+        review: 'Review with AI',
+        list: 'Back to records',
+      },
+      notFound: {
+        heading: 'Record not found',
+        description: 'This record does not exist or is no longer available.',
+        listAction: 'Back to records',
+      },
+    },
     journalReview: { title: 'Review — {{id}}' },
     onboarding: {
       title: 'Onboarding',
