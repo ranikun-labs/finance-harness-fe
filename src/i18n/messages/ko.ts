@@ -32,7 +32,24 @@ export const ko: Messages = {
     emotion: { FOMO: 'FOMO', 불안: '불안', 확신: '확신', 관망: '관망', 혼란: '혼란' },
   },
   app: {
-    home: { title: 'Home' },
+    home: {
+      title: 'Home',
+      hero: {
+        eyebrow: '판단 전 확인',
+        heading: '판단 전에 질문부터 시작하세요',
+        description: '궁금한 내용을 질문하고 확인할 항목을 살펴보세요.',
+        action: '질문 시작하기',
+      },
+      recentRecords: {
+        heading: '최근 기록',
+        viewAll: '전체 기록 보기',
+      },
+      empty: {
+        title: '아직 기록이 없어요',
+        description: '질문에서 확인할 항목을 살펴보고 첫 기록을 준비해보세요.',
+        action: '질문 시작하기',
+      },
+    },
     ask: {
       title: 'Ask 결과',
       titleWithQuery: 'Ask 결과 — {{query}}',
