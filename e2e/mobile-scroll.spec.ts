@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { APP_ROUTE_PATHS, buildAppAskPath } from '@/constants/routes';
+import { en } from '@/i18n/messages/en';
+import { ko } from '@/i18n/messages/ko';
 
 test.describe('모바일 세로 스크롤 계약', () => {
   // Playwright는 첫 인자가 fixture 구조분해 패턴이어야 하므로, 사용하지 않더라도
@@ -102,5 +104,85 @@ test.describe('모바일 세로 스크롤 계약', () => {
     const cta = page.getByRole('link', { name: '동의하고 시작하기' });
     await cta.scrollIntoViewIfNeeded();
     await expect(cta).toBeVisible();
+  });
+
+  test('Ask Result는 main만 스크롤하고 마지막 CTA가 탭바에 가리지 않는다', async ({ page }) => {
+    await page.goto(buildAppAskPath('모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문'));
+
+    const viewportHeight = page.viewportSize()!.height;
+    const scrollContract = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      let el: HTMLElement | null = main.parentElement;
+      let overflowingAncestorCount = 0;
+      while (el) {
+        const overflowY = getComputedStyle(el).overflowY;
+        const isScrollSurface = overflowY === 'auto' || overflowY === 'scroll';
+        if (isScrollSurface && el.scrollHeight > el.clientHeight + 1) {
+          overflowingAncestorCount += 1;
+        }
+        el = el.parentElement;
+      }
+      return {
+        documentHeight: document.documentElement.scrollHeight,
+        mainScrollable: main.scrollHeight > main.clientHeight,
+        overflowingAncestorCount,
+      };
+    });
+
+    expect(scrollContract.documentHeight).toBeLessThanOrEqual(viewportHeight + 1);
+    expect(scrollContract.mainScrollable).toBe(true);
+    expect(scrollContract.overflowingAncestorCount).toBe(0);
+
+    const lastCta = page.getByRole('link', { name: ko.app.ask.navigation.askAgain });
+    await lastCta.scrollIntoViewIfNeeded();
+    const ctaBox = (await lastCta.boundingBox())!;
+    const navBox = (await page.getByRole('navigation', { name: ko.nav.ariaLabel }).boundingBox())!;
+    expect(ctaBox.y + ctaBox.height).toBeLessThanOrEqual(navBox.y + 1);
+  });
+
+  for (const { label, question } of [
+    { label: '긴 한국어', question: '산업 흐름과 실적 전제를 어떻게 확인해야 할까요? '.repeat(12) },
+    {
+      label: 'long English',
+      question: 'How should I review business context and earnings assumptions? '.repeat(12),
+    },
+    { label: '긴 무공백', question: 'A'.repeat(320) },
+  ]) {
+    test(`Ask Result의 ${label} 질문은 수평 overflow 없이 wrap된다`, async ({ page }) => {
+      await page.goto(buildAppAskPath(question));
+      const questionText = page.getByText(question.trim());
+      await expect(questionText).toBeVisible();
+
+      const overflow = await page.evaluate(() => {
+        const main = document.querySelector('main')!;
+        return {
+          document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          main: main.scrollWidth > main.clientWidth,
+        };
+      });
+      expect(overflow).toEqual({ document: false, main: false });
+    });
+  }
+});
+
+test.describe('Ask 영어 모바일 레이아웃', () => {
+  test.use({ locale: 'en-US' });
+
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'Mobile 375', '375×812 뷰포트에서만 검증한다');
+  });
+
+  test('영어 CTA와 fixture가 375px에서 수평 overflow를 만들지 않는다', async ({ page }) => {
+    await page.goto(buildAppAskPath('How should I review this question?'));
+
+    await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
+    await expect(
+      page.getByRole('link', { name: en.app.ask.navigation.investmentRecord }),
+    ).toBeVisible();
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
   });
 });

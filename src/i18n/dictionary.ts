@@ -43,7 +43,47 @@ export interface Messages {
   };
   app: {
     home: { title: string };
-    ask: { title: string; titleWithQuery: string };
+    ask: {
+      /** 기존 skeleton 라우트 호환용 제목. 실제 Ask h1은 `header.title`을 사용한다. */
+      title: string;
+      titleWithQuery: string;
+      header: { title: string; backLabel: string };
+      empty: { title: string; description: string; cta: string };
+      questionLabel: string;
+      perspectives: {
+        heading: string;
+        items: {
+          businessContext: string;
+          industryTrends: string;
+          earningsAssumptions: string;
+          pricedInExpectations: string;
+          currencyAndRates: string;
+          biasAndCounterEvidence: string;
+        };
+      };
+      checklist: {
+        heading: string;
+        count: string;
+        items: {
+          businessContext: { title: string; description: string };
+          industryTrends: { title: string; description: string };
+          earningsAssumptions: { title: string; description: string };
+          pricedInExpectations: { title: string; description: string };
+          currencyAndRates: { title: string; description: string };
+          biasAndCounterEvidence: { title: string; description: string };
+        };
+      };
+      fixtureNotice: string;
+      recordQuestions: {
+        heading: string;
+        items: {
+          businessAssumption: string;
+          evidenceToCheck: string;
+          counterEvidence: string;
+        };
+      };
+      navigation: { studyNote: string; investmentRecord: string; askAgain: string };
+    };
     journalList: {
       title: string;
       filters: { groupLabel: string; all: string; investment: string; study: string };
