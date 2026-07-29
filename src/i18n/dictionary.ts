@@ -96,7 +96,34 @@ export interface Messages {
       subjects: Record<SampleSubjectKey, string>;
     };
     journalNew: { investment: string; study: string };
-    journalDetail: { title: string };
+    journalDetail: {
+      title: string;
+      backLabel: string;
+      metadata: {
+        recordType: string;
+        recordedAt: string;
+        subject: string;
+        pastAction: string;
+        pastEmotion: string;
+      };
+      investment: {
+        questionHeading: string;
+        aiChecklistHeading: string;
+        recordHeading: string;
+        checkedItemsHeading: string;
+      };
+      study: {
+        questionHeading: string;
+        summaryHeading: string;
+        nextChecksHeading: string;
+      };
+      itemCount: string;
+      checkedProgress: string;
+      checkedStatus: string;
+      uncheckedStatus: string;
+      navigation: { review: string; list: string };
+      notFound: { heading: string; description: string; listAction: string };
+    };
     journalReview: { title: string };
     onboarding: {
       /** 기존 skeleton 라우트 호환용 제목. 실제 온보딩 h1은 `hero.title`을 사용한다. */

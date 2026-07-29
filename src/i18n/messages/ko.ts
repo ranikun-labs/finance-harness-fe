@@ -136,7 +136,41 @@ export const ko: Messages = {
       investment: '일지 저장 (투자 기록)',
       study: '공부 노트 저장',
     },
-    journalDetail: { title: '일지 상세 — {{id}}' },
+    journalDetail: {
+      title: '기록 상세',
+      backLabel: '기록 목록으로 돌아가기',
+      metadata: {
+        recordType: '기록 유형',
+        recordedAt: '작성일',
+        subject: '기록 대상',
+        pastAction: '당시 행동',
+        pastEmotion: '당시 감정',
+      },
+      investment: {
+        questionHeading: '당시 질문',
+        aiChecklistHeading: '과거 AI 체크리스트',
+        recordHeading: '내가 남긴 기록',
+        checkedItemsHeading: '체크한 항목',
+      },
+      study: {
+        questionHeading: '원래 질문',
+        summaryHeading: '정리한 내용',
+        nextChecksHeading: '다음에 확인할 항목',
+      },
+      itemCount: '{{count}}개 항목',
+      checkedProgress: '{{checked}} / {{total}}',
+      checkedStatus: '확인함',
+      uncheckedStatus: '확인하지 않음',
+      navigation: {
+        review: 'AI와 복기하기',
+        list: '기록 목록으로 돌아가기',
+      },
+      notFound: {
+        heading: '기록을 찾을 수 없어요',
+        description: '요청한 기록이 없거나 더 이상 확인할 수 없어요.',
+        listAction: '기록 목록으로 돌아가기',
+      },
+    },
     journalReview: { title: '복기 — {{id}}' },
     onboarding: {
       title: '온보딩',
