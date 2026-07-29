@@ -50,6 +50,7 @@ export interface Messages {
         heading: string;
         description: string;
         action: string;
+        ariaLabel: string;
       };
       recentRecords: {
         heading: string;

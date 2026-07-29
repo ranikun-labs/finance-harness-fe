@@ -19,6 +19,7 @@ export function HomePage() {
     <div className="flex min-h-full min-w-0 flex-col gap-6 px-4 pt-5 pb-6">
       <Link
         to={buildAppAskPath()}
+        aria-label={t('app.home.hero.ariaLabel')}
         className="group focus-visible:ring-ring/50 block min-h-11 min-w-0 rounded-3xl outline-none focus-visible:ring-3"
       >
         <Card className="border-primary/20 from-primary/10 via-card to-card group-hover:border-primary/35 flex min-h-[220px] min-w-0 flex-col justify-between gap-6 rounded-3xl bg-gradient-to-br p-6 shadow-md transition-colors">
@@ -28,6 +29,7 @@ export function HomePage() {
               {t('app.home.hero.eyebrow')}
             </p>
             <h1 className="text-foreground min-w-0 text-3xl leading-tight font-extrabold tracking-tight [overflow-wrap:anywhere]">
+              <span className="sr-only">{t('app.home.title')} — </span>
               {t('app.home.hero.heading')}
             </h1>
             <p className="text-muted-foreground min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">

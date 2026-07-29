@@ -40,6 +40,7 @@ export const en: Messages = {
         heading: 'Start with a question before you decide',
         description: 'Ask what you are curious about and review the points worth checking.',
         action: 'Start a question',
+        ariaLabel: 'Explore a question',
       },
       recentRecords: {
         heading: 'Recent records',

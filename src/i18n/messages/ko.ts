@@ -39,6 +39,7 @@ export const ko: Messages = {
         heading: '판단 전에 질문부터 시작하세요',
         description: '궁금한 내용을 질문하고 확인할 항목을 살펴보세요.',
         action: '질문 시작하기',
+        ariaLabel: '궁금한 내용 묻기',
       },
       recentRecords: {
         heading: '최근 기록',

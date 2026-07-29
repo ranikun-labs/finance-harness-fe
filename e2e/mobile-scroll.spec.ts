@@ -183,7 +183,7 @@ test.describe('Home 모바일 레이아웃', () => {
 
     const viewportHeight = page.viewportSize()!.height;
     const heroLink = page.getByRole('link', {
-      name: new RegExp(ko.app.home.hero.heading),
+      name: ko.app.home.hero.ariaLabel,
     });
     const heroBox = (await heroLink.boundingBox())!;
     expect(heroBox.y).toBeGreaterThanOrEqual(0);

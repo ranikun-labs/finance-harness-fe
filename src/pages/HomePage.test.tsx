@@ -30,10 +30,10 @@ describe('HomePage', () => {
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+      screen.getByRole('heading', { level: 1, name: new RegExp(ko.app.home.hero.heading) }),
     ).toBeInTheDocument();
 
-    const heroLink = screen.getByRole('link', { name: new RegExp(ko.app.home.hero.heading) });
+    const heroLink = screen.getByRole('link', { name: ko.app.home.hero.ariaLabel });
     expect(heroLink).toHaveAttribute('href', buildAppAskPath());
     expect(new URL(heroLink.getAttribute('href')!, 'https://example.test').search).toBe('');
     expect(heroLink.querySelectorAll('a, button, input, textarea')).toHaveLength(0);
@@ -46,7 +46,7 @@ describe('HomePage', () => {
     renderPage('en');
 
     expect(
-      screen.getByRole('heading', { level: 1, name: en.app.home.hero.heading }),
+      screen.getByRole('heading', { level: 1, name: new RegExp(en.app.home.hero.heading) }),
     ).toBeInTheDocument();
     expect(screen.getByText(en.app.home.hero.description)).toBeInTheDocument();
     expect(

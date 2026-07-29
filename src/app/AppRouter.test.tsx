@@ -101,7 +101,10 @@ describe('AppRouter', () => {
     it('renders the app home at /app', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
       expect(
-        screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+        screen.getByRole('heading', {
+          level: 1,
+          name: new RegExp(ko.app.home.hero.heading),
+        }),
       ).toBeInTheDocument();
     });
 
@@ -129,7 +132,10 @@ describe('AppRouter', () => {
     it('matches /app as the app home, not a public locale named "app"', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
       expect(
-        screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+        screen.getByRole('heading', {
+          level: 1,
+          name: new RegExp(ko.app.home.hero.heading),
+        }),
       ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /공개 웹 홈/ })).toBeNull();
     });
@@ -204,9 +210,9 @@ describe('AppRouter', () => {
     it('marks only the Home tab active at /app', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
 
-      const homeLink = screen.getByRole('link', { name: ko.nav.home, exact: true });
-      const askLink = screen.getByRole('link', { name: ko.nav.ask, exact: true });
-      const journalLink = screen.getByRole('link', { name: ko.nav.journal, exact: true });
+      const homeLink = screen.getByRole('link', { name: ko.nav.home });
+      const askLink = screen.getByRole('link', { name: ko.nav.ask });
+      const journalLink = screen.getByRole('link', { name: ko.nav.journal });
 
       expect(homeLink).toHaveAttribute('aria-current', 'page');
       expect(askLink).not.toHaveAttribute('aria-current');

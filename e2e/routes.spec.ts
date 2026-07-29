@@ -103,7 +103,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     for (const tab of BOTTOM_TABS) {
       // 앱 locale은 playwright.config.ts에서 'ko-KR'로 고정되므로(저장값 없음 →
       // navigator.language 폴백) ko 사전 값으로 매칭한다.
-      await page.getByRole('link', { name: ko.nav[tab.id] }).click();
+      await page.getByRole('link', { name: ko.nav[tab.id], exact: true }).click();
       const url = new URL(page.url());
       expect(url.pathname).toBe(tab.path);
     }
@@ -113,7 +113,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
     const heroLink = page.getByRole('link', {
-      name: new RegExp(ko.app.home.hero.heading),
+      name: ko.app.home.hero.ariaLabel,
     });
     await expect(heroLink).toHaveAttribute('href', buildAppAskPath());
     await heroLink.click();
@@ -601,9 +601,10 @@ test.describe('Home English locale', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: en.app.home.recentRecords.heading }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: new RegExp(en.app.home.hero.heading) }),
-    ).toHaveAttribute('href', buildAppAskPath());
+    await expect(page.getByRole('link', { name: en.app.home.hero.ariaLabel })).toHaveAttribute(
+      'href',
+      buildAppAskPath(),
+    );
     await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });
