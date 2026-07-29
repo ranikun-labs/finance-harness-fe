@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-import { APP_ROUTE_PATHS, buildAppAskPath, buildAppJournalDetailPath } from '@/constants/routes';
+import {
+  APP_ROUTE_PATHS,
+  buildAppAskPath,
+  buildAppJournalDetailPath,
+  buildAppJournalReviewPath,
+} from '@/constants/routes';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 
@@ -253,5 +258,82 @@ test.describe('기록 상세 모바일 레이아웃', () => {
     });
     expect(overflow).toEqual({ document: false, main: false });
     await expect(recordText).toBeVisible();
+  });
+});
+
+test.describe('기록 복기 모바일 레이아웃', () => {
+  const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
+
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'Mobile 375', '375×812 뷰포트에서만 검증한다');
+  });
+
+  test('AppShell만 스크롤하고 마지막 상세 복귀 CTA가 완전히 노출된다', async ({ page }) => {
+    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+
+    const viewportHeight = page.viewportSize()!.height;
+    const contract = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      let element: HTMLElement | null = main;
+      let overflowingScrollSurfaces = 0;
+      while (element) {
+        const overflowY = getComputedStyle(element).overflowY;
+        const isScrollSurface = overflowY === 'auto' || overflowY === 'scroll';
+        if (isScrollSurface && element.scrollHeight > element.clientHeight + 1) {
+          overflowingScrollSurfaces += 1;
+        }
+        element = element.parentElement;
+      }
+      return {
+        documentHeight: document.documentElement.scrollHeight,
+        overflowingScrollSurfaces,
+        horizontalOverflow:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      };
+    });
+
+    expect(contract.documentHeight).toBeLessThanOrEqual(viewportHeight + 1);
+    expect(contract.overflowingScrollSurfaces).toBe(1);
+    expect(contract.horizontalOverflow).toBe(false);
+    await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+
+    const detailCta = page
+      .getByRole('link', { name: ko.app.journalReview.navigation.detail })
+      .last();
+    await detailCta.scrollIntoViewIfNeeded();
+    const ctaBox = (await detailCta.boundingBox())!;
+    expect(ctaBox.y).toBeGreaterThanOrEqual(0);
+    expect(ctaBox.y + ctaBox.height).toBeLessThanOrEqual(viewportHeight + 1);
+  });
+
+  test('긴 무공백 질문과 메모도 수평 overflow 없이 wrap된다', async ({ page }) => {
+    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+
+    const questionSection = page
+      .getByRole('heading', {
+        name: ko.app.journalReview.investment.questionHeading,
+      })
+      .locator('xpath=..');
+    const memoSection = page
+      .getByRole('heading', {
+        name: ko.app.journalReview.investment.memoHeading,
+      })
+      .locator('xpath=..');
+    await questionSection.locator('p').evaluate((element) => {
+      element.textContent = 'Q'.repeat(360);
+    });
+    await memoSection.locator('p').evaluate((element) => {
+      element.textContent = 'M'.repeat(360);
+    });
+
+    const overflow = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      return {
+        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        main: main.scrollWidth > main.clientWidth,
+      };
+    });
+    expect(overflow).toEqual({ document: false, main: false });
   });
 });
