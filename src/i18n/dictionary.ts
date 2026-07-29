@@ -125,7 +125,46 @@ export interface Messages {
       navigation: { review: string; list: string };
       notFound: { heading: string; description: string; listAction: string };
     };
-    journalReview: { title: string };
+    journalReview: {
+      /** 기존 skeleton 및 route 제목 호환용. 실제 화면 h1은 `headerTitle`을 사용한다. */
+      title: string;
+      headerTitle: string;
+      backLabel: string;
+      metadata: {
+        recordType: string;
+        recordedAt: string;
+        pastAction: string;
+        pastEmotion: string;
+      };
+      summary: { heading: string };
+      status: { checked: string; unchecked: string };
+      investment: {
+        questionHeading: string;
+        memoHeading: string;
+        statusHeading: string;
+        reflectionHeading: string;
+        prompts: {
+          assumption: string;
+          uncheckedImpact: string;
+          counterEvidence: string;
+          nextChecks: string;
+        };
+      };
+      study: {
+        questionHeading: string;
+        memoHeading: string;
+        statusHeading: string;
+        reflectionHeading: string;
+        prompts: {
+          understanding: string;
+          revisit: string;
+          nextQuestion: string;
+        };
+      };
+      policyNotice: string;
+      navigation: { detail: string };
+      notFound: { heading: string; description: string; listAction: string };
+    };
     onboarding: {
       /** 기존 skeleton 라우트 호환용 제목. 실제 온보딩 h1은 `hero.title`을 사용한다. */
       title: string;

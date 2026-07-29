@@ -172,7 +172,50 @@ export const ko: Messages = {
         listAction: '기록 목록으로 돌아가기',
       },
     },
-    journalReview: { title: '복기 — {{id}}' },
+    journalReview: {
+      title: '복기 — {{id}}',
+      headerTitle: '기록 복기',
+      backLabel: '기록 상세로 돌아가기',
+      metadata: {
+        recordType: '기록 유형',
+        recordedAt: '작성일',
+        pastAction: '당시 행동',
+        pastEmotion: '당시 감정',
+      },
+      summary: { heading: '복기 대상 기록' },
+      status: { checked: '확인함', unchecked: '확인하지 않음' },
+      investment: {
+        questionHeading: '당시 질문',
+        memoHeading: '당시 메모',
+        statusHeading: '당시 확인 상태',
+        reflectionHeading: '다시 살펴볼 질문',
+        prompts: {
+          assumption: '당시 중요하게 본 판단의 전제는 무엇이었나요?',
+          uncheckedImpact: '확인하지 않은 항목이 당시 판단에 어떤 영향을 줄 수 있었나요?',
+          counterEvidence: '당시 판단을 바꿀 반대 근거를 미리 정했나요?',
+          nextChecks: '다음 판단 전에 먼저 확인할 항목은 무엇인가요?',
+        },
+      },
+      study: {
+        questionHeading: '원래 학습 질문',
+        memoHeading: '당시 정리한 내용',
+        statusHeading: '다음 확인 항목의 당시 상태',
+        reflectionHeading: '학습을 다시 살펴볼 질문',
+        prompts: {
+          understanding: '당시 정리한 내용에서 이해한 핵심은 무엇인가요?',
+          revisit: '지금 다시 확인하거나 설명을 보완할 부분은 무엇인가요?',
+          nextQuestion: '다음에 이어서 확인할 학습 질문은 무엇인가요?',
+        },
+      },
+      policyNotice:
+        '이 화면은 정답을 판단하는 화면이 아니라, 당시 확인 상태와 판단 근거를 다시 살펴보기 위한 화면입니다.',
+      navigation: { detail: '기록 상세로 돌아가기' },
+      notFound: {
+        heading: '복기할 기록을 찾을 수 없어요',
+        description: '요청한 기록이 없거나 더 이상 확인할 수 없어요.',
+        listAction: '기록 목록으로 돌아가기',
+      },
+    },
     onboarding: {
       title: '온보딩',
       productName: 'AI 투자 체크리스트',
