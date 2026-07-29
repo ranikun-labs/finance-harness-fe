@@ -170,6 +170,103 @@ test.describe('모바일 세로 스크롤 계약', () => {
   }
 });
 
+test.describe('Home 모바일 레이아웃', () => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'Mobile 375', '375×812 뷰포트에서만 검증한다');
+  });
+
+  test('Hero가 첫 화면에 보이고 main만 스크롤하며 마지막 링크가 탭바에 가리지 않는다', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    const viewportHeight = page.viewportSize()!.height;
+    const heroLink = page.getByRole('link', {
+      name: ko.app.home.hero.ariaLabel,
+    });
+    const heroBox = (await heroLink.boundingBox())!;
+    expect(heroBox.y).toBeGreaterThanOrEqual(0);
+    expect(heroBox.y).toBeLessThan(viewportHeight);
+
+    const contract = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      let element: HTMLElement | null = main;
+      let overflowingScrollSurfaces = 0;
+      while (element) {
+        const overflowY = getComputedStyle(element).overflowY;
+        const isScrollSurface = overflowY === 'auto' || overflowY === 'scroll';
+        if (isScrollSurface && element.scrollHeight > element.clientHeight + 1) {
+          overflowingScrollSurfaces += 1;
+        }
+        element = element.parentElement;
+      }
+      return {
+        documentHeight: document.documentElement.scrollHeight,
+        mainScrollable: main.scrollHeight > main.clientHeight,
+        overflowingScrollSurfaces,
+        horizontalOverflow:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      };
+    });
+
+    expect(contract.documentHeight).toBeLessThanOrEqual(viewportHeight + 1);
+    expect(contract.mainScrollable).toBe(true);
+    expect(contract.overflowingScrollSurfaces).toBe(1);
+    expect(contract.horizontalOverflow).toBe(false);
+
+    const viewAll = page.getByRole('link', { name: ko.app.home.recentRecords.viewAll });
+    await viewAll.scrollIntoViewIfNeeded();
+    const viewAllBox = (await viewAll.boundingBox())!;
+    const navBox = (await page.getByRole('navigation', { name: ko.nav.ariaLabel }).boundingBox())!;
+    expect(viewAllBox.y).toBeGreaterThanOrEqual(0);
+    expect(viewAllBox.y + viewAllBox.height).toBeLessThanOrEqual(navBox.y + 1);
+  });
+
+  test('긴 Hero와 최근 기록 문구도 수평 overflow 없이 wrap된다', async ({ page }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    await page
+      .getByRole('heading', { level: 1, name: ko.app.home.hero.heading })
+      .evaluate((element) => {
+        element.textContent = 'H'.repeat(360);
+      });
+    await page.getByText('반도체 기업 A 요즘 어때?').evaluate((element) => {
+      element.textContent = 'Q'.repeat(360);
+    });
+
+    const overflow = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      return {
+        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        main: main.scrollWidth > main.clientWidth,
+      };
+    });
+    expect(overflow).toEqual({ document: false, main: false });
+  });
+});
+
+test.describe('Home 데스크톱 앱 프레임', () => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', '데스크톱 프로젝트에서만 검증한다');
+  });
+
+  test('1024px viewport에서 앱 프레임은 기존 480px 너비를 유지한다', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    const frameWidth = await page.locator('main').evaluate((main) => {
+      let element: HTMLElement | null = main.parentElement;
+      while (element && getComputedStyle(element).maxWidth !== '480px') {
+        element = element.parentElement;
+      }
+      return element?.getBoundingClientRect().width;
+    });
+    expect(frameWidth).toBe(480);
+  });
+});
+
 test.describe('Ask 영어 모바일 레이아웃', () => {
   test.use({ locale: 'en-US' });
 

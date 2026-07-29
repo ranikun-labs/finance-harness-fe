@@ -42,7 +42,26 @@ export interface Messages {
     emotion: { FOMO: string; 불안: string; 확신: string; 관망: string; 혼란: string };
   };
   app: {
-    home: { title: string };
+    home: {
+      /** 기존 skeleton route 제목 호환용. 실제 화면 h1은 `hero.heading`을 사용한다. */
+      title: string;
+      hero: {
+        eyebrow: string;
+        heading: string;
+        description: string;
+        action: string;
+        ariaLabel: string;
+      };
+      recentRecords: {
+        heading: string;
+        viewAll: string;
+      };
+      empty: {
+        title: string;
+        description: string;
+        action: string;
+      };
+    };
     ask: {
       /** 기존 skeleton 라우트 호환용 제목. 실제 Ask h1은 `header.title`을 사용한다. */
       title: string;

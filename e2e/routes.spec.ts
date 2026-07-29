@@ -22,7 +22,7 @@ const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
 const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
-  { path: APP_ROUTE_PATHS.appHome, heading: 'Home' },
+  { path: APP_ROUTE_PATHS.appHome, heading: ko.app.home.hero.heading },
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
@@ -103,9 +103,95 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     for (const tab of BOTTOM_TABS) {
       // 앱 locale은 playwright.config.ts에서 'ko-KR'로 고정되므로(저장값 없음 →
       // navigator.language 폴백) ko 사전 값으로 매칭한다.
-      await page.getByRole('link', { name: ko.nav[tab.id] }).click();
+      await page.getByRole('link', { name: ko.nav[tab.id], exact: true }).click();
       const url = new URL(page.url());
       expect(url.pathname).toBe(tab.path);
+    }
+  });
+
+  test('Home Hero starts Ask without a query and browser back returns Home', async ({ page }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    const heroLink = page.getByRole('link', {
+      name: ko.app.home.hero.ariaLabel,
+    });
+    await expect(heroLink).toHaveAttribute('href', buildAppAskPath());
+    await heroLink.click();
+
+    const askUrl = new URL(page.url());
+    expect(askUrl.pathname).toBe(APP_ROUTE_PATHS.ask);
+    expect(askUrl.search).toBe('');
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
+    ).toBeVisible();
+
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.appHome}$`));
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+    ).toBeVisible();
+  });
+
+  test('Home exposes the newest two canonical records and navigates to list and detail', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    const recentSection = page
+      .getByRole('heading', { level: 2, name: ko.app.home.recentRecords.heading })
+      .locator('xpath=..');
+    const recentItems = recentSection.getByRole('listitem');
+    await expect(recentItems).toHaveCount(2);
+    await expect(recentItems.nth(0).getByRole('link')).toHaveAttribute(
+      'href',
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    );
+    await expect(recentItems.nth(1).getByRole('link')).toHaveAttribute(
+      'href',
+      buildAppJournalDetailPath(STUDY_ID),
+    );
+
+    await recentItems.nth(0).getByRole('link').click();
+    await expect(page).toHaveURL(
+      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
+    );
+    await page.goBack();
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+    ).toBeVisible();
+
+    await page.getByRole('link', { name: ko.app.home.recentRecords.viewAll }).click();
+    await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}$`));
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+    ).toBeVisible();
+  });
+
+  test('Home keeps only its tab active and exposes no input or excluded feature controls', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    const homeTab = page.getByRole('link', { name: ko.nav.home, exact: true });
+    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
+    const journalTab = page.getByRole('link', { name: ko.nav.journal, exact: true });
+    await expect(homeTab).toHaveAttribute('aria-current', 'page');
+    await expect(askTab).not.toHaveAttribute('aria-current');
+    await expect(journalTab).not.toHaveAttribute('aria-current');
+
+    await expect(
+      page.locator('main form, main input, main textarea, main [role="textbox"]'),
+    ).toHaveCount(0);
+    for (const name of [
+      /시장 체크|관심종목 체크/,
+      /Watchlist|관심종목/,
+      /오늘의 질문|추천 질문/,
+      /실시간|시세|수익률|종목 순위/,
+      /투자 추천|매수 추천|매도 추천/,
+    ]) {
+      await expect(page.getByRole('heading', { name })).toHaveCount(0);
+      await expect(page.getByRole('link', { name })).toHaveCount(0);
+      await expect(page.getByRole('button', { name })).toHaveCount(0);
     }
   });
 
@@ -498,6 +584,28 @@ test.describe('Ask English locale', () => {
     await expect(page.getByText(question)).toBeVisible();
     await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
     await expect(page.getByRole('link', { name: en.app.ask.navigation.askAgain })).toBeVisible();
+  });
+});
+
+test.describe('Home English locale', () => {
+  test.use({ locale: 'en-US' });
+
+  test('renders English Home labels while preserving fixture-authored record text', async ({
+    page,
+  }) => {
+    await page.goto(APP_ROUTE_PATHS.appHome);
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: en.app.home.hero.heading }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 2, name: en.app.home.recentRecords.heading }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: en.app.home.hero.ariaLabel })).toHaveAttribute(
+      'href',
+      buildAppAskPath(),
+    );
+    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });
 

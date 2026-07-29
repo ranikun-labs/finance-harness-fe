@@ -33,7 +33,25 @@ export const en: Messages = {
     },
   },
   app: {
-    home: { title: 'Home' },
+    home: {
+      title: 'Home',
+      hero: {
+        eyebrow: 'Check before deciding',
+        heading: 'Start with a question before you decide',
+        description: 'Ask what you are curious about and review the points worth checking.',
+        action: 'Start a question',
+        ariaLabel: 'Explore a question',
+      },
+      recentRecords: {
+        heading: 'Recent records',
+        viewAll: 'View all records',
+      },
+      empty: {
+        title: 'No records yet',
+        description: 'Ask a question and review what to check before preparing your first record.',
+        action: 'Start a question',
+      },
+    },
     ask: {
       title: 'Ask Result',
       titleWithQuery: 'Ask Result — {{query}}',
