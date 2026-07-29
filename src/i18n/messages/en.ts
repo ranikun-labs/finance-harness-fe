@@ -175,7 +175,51 @@ export const en: Messages = {
         listAction: 'Back to records',
       },
     },
-    journalReview: { title: 'Review — {{id}}' },
+    journalReview: {
+      title: 'Review — {{id}}',
+      headerTitle: 'Review record',
+      backLabel: 'Back to record details',
+      metadata: {
+        recordType: 'Record type',
+        recordedAt: 'Recorded on',
+        pastAction: 'Action at the time',
+        pastEmotion: 'Emotion at the time',
+      },
+      summary: { heading: 'Record being reviewed' },
+      status: { checked: 'Checked', unchecked: 'Not checked' },
+      investment: {
+        questionHeading: 'Question at the time',
+        memoHeading: 'Note at the time',
+        statusHeading: 'Check status at the time',
+        reflectionHeading: 'Questions to revisit',
+        prompts: {
+          assumption: 'Which assumptions mattered most to your reasoning at the time?',
+          uncheckedImpact:
+            'How might the unchecked items have affected your reasoning at the time?',
+          counterEvidence: 'Had you identified evidence that would change your reasoning?',
+          nextChecks: 'What would you check first before making a future decision?',
+        },
+      },
+      study: {
+        questionHeading: 'Original study question',
+        memoHeading: 'What you summarized at the time',
+        statusHeading: 'Previous status of follow-up items',
+        reflectionHeading: 'Questions for revisiting your learning',
+        prompts: {
+          understanding: 'What was the main idea you understood from your summary?',
+          revisit: 'What would you revisit or explain more clearly now?',
+          nextQuestion: 'What study question would you explore next?',
+        },
+      },
+      policyNotice:
+        'This screen does not judge whether your decision was correct. It helps you revisit what you checked and the reasoning you used at the time.',
+      navigation: { detail: 'Back to record details' },
+      notFound: {
+        heading: 'Record unavailable for review',
+        description: 'This record does not exist or is no longer available.',
+        listAction: 'Back to records',
+      },
+    },
     onboarding: {
       title: 'Onboarding',
       productName: 'AI Investment Checklist',

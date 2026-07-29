@@ -185,7 +185,7 @@ describe('AppRouter', () => {
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
       [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
-      [buildAppJournalReviewPath('sample-id'), /복기/],
+      [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],
     ])('hides the bottom tab bar on %s', (path, heading) => {
       renderAt(path);
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();

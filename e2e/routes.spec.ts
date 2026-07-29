@@ -30,7 +30,10 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
     path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
     heading: ko.app.journalDetail.headerTitle,
   },
-  { path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID), heading: /복기/ },
+  {
+    path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+    heading: ko.app.journalReview.headerTitle,
+  },
 ];
 
 // STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이 더
@@ -201,7 +204,9 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(page).toHaveURL(
       new RegExp(`${buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID)}$`),
     );
-    await expect(page.getByRole('heading', { name: /복기/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
+    ).toBeVisible();
   });
 
   test('journal detail resolves an encoded existing id and builds a canonical review href', async ({
@@ -246,6 +251,118 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       await expect(page.getByRole('heading', { name: APP_NOT_FOUND })).toHaveCount(0);
     });
   }
+
+  for (const review of [
+    {
+      label: 'primary investment',
+      id: PRIMARY_INVESTMENT_ID,
+      subject: ko.app.journalList.subjects.semiconductorCompanyA,
+      section: ko.app.journalReview.investment.reflectionHeading,
+    },
+    {
+      label: 'second investment',
+      id: SECOND_INVESTMENT_ID,
+      subject: ko.app.journalList.subjects.batteryCompanyC,
+      section: ko.app.journalReview.investment.reflectionHeading,
+    },
+    {
+      label: 'study',
+      id: STUDY_ID,
+      subject: '월말 리밸런싱',
+      section: ko.app.journalReview.study.reflectionHeading,
+    },
+  ]) {
+    test(`renders the ${review.label} review fixture directly`, async ({ page }) => {
+      await page.goto(buildAppJournalReviewPath(review.id));
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
+      ).toBeVisible();
+      await expect(page.getByText(review.subject, { exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: review.section })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+    });
+  }
+
+  test('journal review returns to canonical record details using a deterministic link', async ({
+    page,
+  }) => {
+    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    const detailLinks = page.getByRole('link', {
+      name: ko.app.journalReview.navigation.detail,
+    });
+
+    await expect(detailLinks).toHaveCount(2);
+    for (let index = 0; index < 2; index += 1) {
+      await expect(detailLinks.nth(index)).toHaveAttribute(
+        'href',
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      );
+    }
+    await detailLinks.last().click();
+    await expect(page).toHaveURL(
+      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
+    );
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+  });
+
+  test('journal review resolves an encoded existing id and keeps its canonical detail href', async ({
+    page,
+  }) => {
+    const encodedPath = `${APP_ROUTE_PATHS.journalList}/journal%2D2026%2D06%2D28%2D01/review`;
+    await page.goto(encodedPath);
+
+    await expect(
+      page.getByText(ko.app.journalList.subjects.semiconductorCompanyA, { exact: true }),
+    ).toBeVisible();
+    const detailLinks = page.getByRole('link', {
+      name: ko.app.journalReview.navigation.detail,
+    });
+    await expect(detailLinks.first()).toHaveAttribute(
+      'href',
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    );
+  });
+
+  for (const missing of [
+    {
+      label: 'unknown',
+      path: buildAppJournalReviewPath('unknown-record-id'),
+    },
+    {
+      label: 'malformed encoded',
+      path: `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A/review`,
+    },
+  ]) {
+    test(`journal review renders its local Not Found for ${missing.label} id`, async ({ page }) => {
+      await page.goto(missing.path);
+
+      await expect(
+        page.getByRole('heading', {
+          level: 1,
+          name: ko.app.journalReview.notFound.heading,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: ko.app.journalReview.navigation.detail }),
+      ).toHaveCount(0);
+      const links = page.getByRole('link');
+      for (let index = 0; index < (await links.count()); index += 1) {
+        await expect(links.nth(index)).toHaveAttribute('href', APP_ROUTE_PATHS.journalList);
+      }
+      await expect(page.getByRole('heading', { name: APP_NOT_FOUND })).toHaveCount(0);
+    });
+  }
+
+  test('journal review exposes no mutation form or save and submit controls', async ({ page }) => {
+    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+
+    await expect(page.locator('form, input, textarea, [type="submit"]')).toHaveCount(0);
+    await expect(page.getByRole('button')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /저장|제출|수정|삭제/ })).toHaveCount(0);
+  });
 
   test('journal list: the last record card is not covered by the bottom navigation', async ({
     page,
@@ -404,6 +521,29 @@ test.describe('Journal detail English locale', () => {
     await expect(
       page.getByRole('heading', {
         name: en.app.journalDetail.investment.questionHeading,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+  });
+});
+
+test.describe('Journal review English locale', () => {
+  test.use({ locale: 'en-US' });
+
+  test('renders English review labels while preserving the fixture-authored record', async ({
+    page,
+  }) => {
+    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: en.app.journalReview.headerTitle }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(en.app.journalList.subjects.semiconductorCompanyA, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: en.app.journalReview.investment.reflectionHeading,
       }),
     ).toBeVisible();
     await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
