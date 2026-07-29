@@ -1,6 +1,11 @@
 import type { EmotionTag, RecordAction } from '@/constants/policy';
 import type { SampleSubjectKey } from '@/i18n/dictionary';
 
+export interface JournalChecklistItem {
+  text: string;
+  checked: boolean;
+}
+
 interface BaseJournalEntry {
   id: string;
   recordedAt: string;
@@ -15,11 +20,14 @@ type InvestmentJournalEntry = BaseJournalEntry & {
   type: 'investment';
   subjectKey: SampleSubjectKey;
   action: RecordAction;
+  aiChecklist: string[];
+  decisionChecks: JournalChecklistItem[];
 };
 
 type StudyJournalEntry = BaseJournalEntry & {
   type: 'study';
   title: string;
+  nextChecks: JournalChecklistItem[];
 };
 
 export type JournalEntry = InvestmentJournalEntry | StudyJournalEntry;
@@ -41,6 +49,17 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     emotion: '확신',
     checkedCount: 2,
     totalCount: 3,
+    aiChecklist: [
+      '반도체 업황 — HBM·AI 수요 기대가 유지되는지',
+      '외국인 수급 — 하루짜리인지 누적 흐름인지',
+      '월말 리밸런싱 — 기관 수급 변동성 구간인지',
+      '실적 기대 — 이미 가격에 반영됐는지',
+    ],
+    decisionChecks: [
+      { text: '외국인 수급이 누적 흐름인지 확인했다', checked: true },
+      { text: '반도체 업황 지속 여부를 점검했다', checked: true },
+      { text: '월말 리밸런싱 구간 여부를 확인했다', checked: false },
+    ],
   },
   {
     id: 'journal-2026-06-27-01',
@@ -51,6 +70,11 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     memo: '펀드 벤치마크 대비 비중 조정이 필요해 월말에 기관 수급이 크게 튀는 경향이 있다. 단기 수급 왜곡으로 오해할 수 있음.',
     checkedCount: 3,
     totalCount: 3,
+    nextChecks: [
+      { text: '외국인 수급 흐름을 다시 확인한다', checked: true },
+      { text: '기관 수급과 벤치마크 조정을 비교한다', checked: true },
+      { text: '다음 실적 발표 일정을 확인한다', checked: true },
+    ],
   },
   {
     id: 'journal-2026-06-24-01',
@@ -63,5 +87,17 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     emotion: '불안',
     checkedCount: 1,
     totalCount: 4,
+    aiChecklist: [
+      '정책 환경 — 지원 정책의 방향이 유지되는지',
+      '수요 흐름 — 단기 반등과 누적 수요를 구분했는지',
+      '실적 전제 — 기대와 실제 수치의 차이가 있는지',
+      '반대 근거 — 판단을 바꿀 신호를 확인했는지',
+    ],
+    decisionChecks: [
+      { text: '관련 정책의 최근 변화를 확인했다', checked: true },
+      { text: '수요 회복이 누적 흐름인지 확인했다', checked: false },
+      { text: '실적 발표 전제를 다시 점검했다', checked: false },
+      { text: '판단을 바꿀 반대 근거를 정리했다', checked: false },
+    ],
   },
 ];

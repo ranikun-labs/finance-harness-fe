@@ -13,6 +13,7 @@ import {
   buildLocaleHomePath,
 } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
+import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
@@ -183,7 +184,7 @@ describe('AppRouter', () => {
     it.each([
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
       [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
-      [buildAppJournalDetailPath('sample-id'), /일지 상세/],
+      [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.title],
       [buildAppJournalReviewPath('sample-id'), /복기/],
     ])('hides the bottom tab bar on %s', (path, heading) => {
       renderAt(path);
