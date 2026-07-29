@@ -162,7 +162,7 @@ export function JournalDetailPage() {
   return (
     <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <DetailHeader
-        title={t('app.journalDetail.title')}
+        title={t('app.journalDetail.headerTitle')}
         backLabel={t('app.journalDetail.backLabel')}
       />
 
@@ -272,7 +272,7 @@ export function JournalDetailPage() {
         </>
       )}
 
-      <nav aria-label={t('app.journalDetail.title')}>
+      <nav aria-label={t('app.journalDetail.headerTitle')}>
         <Link
           className={cn(
             buttonVariants({ size: 'lg' }),

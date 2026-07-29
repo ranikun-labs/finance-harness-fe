@@ -35,7 +35,7 @@ describe('JournalDetailPage', () => {
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.journalDetail.title }),
+      screen.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeInTheDocument();
 
     const sectionHeadings = screen.getAllByRole('heading', { level: 2 });
@@ -168,7 +168,7 @@ describe('JournalDetailPage', () => {
     renderPage(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID), 'en');
 
     expect(
-      screen.getByRole('heading', { level: 1, name: en.app.journalDetail.title }),
+      screen.getByRole('heading', { level: 1, name: en.app.journalDetail.headerTitle }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {

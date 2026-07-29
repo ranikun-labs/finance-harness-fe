@@ -140,7 +140,8 @@ export const en: Messages = {
       study: 'Save Study Note',
     },
     journalDetail: {
-      title: 'Record details',
+      title: 'Entry Detail — {{id}}',
+      headerTitle: 'Record details',
       backLabel: 'Back to records',
       metadata: {
         recordType: 'Record type',

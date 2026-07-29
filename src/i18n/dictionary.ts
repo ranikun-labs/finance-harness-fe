@@ -98,6 +98,7 @@ export interface Messages {
     journalNew: { investment: string; study: string };
     journalDetail: {
       title: string;
+      headerTitle: string;
       backLabel: string;
       metadata: {
         recordType: string;

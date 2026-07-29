@@ -26,7 +26,10 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
-  { path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID), heading: ko.app.journalDetail.title },
+  {
+    path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    heading: ko.app.journalDetail.headerTitle,
+  },
   { path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID), heading: /복기/ },
 ];
 
@@ -182,7 +185,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       await page.goto(buildAppJournalDetailPath(detail.id));
 
       await expect(
-        page.getByRole('heading', { level: 1, name: ko.app.journalDetail.title }),
+        page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
       ).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: detail.heading })).toBeVisible();
       await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
@@ -390,7 +393,7 @@ test.describe('Journal detail English locale', () => {
     await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
 
     await expect(
-      page.getByRole('heading', { level: 1, name: en.app.journalDetail.title }),
+      page.getByRole('heading', { level: 1, name: en.app.journalDetail.headerTitle }),
     ).toBeVisible();
     await expect(
       page.getByRole('heading', {

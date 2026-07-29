@@ -137,7 +137,8 @@ export const ko: Messages = {
       study: '공부 노트 저장',
     },
     journalDetail: {
-      title: '기록 상세',
+      title: '일지 상세 — {{id}}',
+      headerTitle: '기록 상세',
       backLabel: '기록 목록으로 돌아가기',
       metadata: {
         recordType: '기록 유형',
