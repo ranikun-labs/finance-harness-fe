@@ -100,7 +100,9 @@ describe('AppRouter', () => {
   describe('app ownership (/app/*)', () => {
     it('renders the app home at /app', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
-      expect(screen.getByRole('heading', { name: 'Home' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+      ).toBeInTheDocument();
     });
 
     it.each([
@@ -126,7 +128,9 @@ describe('AppRouter', () => {
   describe('route priority: /app wins over /:locale', () => {
     it('matches /app as the app home, not a public locale named "app"', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
-      expect(screen.getByRole('heading', { name: 'Home' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+      ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /공개 웹 홈/ })).toBeNull();
     });
 
@@ -195,6 +199,18 @@ describe('AppRouter', () => {
     it('does not show the app bottom tab bar on the public surface', () => {
       renderAt(buildLocaleHomePath('ko'));
       expect(bottomNav()).toBeNull();
+    });
+
+    it('marks only the Home tab active at /app', () => {
+      renderAt(APP_ROUTE_PATHS.appHome);
+
+      const homeLink = screen.getByRole('link', { name: ko.nav.home, exact: true });
+      const askLink = screen.getByRole('link', { name: ko.nav.ask, exact: true });
+      const journalLink = screen.getByRole('link', { name: ko.nav.journal, exact: true });
+
+      expect(homeLink).toHaveAttribute('aria-current', 'page');
+      expect(askLink).not.toHaveAttribute('aria-current');
+      expect(journalLink).not.toHaveAttribute('aria-current');
     });
   });
 });
