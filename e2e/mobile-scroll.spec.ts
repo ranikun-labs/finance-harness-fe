@@ -4,10 +4,55 @@ import {
   APP_ROUTE_PATHS,
   buildAppAskPath,
   buildAppJournalDetailPath,
+  buildAppJournalNewPath,
   buildAppJournalReviewPath,
+  buildFeaturesPath,
+  buildLearnPath,
+  buildLocaleHomePath,
 } from '@/constants/routes';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
+
+test.describe('480×812 통합 뷰포트', () => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', '중복 없이 480×812를 한 번 검증한다');
+  });
+
+  test('STEP 9 app/public 화면은 수평 overflow 없이 하나의 h1을 유지한다', async ({ page }) => {
+    await page.setViewportSize({ width: 480, height: 812 });
+
+    const paths = [
+      APP_ROUTE_PATHS.appHome,
+      APP_ROUTE_PATHS.onboarding,
+      buildAppAskPath('480px 통합 확인 질문'),
+      APP_ROUTE_PATHS.journalList,
+      buildAppJournalDetailPath('journal-2026-06-28-01'),
+      buildAppJournalReviewPath('journal-2026-06-28-01'),
+      buildAppJournalNewPath('investment'),
+      buildAppJournalNewPath('study'),
+      buildLocaleHomePath('ko'),
+      buildLocaleHomePath('en'),
+      buildFeaturesPath('ko'),
+      buildFeaturesPath('en'),
+      buildLearnPath('ko'),
+      buildLearnPath('en'),
+      '/fr',
+      '/app/unknown',
+    ];
+
+    for (const path of paths) {
+      await page.goto(path);
+      await expect(page.locator('h1')).toHaveCount(1);
+      const viewportContract = await page.evaluate(() => ({
+        width: document.documentElement.clientWidth,
+        horizontalOverflow:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      }));
+      expect(viewportContract).toEqual({ width: 480, horizontalOverflow: false });
+    }
+  });
+});
 
 test.describe('모바일 세로 스크롤 계약', () => {
   // Playwright는 첫 인자가 fixture 구조분해 패턴이어야 하므로, 사용하지 않더라도
