@@ -17,7 +17,9 @@
 - **완료:** STEP 0~9 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI)
 - **현재:** **STEP 9 완료** — 온보딩·Home·Ask·Journal 목록·상세·복기 UI와 public placeholder/pre-render 통합 Gate 통과
 - **아직 안 함:** Journal New 실제 Form, 저장·수정·삭제, API·persistence, Auth, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** STEP 10 시작 전에 현재 HEAD를 Template 추출 기준으로 보존하고, 그 다음 Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR에서 시작한다.
+- **다음 행동:** PR #14를 일반 Merge Commit으로 병합한 뒤 그 최종 master Merge
+  Commit을 기준으로 Template을 추출하고, 그 다음 Journal New Form·경량 상태·모의
+  데이터 흐름을 STEP 10 별도 PR에서 시작한다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -52,7 +54,7 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ---
 
-## 3. 현재 완료 상태 (STEP 8 완료 기준)
+## 3. 현재 완료 상태 (STEP 9 완료 기준)
 
 아래는 **실제 로컬 저장소에서 확인된 완료 사항만** 기록한다. 미구현 항목을 완료로 적지 않는다.
 
@@ -256,12 +258,13 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ## 11. 현재 위치와 다음 행동
 
-**STEP 8 완료 기준:**
+**STEP 9 완료 기준:**
 
-- ✅ STEP 0~8 완료
-- 🔶 STEP 9 시작 전
-- 다음 작업: **핵심 화면 UI 구현**
-- 실제 화면 UI·API 연동·hosting provider 확정은 **아직 구현하지 않음**
+- ✅ STEP 0~9 완료
+- ✅ 완료 화면: Home, Onboarding, Ask 결과·빈 상태, Journal List·Detail·Review
+- Journal New 실제 Form은 STEP 10으로 보류
+- 다음 순서: **PR #14 Merge → Template 추출 → STEP 10**
+- API 연동·hosting provider 확정은 **아직 구현하지 않음**
 
 **STEP 5 산출물:**
 
@@ -339,20 +342,20 @@ React 기반 하나의 프론트엔드 코드베이스
       480×812, 1024px viewport 회귀 검증
 - [x] 정책: 추천·목표가·손절가·비중·수익률 예측·판단 대행·실시간 시세·개인화 UI
       없음. 과거 행동 label은 기록 metadata로만 표시하며 감정 값은 정책의 5개 고정
-- [x] Node 22.23.1·pnpm 11.15.1의 base `pnpm verify:full` 통과: Prettier,
-      TypeScript, Vitest 27 files/279 tests, client build, SSR build, 6-path
-      Pre-render, Playwright 222 passed/14 skipped. ESLint는 errors 0, 기존 Fast
-      Refresh warnings 3. retry·flaky·timeout·browser crash 없음
-- [x] 480×812 보강 후 targeted Playwright 통과(2 passed/13 skipped). 변경 후 허용된
-      두 번째 `verify:full`은 문서 Prettier 불일치에서 중단되었고 해당 문서는 즉시
-      포맷·재검증했다. 최대 2회 제한 때문에 composite Full Gate는 다시 실행하지 않아
-      RPL-29 판정은 비차단 Finding(B)으로 남긴다
+- [x] Node 22.23.1·pnpm 11.15.1의 최종 unchanged Head에서 `pnpm verify:full`
+      통과(94초, exit 0): Prettier, TypeScript, Vitest 27 files/279 tests, client
+      build, SSR build, 6-path Pre-render, Playwright 223 passed/15 skipped. ESLint는
+      errors 0, 기존 Fast Refresh warnings 3. retry·flaky·timeout·browser crash 없음.
+      Production 코드와 package/lockfile 변경 없음
+- [x] Gate 이력: 초기 `verify:full` 통과 → 문서 추가 후 실행이 Prettier 불일치에서
+      중단 → 문서 포맷 보정 → 최종 unchanged Head `verify:full` 통과. 최종 판정 A
 
-Template 추출 기준 후보는 production 코드가 base와 동일한
-`dc672dd00ef389e59974ead335684399dc6ab596`이다. STEP 10에서 Form·상태 경계를
-추가하기 전에 이 snapshot을 Template으로 추출하는 것을 권고한다.
+React Template extraction 기준은 PR #14가 **일반 Merge Commit**으로 병합된 후
+생성되는 최종 master Merge Commit SHA다. 아직 Merge Commit은 생성되지 않았으며,
+Template 추출은 STEP 10 구현 전에 수행한다.
 
 **다음 실행 항목:**
 
-1. [ ] 현재 STEP 9 snapshot의 Template 추출 여부 결정
-2. [ ] STEP 10 — Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR로 구현
+1. [ ] PR #14를 일반 Merge Commit으로 병합
+2. [ ] 최종 master Merge Commit SHA를 기준으로 Template 추출
+3. [ ] STEP 10 — Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR로 구현
