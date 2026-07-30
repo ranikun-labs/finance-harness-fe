@@ -14,10 +14,10 @@
 
 ## 결론 먼저 — 현재 위치
 
-- **완료:** STEP 0~8 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 원본 반입·화면 매핑 / 공개 웹·앱 라우팅 경계 설계 / Pre-render + `/app/*` SPA 렌더링·fallback 계약 / 한국어·영어 i18n 기반 / 디자인 시스템·공통 UI 기반)
-- **현재:** **STEP 9 시작 전** — 핵심 화면 UI 구현 대기
-- **아직 안 함:** 실제 화면 UI 구현, API 연동, 네이티브 프로젝트
-- **다음 행동:** 핵심 화면 UI 구현(STEP 9, 온보딩·Home·Ask·Journal 등). 라우팅 경계 설계·Pre-render/fallback 계약은 [`docs/route-architecture.md`](./route-architecture.md), i18n 계약은 같은 문서 §6, STEP 4 매핑 결과는 [`docs/design-route-map.md`](./design-route-map.md) 참고.
+- **완료:** STEP 0~9 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI)
+- **현재:** **STEP 9 완료** — 온보딩·Home·Ask·Journal 목록·상세·복기 UI와 public placeholder/pre-render 통합 Gate 통과
+- **아직 안 함:** Journal New 실제 Form, 저장·수정·삭제, API·persistence, Auth, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
+- **다음 행동:** STEP 10 시작 전에 현재 HEAD를 Template 추출 기준으로 보존하고, 그 다음 Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR에서 시작한다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -56,27 +56,27 @@ React 기반 하나의 프론트엔드 코드베이스
 
 아래는 **실제 로컬 저장소에서 확인된 완료 사항만** 기록한다. 미구현 항목을 완료로 적지 않는다.
 
-| 영역         | 완료 내용                                                                                                                                                                                                                                                                                                                                                 | 상태              |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| 빌드 스택    | Vite 8 · React 19 · TypeScript 6                                                                                                                                                                                                                                                                                                                          | ✅                |
-| 라우팅 골격  | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                                                                                                                                                                                                             | ✅                |
-| 라우트 계약  | 라우트 정의 단일 소스 [`routes.ts`](../src/constants/routes.ts) — 공개 웹 `PUBLIC_ROUTE_PATHS`(`/:locale`, `/:locale/features`, `/:locale/learn/*`)와 웹앱 `APP_ROUTE_PATHS`(`/app` 프리픽스 7종)로 분리. 루트 `/`는 `/ko` redirect. 경계 설계는 [`route-architecture.md`](./route-architecture.md)                                                       | ✅                |
-| NotFound     | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                                                                                  | ✅                |
-| 하단 탭      | [`BOTTOM_TABS`](../src/constants/navigation.ts) 3개(홈/질문/기록) 단일 소스                                                                                                                                                                                                                                                                               | ✅                |
-| 레이아웃     | 모바일 AppShell · TabLayout · BottomNavigation                                                                                                                                                                                                                                                                                                            | ✅                |
-| 화면         | 각 라우트 페이지는 **전부 스켈레톤**(실 UI 아님)                                                                                                                                                                                                                                                                                                          | ✅(스켈레톤 한정) |
-| 디자인 토큰  | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                                                                        | ✅                |
-| Capacitor    | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                                                                                     | ✅(설정 한정)     |
-| Pre-render   | 공개 고정 경로 6개(`/ko`, `/en`, `/:locale/features`, `/:locale/learn`) 정적 HTML 생성. Vite 코어 `--ssr`([`entry-server.tsx`](../src/entry-server.tsx)) + `renderToString`, 매니페스트는 [`prerender/manifest.ts`](../src/prerender/manifest.ts)에서 파생(하드코딩 없음), 신규 dependency 0개                                                            | ✅                |
-| Hydration    | Pre-render 결과는 `hydrateRoot`, 그 외(`/app/*` 포함)는 `createRoot` — root의 `data-render-mode` marker로 분기([`main.tsx`](../src/main.tsx), [`shouldHydrate.ts`](../src/prerender/shouldHydrate.ts))                                                                                                                                                    | ✅                |
-| SPA fallback | provider-neutral clean URL 계약(자산 우선 → directory-index → asset 404 → HTML document fallback → 404)을 [`route-architecture.md`](./route-architecture.md) §5.4에 명시, `e2e/support/fixtureServer.ts`로 검증                                                                                                                                           | ✅                |
-| 문서         | 제품 정책·화면/라우트 기준 문서, README의 Pre-render/SPA fallback 계약                                                                                                                                                                                                                                                                                    | ✅                |
-| 검증         | Vitest 유닛 5종 + Playwright 3종(`e2e/`), `verify`/`verify:full` 스크립트 + 자동 build 검증(`scripts/verify-prerender-output.mjs`) + 별도 idempotency 명령(`pnpm verify:build-idempotency`)                                                                                                                                                               | ✅                |
-| 품질 회귀    | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                                                                                                                                                                                                    | ✅                |
-| i18n 기반    | 신규 dependency 0개(React Context + 타입 안전 로컬 dictionary, [`src/i18n/`](../src/i18n)). 공개 웹은 URL `:locale`이 유일 기준(`PublicLayout` 주입), 앱(`/app/*`)은 `localStorage`→`navigator.language`→`DEFAULT_LOCALE` 우선순위로 독립 저장·복원. Pre-render 6개 산출물의 `<html lang>` 정합성, `document.documentElement.lang` 클라이언트 동기화 포함 | ✅                |
+| 영역         | 완료 내용                                                                                                                                                                                                                                                                                                                                                 | 상태          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| 빌드 스택    | Vite 8 · React 19 · TypeScript 6                                                                                                                                                                                                                                                                                                                          | ✅            |
+| 라우팅 골격  | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                                                                                                                                                                                                             | ✅            |
+| 라우트 계약  | 라우트 정의 단일 소스 [`routes.ts`](../src/constants/routes.ts) — 공개 웹 `PUBLIC_ROUTE_PATHS`(`/:locale`, `/:locale/features`, `/:locale/learn/*`)와 웹앱 `APP_ROUTE_PATHS`(`/app` 프리픽스 7종)로 분리. 루트 `/`는 `/ko` redirect. 경계 설계는 [`route-architecture.md`](./route-architecture.md)                                                       | ✅            |
+| NotFound     | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                                                                                  | ✅            |
+| 하단 탭      | [`BOTTOM_TABS`](../src/constants/navigation.ts) 3개(홈/질문/기록) 단일 소스                                                                                                                                                                                                                                                                               | ✅            |
+| 레이아웃     | 모바일 AppShell · TabLayout · BottomNavigation                                                                                                                                                                                                                                                                                                            | ✅            |
+| 화면         | 앱 Home·Onboarding·Ask(결과/빈 상태)·Journal List·Detail·Review 실 UI 완료. Journal New는 STEP 10 전까지 의도된 placeholder 유지. 공개 Home·Features·Learn은 locale별 placeholder 유지                                                                                                                                                                    | ✅(STEP 9)    |
+| 디자인 토큰  | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                                                                        | ✅            |
+| Capacitor    | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                                                                                     | ✅(설정 한정) |
+| Pre-render   | 공개 고정 경로 6개(`/ko`, `/en`, `/:locale/features`, `/:locale/learn`) 정적 HTML 생성. Vite 코어 `--ssr`([`entry-server.tsx`](../src/entry-server.tsx)) + `renderToString`, 매니페스트는 [`prerender/manifest.ts`](../src/prerender/manifest.ts)에서 파생(하드코딩 없음), 신규 dependency 0개                                                            | ✅            |
+| Hydration    | Pre-render 결과는 `hydrateRoot`, 그 외(`/app/*` 포함)는 `createRoot` — root의 `data-render-mode` marker로 분기([`main.tsx`](../src/main.tsx), [`shouldHydrate.ts`](../src/prerender/shouldHydrate.ts))                                                                                                                                                    | ✅            |
+| SPA fallback | provider-neutral clean URL 계약(자산 우선 → directory-index → asset 404 → HTML document fallback → 404)을 [`route-architecture.md`](./route-architecture.md) §5.4에 명시, `e2e/support/fixtureServer.ts`로 검증                                                                                                                                           | ✅            |
+| 문서         | 제품 정책·화면/라우트 기준 문서, README의 Pre-render/SPA fallback 계약                                                                                                                                                                                                                                                                                    | ✅            |
+| 검증         | Vitest 유닛 5종 + Playwright 3종(`e2e/`), `verify`/`verify:full` 스크립트 + 자동 build 검증(`scripts/verify-prerender-output.mjs`) + 별도 idempotency 명령(`pnpm verify:build-idempotency`)                                                                                                                                                               | ✅            |
+| 품질 회귀    | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                                                                                                                                                                                                    | ✅            |
+| i18n 기반    | 신규 dependency 0개(React Context + 타입 안전 로컬 dictionary, [`src/i18n/`](../src/i18n)). 공개 웹은 URL `:locale`이 유일 기준(`PublicLayout` 주입), 앱(`/app/*`)은 `localStorage`→`navigator.language`→`DEFAULT_LOCALE` 우선순위로 독립 저장·복원. Pre-render 6개 산출물의 `<html lang>` 정합성, `document.documentElement.lang` 클라이언트 동기화 포함 | ✅            |
 
-> **아직 완료가 아닌 것:** 공개 웹 실제 UI(현재 placeholder), 앱 화면 실제 UI,
-> 폼·상태·데이터 흐름, API 연동, 네이티브 프로젝트 생성, 출시 설정,
+> **아직 완료가 아닌 것:** 공개 웹 실제 UI(현재 placeholder), Journal New 실제 Form,
+> 저장·수정·삭제와 데이터 흐름, API 연동, 네이티브 프로젝트 생성, 출시 설정,
 > hosting provider 확정(공개 웹/앱 라우팅 경계·Pre-render/SPA fallback 계약·i18n
 > 기반 자체는 STEP 5·6·7에서 완료됨 — 위 표 참고).
 
@@ -127,24 +127,24 @@ React 기반 하나의 프론트엔드 코드베이스
 > 설계)** 과 **렌더링 설정** 책임을 구분해 기록한다. 모든 STEP의 규모가 동일하지 않으며,
 > **실제 개발량은 화면 구현(STEP 9)과 API 연동(STEP 11)에 집중**된다.
 
-| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태    | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
-| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ------- | ----------------------- | -------------------------- |
-| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅      | 정책 PR                 | 화면 구현                  |
-| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅      | 문서 PR                 | 실제 라우팅 코드           |
-| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅      | (외부 산출물)           | 저장소 반입                |
-| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅      | PR #1                   | 실 UI·API                  |
-| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅      | 자산·매핑 문서 PR       | 실 UI 구현·라우팅 전환     |
-| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계 + 라우트 코드   | STEP 4                   | 경계·라우트 계약 합의·구현      | ✅      | 라우팅 경계 PR          | Pre-render 설정            |
-| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | ✅      | 렌더링 설정 PR          | 번역·실 UI                 |
-| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5, 6                | ko/en 전환 동작                 | ✅      | i18n PR                 | 번역 SaaS·실 UI            |
-| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ✅      | 디자인 시스템 PR        | 화면별 로직                |
-| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | 🔶 현재 | **화면/흐름별 다수 PR** | API 연동                   |
-| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태 설계                     | STEP 9                   | 흐름 동작(모의 데이터)          | ⬜      | 상태/폼 PR              | 백엔드 연동                |
-| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜      | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
-| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜      | 품질 PR                 | 네이티브                   |
-| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒    | 네이티브 PR             | 출시 설정과 혼재           |
-| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜      | 테스트 PR               | 신규 기능                  |
-| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜      | 출시 설정 PR            | 신규 기능                  |
+| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태 | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
+| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ---- | ----------------------- | -------------------------- |
+| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅   | 정책 PR                 | 화면 구현                  |
+| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅   | 문서 PR                 | 실제 라우팅 코드           |
+| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅   | (외부 산출물)           | 저장소 반입                |
+| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅   | PR #1                   | 실 UI·API                  |
+| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅   | 자산·매핑 문서 PR       | 실 UI 구현·라우팅 전환     |
+| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계 + 라우트 코드   | STEP 4                   | 경계·라우트 계약 합의·구현      | ✅   | 라우팅 경계 PR          | Pre-render 설정            |
+| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | ✅   | 렌더링 설정 PR          | 번역·실 UI                 |
+| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5, 6                | ko/en 전환 동작                 | ✅   | i18n PR                 | 번역 SaaS·실 UI            |
+| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ✅   | 디자인 시스템 PR        | 화면별 로직                |
+| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ✅   | **화면/흐름별 다수 PR** | API 연동                   |
+| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태 설계                     | STEP 9                   | 흐름 동작(모의 데이터)          | ⬜   | 상태/폼 PR              | 백엔드 연동                |
+| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜   | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
+| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜   | 품질 PR                 | 네이티브                   |
+| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒 | 네이티브 PR             | 출시 설정과 혼재           |
+| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜   | 테스트 PR               | 신규 기능                  |
+| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜   | 출시 설정 PR            | 신규 기능                  |
 
 ---
 
@@ -178,7 +178,7 @@ React 기반 하나의 프론트엔드 코드베이스
 - ✅ **Pre-render + `/app/*` SPA 렌더링·fallback 계약 (STEP 6)**
 - ✅ **한국어·영어 i18n 기반 (STEP 7)**
 - ✅ **디자인 시스템·공통 UI 기반 (STEP 8, 이 PR)**
-- ⬜ 화면 또는 사용자 흐름별 UI 구현(다수)
+- ✅ 화면 또는 사용자 흐름별 UI 구현(다수)
 - ⬜ API·상태 연동(다수)
 - ⬜ 출시 품질 보강
 
@@ -318,6 +318,41 @@ React 기반 하나의 프론트엔드 코드베이스
 > `ActionCard`, `StatusBadge`, `EmotionBadge`, `SectionHeader`, `SegmentedControl`,
 > `FormField`, checklist item, Loading/Error shell, 화면별 실 UI.
 
+**STEP 9 완료 기준 (RPL-29 Final Gate):**
+
+- [x] 앱 화면: Home, Onboarding, Ask 결과/빈 상태, Journal List·Detail·Review 완료.
+      Journal New의 `investment`·`study` 진입은 제목만 표시하는 placeholder이며 실제
+      Form·save·submit·persistence는 STEP 10으로 보류
+- [x] 공개 화면: `/ko`, `/en`, locale별 Features·Learn과 unsupported locale
+      NotFound를 ko/en으로 검증. 고정 Pre-render는 `/ko`, `/en`, `/ko/features`,
+      `/en/features`, `/ko/learn`, `/en/learn` 6개
+- [x] route/shell: `BrowserRouter`, `/`→`/ko` replace, locale allowlist, encoded
+      Journal ID·query helper 유지. Bottom Navigation은 Home·Ask·Journal만 포함하고
+      Onboarding·Journal New·Detail·Review에는 표시하지 않음. 탭 화면은 `TabLayout`
+      main, 그 외 앱 화면은 `AppShell`이 단일 실제 스크롤 표면이며 데스크톱 앱 frame은
+      480px
+- [x] i18n: ko/en dictionary contract와 화면 label 번역, public URL locale, app
+      `localStorage`→`navigator.language`→default locale, `<html lang>` 동기화 검증.
+      fixture 작성자 텍스트는 locale 전환 시 자동 번역하지 않음
+- [x] 접근성·모바일: 화면별 h1 하나, heading/semantic navigation, accessible name,
+      `aria-current`, focus-visible·44px 이상 target, 긴 문자열 wrapping, 375×812,
+      480×812, 1024px viewport 회귀 검증
+- [x] 정책: 추천·목표가·손절가·비중·수익률 예측·판단 대행·실시간 시세·개인화 UI
+      없음. 과거 행동 label은 기록 metadata로만 표시하며 감정 값은 정책의 5개 고정
+- [x] Node 22.23.1·pnpm 11.15.1의 base `pnpm verify:full` 통과: Prettier,
+      TypeScript, Vitest 27 files/279 tests, client build, SSR build, 6-path
+      Pre-render, Playwright 222 passed/14 skipped. ESLint는 errors 0, 기존 Fast
+      Refresh warnings 3. retry·flaky·timeout·browser crash 없음
+- [x] 480×812 보강 후 targeted Playwright 통과(2 passed/13 skipped). 변경 후 허용된
+      두 번째 `verify:full`은 문서 Prettier 불일치에서 중단되었고 해당 문서는 즉시
+      포맷·재검증했다. 최대 2회 제한 때문에 composite Full Gate는 다시 실행하지 않아
+      RPL-29 판정은 비차단 Finding(B)으로 남긴다
+
+Template 추출 기준 후보는 production 코드가 base와 동일한
+`dc672dd00ef389e59974ead335684399dc6ab596`이다. STEP 10에서 Form·상태 경계를
+추가하기 전에 이 snapshot을 Template으로 추출하는 것을 권고한다.
+
 **다음 실행 항목:**
 
-1. [ ] 핵심 화면 UI 구현(STEP 9) — 온보딩·Home·Ask·Journal 등
+1. [ ] 현재 STEP 9 snapshot의 Template 추출 여부 결정
+2. [ ] STEP 10 — Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR로 구현
