@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router';
 
+import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
 import { buildAppJournalNewPath } from '@/constants/routes';
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
@@ -45,8 +46,13 @@ export function JournalNewPage() {
     );
   }
 
-  const title =
-    resolution.type === 'study' ? t('app.journalNew.study') : t('app.journalNew.investment');
-
-  return <PageSkeleton title={title} />;
+  if (resolution.type === 'study') return <PageSkeleton title={t('app.journalNew.study')} />;
+  return (
+    <section className="flex min-h-full flex-col">
+      <header className="p-4 pb-0">
+        <h1 className="text-foreground text-lg font-semibold">{t('app.journalNew.investment')}</h1>
+      </header>
+      <InvestmentJournalForm onDirtyChange={() => undefined} />
+    </section>
+  );
 }

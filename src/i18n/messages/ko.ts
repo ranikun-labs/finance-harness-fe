@@ -153,6 +153,71 @@ export const ko: Messages = {
     journalNew: {
       investment: '일지 저장 (투자 기록)',
       study: '공부 노트 저장',
+      typeSwitch: {
+        investment: '투자 기록',
+        study: '학습 기록',
+        dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
+      },
+      form: {
+        optional: '선택',
+        checkEntries: '입력 확인',
+        validUnsaved: '입력 형식을 확인했습니다. 아직 저장되지 않았습니다.',
+        validationSummary: '입력 내용을 확인해주세요.',
+        validation: {
+          required: '필수 입력 항목입니다.',
+          maxLength: '허용된 글자 수를 초과했습니다.',
+          invalidChoice: '선택값이 올바르지 않습니다.',
+          invalidDatetime: '날짜와 시간을 확인해주세요.',
+        },
+        investment: {
+          assetName: {
+            label: '종목',
+            placeholder: '종목명 또는 티커',
+            helper: '기록하려는 대상만 적어주세요.',
+          },
+          occurredAt: {
+            label: '기록 시각',
+            helper: '시간대 변환 없이 입력한 현지 시각으로 기록합니다.',
+          },
+          action: {
+            label: '내가 한 행동',
+            helper: '추천이 아닌, 실제로 한 행동을 기록용으로 선택해주세요.',
+          },
+          reasoning: {
+            label: '판단 이유',
+            placeholder: '이 시점에 이 행동을 한 이유를 적어보세요.',
+            helper: '예측이나 추천이 아닌 당시 근거를 남겨보세요.',
+            count: '{{count}} / 4000',
+          },
+          emotion: {
+            label: '감정',
+            helper: '당시 감정을 하나만 선택할 수 있어요.',
+            none: '선택 안 함',
+          },
+        },
+        study: {
+          title: {
+            label: '배운 주제',
+            placeholder: '배운 주제나 개념을 적어보세요.',
+            helper: '이번에 학습한 주제만 적어주세요.',
+          },
+          occurredAt: {
+            label: '기록 시각',
+            helper: '시간대 변환 없이 입력한 현지 시각으로 기록합니다.',
+          },
+          keyContent: {
+            label: '오늘 배운 것',
+            placeholder: '이번에 새로 이해한 내용을 적어보세요.',
+            helper: '핵심 내용을 내 말로 정리해보세요.',
+            count: '{{count}} / 6000',
+          },
+          openQuestions: {
+            label: '다음에 확인할 것',
+            placeholder: '한 줄에 하나씩 적어보세요.',
+            helper: '줄바꿈마다 하나의 질문으로 유지됩니다.',
+          },
+        },
+      },
       invalidType: {
         heading: '지원하지 않는 기록 유형이에요',
         description: '투자 기록 또는 공부 노트 중에서 선택해주세요.',

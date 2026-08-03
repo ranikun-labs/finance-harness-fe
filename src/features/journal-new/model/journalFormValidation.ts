@@ -4,10 +4,22 @@ import type {
   StudyJournalFormState,
 } from '@/features/journal-new/model/journalFormTypes';
 
+export type InvestmentJournalField =
+  'assetName' | 'occurredAt' | 'action' | 'reasoning' | 'emotion';
+export type StudyJournalField = 'title' | 'occurredAt' | 'keyContent' | 'openQuestions';
+export type JournalFormField = InvestmentJournalField | StudyJournalField;
+export type JournalValidationCode =
+  'required' | 'max_length' | 'invalid_option' | 'invalid_datetime';
+export type JournalValidationMessageKey =
+  | 'journal.validation.required'
+  | 'journal.validation.max_length'
+  | 'journal.validation.invalid_option'
+  | 'journal.validation.invalid_datetime';
+
 export type JournalFieldError = {
-  field: string;
-  code: string;
-  messageKey: string;
+  field: JournalFormField;
+  code: JournalValidationCode;
+  messageKey: JournalValidationMessageKey;
 };
 
 export type JournalValidationResult =
@@ -18,11 +30,19 @@ const MAX_REASONING_LENGTH = 4000;
 const MAX_KEY_CONTENT_LENGTH = 6000;
 const DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?$/;
 
-function error(field: string, code: string, messageKey: string): JournalFieldError {
+function error(
+  field: JournalFormField,
+  code: JournalValidationCode,
+  messageKey: JournalValidationMessageKey,
+): JournalFieldError {
   return { field, code, messageKey };
 }
 
-function addRequiredError(errors: JournalFieldError[], field: string, value: string): boolean {
+function addRequiredError(
+  errors: JournalFieldError[],
+  field: JournalFormField,
+  value: string,
+): boolean {
   if (value.trim() !== '') return false;
   errors.push(error(field, 'required', 'journal.validation.required'));
   return true;
@@ -30,7 +50,7 @@ function addRequiredError(errors: JournalFieldError[], field: string, value: str
 
 function addMaximumLengthError(
   errors: JournalFieldError[],
-  field: string,
+  field: JournalFormField,
   value: string,
   maximum: number,
 ): void {
