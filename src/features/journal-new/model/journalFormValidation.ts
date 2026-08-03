@@ -16,8 +16,7 @@ export type JournalValidationResult =
 const MAX_ASSET_OR_TITLE_LENGTH = 120;
 const MAX_REASONING_LENGTH = 4000;
 const MAX_KEY_CONTENT_LENGTH = 6000;
-const DATETIME_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/;
+const DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?$/;
 
 function error(field: string, code: string, messageKey: string): JournalFieldError {
   return { field, code, messageKey };

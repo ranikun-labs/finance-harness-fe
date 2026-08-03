@@ -69,20 +69,44 @@ describe('journal form validation contract', () => {
     ]);
   });
 
-  it('enforces approved maximum field lengths', () => {
-    const investmentResult = validateInvestmentJournalForm({
+  it('accepts investment fields at their maximum lengths', () => {
+    const result = validateInvestmentJournalForm({
+      ...validInvestment,
+      assetName: 'a'.repeat(120),
+      reasoning: 'r'.repeat(4000),
+    });
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('rejects investment fields beyond their maximum lengths', () => {
+    const result = validateInvestmentJournalForm({
       ...validInvestment,
       assetName: 'a'.repeat(121),
       reasoning: 'r'.repeat(4001),
     });
-    const studyResult = validateStudyJournalForm({
+
+    expect(errorsFor(result)).toEqual(['assetName', 'reasoning']);
+  });
+
+  it('accepts study fields at their maximum lengths', () => {
+    const result = validateStudyJournalForm({
+      ...validStudy,
+      title: 't'.repeat(120),
+      keyContent: 'k'.repeat(6000),
+    });
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('rejects study fields beyond their maximum lengths', () => {
+    const result = validateStudyJournalForm({
       ...validStudy,
       title: 't'.repeat(121),
       keyContent: 'k'.repeat(6001),
     });
 
-    expect(errorsFor(investmentResult)).toEqual(['assetName', 'reasoning']);
-    expect(studyResult.errors.map((error) => error.field)).toEqual(['title', 'keyContent']);
+    expect(result.errors.map((error) => error.field)).toEqual(['title', 'keyContent']);
   });
 
   it('accepts valid investment and study raw form states', () => {
@@ -100,8 +124,21 @@ describe('journal form validation contract', () => {
     expect(errorsFor(result)).toEqual(['action', 'emotion']);
   });
 
-  it('rejects an invalid occurredAt datetime', () => {
-    const result = validateStudyJournalForm({ ...validStudy, occurredAt: '2026-02-30T10:00' });
+  it('accepts a valid local occurredAt datetime', () => {
+    const result = validateStudyJournalForm({ ...validStudy, occurredAt: '2026-08-03T09:30' });
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it.each([
+    ['timezone offset', '2026-08-03T09:30+09:00'],
+    ['UTC suffix', '2026-08-03T09:30Z'],
+    ['malformed timezone offset', '2026-08-03T09:30+99:99'],
+    ['nonexistent calendar date', '2026-02-30T09:30'],
+    ['invalid hour', '2026-08-03T24:00'],
+    ['invalid minute', '2026-08-03T09:60'],
+  ])('rejects an occurredAt datetime with %s', (_reason, occurredAt) => {
+    const result = validateStudyJournalForm({ ...validStudy, occurredAt });
 
     expect(result).toMatchObject({ valid: false });
     expect(result.errors).toContainEqual(
@@ -119,5 +156,18 @@ describe('journal form validation contract', () => {
     validateInvestmentJournalForm(state);
 
     expect(state).toEqual(before);
+  });
+
+  it('does not mutate study input or open questions', () => {
+    const state: StudyJournalFormState = {
+      ...validStudy,
+      openQuestions: ['첫 번째 질문', '두 번째 질문'],
+    };
+    const before = structuredClone(state);
+
+    validateStudyJournalForm(state);
+
+    expect(state).toEqual(before);
+    expect(state.openQuestions).toEqual(['첫 번째 질문', '두 번째 질문']);
   });
 });
