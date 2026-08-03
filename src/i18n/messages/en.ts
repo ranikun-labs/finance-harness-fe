@@ -156,6 +156,12 @@ export const en: Messages = {
     journalNew: {
       investment: 'Save Entry (Investment)',
       study: 'Save Study Note',
+      invalidType: {
+        heading: 'Unsupported record type',
+        description: 'Choose either an investment record or a study note.',
+        investmentAction: 'Create investment record',
+        studyAction: 'Create study note',
+      },
     },
     journalDetail: {
       title: 'Entry Detail — {{id}}',
