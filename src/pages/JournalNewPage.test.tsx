@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -58,11 +58,11 @@ describe('JournalNewPage', () => {
     expect(screen.getByText(en.app.journalNew.invalidType.description)).toBeInTheDocument();
   });
 
-  it('validates investment entries in place without saving or navigation', () => {
+  it('validates investment entries in place without saving or navigation', async () => {
     renderPage(buildAppJournalNewPath('investment'));
     fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
     expect(screen.getAllByRole('alert')).not.toHaveLength(0);
-    expect(document.activeElement).toHaveAttribute('id', 'assetName');
+    await waitFor(() => expect(document.activeElement).toHaveAttribute('id', 'assetName'));
     fireEvent.change(screen.getByLabelText('종목'), { target: { value: '기업 A' } });
     fireEvent.change(screen.getByLabelText('기록 시각'), { target: { value: '2026-08-03T09:30' } });
     fireEvent.click(screen.getByLabelText('관심'));
