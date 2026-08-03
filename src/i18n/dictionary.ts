@@ -114,7 +114,16 @@ export interface Messages {
       emptyFilter: { title: string; description: string; resetAction: string };
       subjects: Record<SampleSubjectKey, string>;
     };
-    journalNew: { investment: string; study: string };
+    journalNew: {
+      investment: string;
+      study: string;
+      invalidType: {
+        heading: string;
+        description: string;
+        investmentAction: string;
+        studyAction: string;
+      };
+    };
     journalDetail: {
       title: string;
       headerTitle: string;

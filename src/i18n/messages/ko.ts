@@ -153,6 +153,12 @@ export const ko: Messages = {
     journalNew: {
       investment: '일지 저장 (투자 기록)',
       study: '공부 노트 저장',
+      invalidType: {
+        heading: '지원하지 않는 기록 유형이에요',
+        description: '투자 기록 또는 공부 노트 중에서 선택해주세요.',
+        investmentAction: '투자 기록 작성',
+        studyAction: '공부 노트 작성',
+      },
     },
     journalDetail: {
       title: '일지 상세 — {{id}}',

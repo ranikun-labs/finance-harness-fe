@@ -194,6 +194,7 @@ describe('AppRouter', () => {
     it.each([
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
       [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
+      [`${APP_ROUTE_PATHS.journalNew}?type=unknown`, ko.app.journalNew.invalidType.heading],
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
       [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],
     ])('hides the bottom tab bar on %s', (path, heading) => {
