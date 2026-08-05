@@ -16,8 +16,11 @@ describe('journal create command mapping', () => {
       reasoning: '  판단 근거  ',
       emotion: '',
     };
+    const before = structuredClone(state);
 
-    expect(toInvestmentJournalCreateCommand(state)).toEqual({
+    const command = toInvestmentJournalCreateCommand(state);
+
+    expect(command).toEqual({
       type: 'investment',
       assetName: '기업 A',
       occurredAt: '2026-08-03T09:30',
@@ -25,7 +28,7 @@ describe('journal create command mapping', () => {
       reasoning: '판단 근거',
       emotion: undefined,
     });
-    expect(state).toEqual({ ...state });
+    expect(state).toEqual(before);
   });
 
   it('preserves a valid investment emotion', () => {
@@ -50,14 +53,18 @@ describe('journal create command mapping', () => {
       keyContent: '  핵심 내용  ',
       openQuestions,
     };
+    const before = structuredClone(state);
 
-    expect(toStudyJournalCreateCommand(state)).toEqual({
+    const command = toStudyJournalCreateCommand(state);
+
+    expect(command).toEqual({
       type: 'study',
       title: '공부 제목',
       occurredAt: '2026-08-03T09:30',
       keyContent: '핵심 내용',
       openQuestions: ['질문 하나', '질문 둘', '질문 하나'],
     });
-    expect(openQuestions).toEqual([' 질문 하나 ', ' ', '질문 둘', '질문 하나']);
+    expect(state).toEqual(before);
+    expect(state.openQuestions).toEqual(before.openQuestions);
   });
 });

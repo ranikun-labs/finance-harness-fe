@@ -258,13 +258,13 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ## 11. 현재 위치와 다음 행동
 
-**STEP 9 완료 기준:**
+**STEP 10 진행 상태:**
 
-- ✅ STEP 0~9 완료
-- ✅ 완료 화면: Home, Onboarding, Ask 결과·빈 상태, Journal List·Detail·Review
-- Journal New 실제 Form은 STEP 10으로 보류
-- 다음 순서: **PR #14 Merge → Template 추출 → STEP 10**
-- API 연동·hosting provider 확정은 **아직 구현하지 않음**
+- ✅ RPL-18: Journal New Form과 클라이언트 검증 완료
+- ✅ RPL-43: Form focus recovery 완료
+- 🔶 RPL-44: test-only Create Port·제출 상태를 보정·검증 중
+- 실제 저장·API·persistence는 백엔드 계약 이후 STEP 11에서만 시작한다.
+- STEP 10 전체 완료는 남은 Slice와 독립 검증 뒤에만 판정한다.
 
 **STEP 5 산출물:**
 

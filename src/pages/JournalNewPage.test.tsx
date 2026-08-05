@@ -205,14 +205,16 @@ describe('JournalNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
     fireEvent.submit(screen.getByRole('button', { name: '테스트 제출 중' }).closest('form')!);
 
-    expect(create).toHaveBeenCalledTimes(1);
-    expect(create).toHaveBeenCalledWith({
-      type: 'investment',
-      assetName: '기업 A',
-      occurredAt: '2026-08-03T09:30',
-      action: 'interest',
-      reasoning: '근거를 적는다.',
-      emotion: undefined,
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledWith({
+        type: 'investment',
+        assetName: '기업 A',
+        occurredAt: '2026-08-03T09:30',
+        action: 'interest',
+        reasoning: '근거를 적는다.',
+        emotion: undefined,
+      });
     });
     await act(async () => resolveCreate!({ journalId: 'test/id' }));
     expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument();
@@ -234,20 +236,63 @@ describe('JournalNewPage', () => {
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
   });
 
-  it('maps a valid study submission to its exact discriminated command', () => {
+  it('recovers a synchronous create throw into failure and retries the current command once', async () => {
+    let createAttempts = 0;
+    const submittedCommands: Parameters<JournalCreatePort['create']>[0][] = [];
+    const create = vi.fn((command: Parameters<JournalCreatePort['create']>[0]) => {
+      submittedCommands.push(command);
+      createAttempts += 1;
+      if (createAttempts === 1) throw new Error('synchronous create failure');
+      return Promise.resolve({ journalId: 'retry/id' });
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('테스트 제출에 실패'));
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('종목')).toHaveValue(' 기업 A ');
+    expect(screen.getByLabelText('종목')).toBeEnabled();
+    expect(screen.getByRole('button', { name: '투자 기록' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '학습 기록' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+
+    await waitFor(() => expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument());
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(submittedCommands[1]).toEqual({
+      type: 'investment',
+      assetName: '기업 A',
+      occurredAt: '2026-08-03T09:30',
+      action: 'interest',
+      reasoning: '근거를 적는다.',
+      emotion: undefined,
+    });
+    expect(screen.getAllByText('detail destination:REPLACE')).toHaveLength(1);
+    expect(buildAppJournalDetailPath('retry/id')).toBe('/app/journal/retry%2Fid');
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it('maps a valid study submission to its exact discriminated command', async () => {
     const pending = deferredResult();
     const create = vi.fn(() => pending.promise);
     renderPage(buildAppJournalNewPath('study'), 'ko', { create });
     fillStudyForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
-    expect(create).toHaveBeenCalledWith({
-      type: 'study',
-      title: '공부 제목',
-      occurredAt: '2026-08-03T09:30',
-      keyContent: '핵심 내용',
-      openQuestions: ['질문 하나', '질문 둘', '질문 하나'],
-    });
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith({
+        type: 'study',
+        title: '공부 제목',
+        occurredAt: '2026-08-03T09:30',
+        keyContent: '핵심 내용',
+        openQuestions: ['질문 하나', '질문 둘', '질문 하나'],
+      }),
+    );
   });
 
   it('disables every submit control and type switch while an injected create is pending', () => {

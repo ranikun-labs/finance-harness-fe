@@ -94,8 +94,8 @@ export function JournalNewPage({ createPort }: Props) {
         ? toInvestmentJournalCreateCommand(state)
         : toStudyJournalCreateCommand(state);
 
-    void createPort
-      .create(command)
+    void Promise.resolve()
+      .then(() => createPort.create(command))
       .then((result) => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;
         const journalId = result.journalId.trim();
