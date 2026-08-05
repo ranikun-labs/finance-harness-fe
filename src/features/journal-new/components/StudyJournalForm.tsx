@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { JournalFormField } from '@/features/journal-new/components/JournalFormField';
 import { JournalValidationSummary } from '@/features/journal-new/components/JournalValidationSummary';
@@ -16,6 +16,9 @@ const initialValues: StudyJournalFormState = {
   keyContent: '',
   openQuestions: [],
 };
+function areStringArraysEqual(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
 export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
@@ -25,10 +28,20 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
   const controls = useRef<Partial<Record<StudyJournalField, HTMLElement | null>>>({});
   const result = useMemo(() => validateStudyJournalForm(values), [values]);
   const errors = result.errors;
-  const dirty = Object.entries(initialValues).some(
-    ([key, value]) => values[key as keyof StudyJournalFormState] !== value,
+  const isDirty = useMemo(
+    () =>
+      Object.keys(initialValues).some((key) => {
+        const field = key as keyof StudyJournalFormState;
+        if (field === 'openQuestions') {
+          return !areStringArraysEqual(values.openQuestions, initialValues.openQuestions);
+        }
+        return values[field] !== initialValues[field];
+      }),
+    [values],
   );
-  onDirtyChange(dirty);
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
   const errorFor = (field: StudyJournalField) =>
     touched[field] || submitAttempted ? errors.find((error) => error.field === field) : undefined;
   const update = <K extends keyof StudyJournalFormState>(

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -39,10 +39,16 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
   const emotionRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const result = useMemo(() => validateInvestmentJournalForm(values), [values]);
   const errors = result.errors;
-  const dirty = Object.entries(initialValues).some(
-    ([key, value]) => values[key as keyof InvestmentJournalFormState] !== value,
+  const isDirty = useMemo(
+    () =>
+      Object.entries(initialValues).some(
+        ([key, value]) => values[key as keyof InvestmentJournalFormState] !== value,
+      ),
+    [values],
   );
-  onDirtyChange(dirty);
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
   const errorFor = (field: InvestmentJournalField) =>
     touched[field] || submitAttempted ? errors.find((error) => error.field === field) : undefined;
   const update = <K extends keyof InvestmentJournalFormState>(
