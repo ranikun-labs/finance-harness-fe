@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
@@ -56,5 +56,77 @@ describe('JournalNewPage', () => {
       screen.getByRole('heading', { level: 1, name: en.app.journalNew.invalidType.heading }),
     ).toBeInTheDocument();
     expect(screen.getByText(en.app.journalNew.invalidType.description)).toBeInTheDocument();
+  });
+
+  it('validates investment entries in place without saving or navigation', async () => {
+    renderPage(buildAppJournalNewPath('investment'));
+    fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
+    expect(screen.getAllByRole('alert')).not.toHaveLength(0);
+    await waitFor(() => expect(document.activeElement).toHaveAttribute('id', 'assetName'));
+    fireEvent.change(screen.getByLabelText('종목'), { target: { value: '기업 A' } });
+    fireEvent.change(screen.getByLabelText('기록 시각'), { target: { value: '2026-08-03T09:30' } });
+    fireEvent.click(screen.getByLabelText('관심'));
+    fireEvent.change(screen.getByLabelText('판단 이유'), { target: { value: '근거를 적는다.' } });
+    fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
+    expect(screen.getByRole('status')).toHaveTextContent('아직 저장되지 않았습니다');
+  });
+
+  it('focuses the first action radio when action is the first invalid field', async () => {
+    renderPage(buildAppJournalNewPath('investment'));
+    fireEvent.change(screen.getByLabelText('종목'), { target: { value: '기업 A' } });
+    fireEvent.change(screen.getByLabelText('기록 시각'), { target: { value: '2026-08-03T09:30' } });
+    fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
+    await waitFor(() => expect(screen.getByLabelText('관심')).toHaveFocus());
+  });
+
+  it('maps study open questions by line and exposes no bottom navigation', () => {
+    renderPage(buildAppJournalNewPath('study'));
+    expect(screen.getByLabelText(/다음에 확인할 것/)).toHaveValue('');
+    expect(screen.queryByRole('navigation', { name: '주요 화면 이동' })).not.toBeInTheDocument();
+  });
+
+  it('round-trips multi-line open questions through the controlled textarea', () => {
+    renderPage(buildAppJournalNewPath('study'));
+    const textarea = screen.getByLabelText(/다음에 확인할 것/);
+    fireEvent.change(textarea, { target: { value: '질문 하나\n질문 둘' } });
+    expect(textarea).toHaveValue('질문 하나\n질문 둘');
+  });
+
+  it('returns to pristine and switches type without confirm after open questions are fully cleared', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    renderPage(buildAppJournalNewPath('study'));
+    const textarea = screen.getByLabelText(/다음에 확인할 것/);
+    fireEvent.change(textarea, { target: { value: '질문 하나' } });
+    fireEvent.change(textarea, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.investment }),
+    ).toBeInTheDocument();
+    confirmSpy.mockRestore();
+  });
+
+  it('keeps the current form on cancel and switches type on confirm', () => {
+    const confirmSpy = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    renderPage(buildAppJournalNewPath('study'));
+    fireEvent.change(screen.getByLabelText(/다음에 확인할 것/), { target: { value: '질문 하나' } });
+
+    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.study }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/다음에 확인할 것/)).toHaveValue('질문 하나');
+
+    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    expect(confirmSpy).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.investment }),
+    ).toBeInTheDocument();
+
+    confirmSpy.mockRestore();
   });
 });

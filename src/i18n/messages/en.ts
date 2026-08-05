@@ -156,6 +156,71 @@ export const en: Messages = {
     journalNew: {
       investment: 'Save Entry (Investment)',
       study: 'Save Study Note',
+      typeSwitch: {
+        investment: 'Investment record',
+        study: 'Study record',
+        dirtyConfirm: 'Your current entries will be discarded. Change record type?',
+      },
+      form: {
+        optional: 'Optional',
+        checkEntries: 'Check entries',
+        validUnsaved: 'Your entries are valid. They have not been saved yet.',
+        validationSummary: 'Please check the entries below.',
+        validation: {
+          required: 'This field is required.',
+          maxLength: 'This entry is too long.',
+          invalidChoice: 'Choose a valid option.',
+          invalidDatetime: 'Check the date and time.',
+        },
+        investment: {
+          assetName: {
+            label: 'Asset',
+            placeholder: 'Asset name or ticker',
+            helper: 'Enter only the subject of this record.',
+          },
+          occurredAt: {
+            label: 'Recorded at',
+            helper: 'This keeps the local time you enter without timezone conversion.',
+          },
+          action: {
+            label: 'What I did',
+            helper: 'Choose what you actually did for this record, not a recommendation.',
+          },
+          reasoning: {
+            label: 'Reasoning',
+            placeholder: 'Describe why you took that action at that time.',
+            helper: 'Record your reasoning, not a prediction or recommendation.',
+            count: '{{count}} / 4000',
+          },
+          emotion: {
+            label: 'Emotion',
+            helper: 'Choose at most one emotion from that time.',
+            none: 'No selection',
+          },
+        },
+        study: {
+          title: {
+            label: 'Topic learned',
+            placeholder: 'Describe a topic or concept you learned.',
+            helper: 'Enter the topic you studied.',
+          },
+          occurredAt: {
+            label: 'Recorded at',
+            helper: 'This keeps the local time you enter without timezone conversion.',
+          },
+          keyContent: {
+            label: 'What I learned today',
+            placeholder: 'Describe what you newly understood.',
+            helper: 'Summarize the key content in your own words.',
+            count: '{{count}} / 6000',
+          },
+          openQuestions: {
+            label: 'What to check next',
+            placeholder: 'Write one item per line.',
+            helper: 'Each line remains one question.',
+          },
+        },
+      },
       invalidType: {
         heading: 'Unsupported record type',
         description: 'Choose either an investment record or a study note.',

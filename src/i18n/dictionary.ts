@@ -117,6 +117,32 @@ export interface Messages {
     journalNew: {
       investment: string;
       study: string;
+      typeSwitch: { investment: string; study: string; dirtyConfirm: string };
+      form: {
+        optional: string;
+        checkEntries: string;
+        validUnsaved: string;
+        validationSummary: string;
+        validation: {
+          required: string;
+          maxLength: string;
+          invalidChoice: string;
+          invalidDatetime: string;
+        };
+        investment: {
+          assetName: { label: string; placeholder: string; helper: string };
+          occurredAt: { label: string; helper: string };
+          action: { label: string; helper: string };
+          reasoning: { label: string; placeholder: string; helper: string; count: string };
+          emotion: { label: string; helper: string; none: string };
+        };
+        study: {
+          title: { label: string; placeholder: string; helper: string };
+          occurredAt: { label: string; helper: string };
+          keyContent: { label: string; placeholder: string; helper: string; count: string };
+          openQuestions: { label: string; placeholder: string; helper: string };
+        };
+      };
       invalidType: {
         heading: string;
         description: string;

@@ -1,6 +1,8 @@
-import { Link, useSearchParams } from 'react-router';
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
-import { PageSkeleton } from '@/components/layout/PageSkeleton';
+import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
+import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
 import { buildAppJournalNewPath } from '@/constants/routes';
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
 import { useTranslation } from '@/i18n/I18nContext';
@@ -11,8 +13,10 @@ import { useTranslation } from '@/i18n/I18nContext';
  */
 export function JournalNewPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const resolution = resolveJournalType(searchParams);
+  const [dirty, setDirty] = useState(false);
 
   if (!resolution.ok) {
     return (
@@ -45,8 +49,40 @@ export function JournalNewPage() {
     );
   }
 
-  const title =
-    resolution.type === 'study' ? t('app.journalNew.study') : t('app.journalNew.investment');
-
-  return <PageSkeleton title={title} />;
+  const changeType = (type: 'investment' | 'study') => {
+    if (type === resolution.type) return;
+    if (!dirty || window.confirm(t('app.journalNew.typeSwitch.dirtyConfirm'))) {
+      navigate(buildAppJournalNewPath(type));
+    }
+  };
+  return (
+    <section className="flex min-h-full flex-col">
+      <header className="p-4 pb-0">
+        <h1 className="text-foreground text-lg font-semibold">
+          {resolution.type === 'study' ? t('app.journalNew.study') : t('app.journalNew.investment')}
+        </h1>
+        <div className="bg-muted mt-4 flex gap-1 rounded-lg p-1">
+          <button
+            type="button"
+            onClick={() => changeType('investment')}
+            className="min-h-11 flex-1 rounded-md px-2 text-sm font-semibold focus-visible:outline-2"
+          >
+            {t('app.journalNew.typeSwitch.investment')}
+          </button>
+          <button
+            type="button"
+            onClick={() => changeType('study')}
+            className="min-h-11 flex-1 rounded-md px-2 text-sm font-semibold focus-visible:outline-2"
+          >
+            {t('app.journalNew.typeSwitch.study')}
+          </button>
+        </div>
+      </header>
+      {resolution.type === 'investment' ? (
+        <InvestmentJournalForm onDirtyChange={setDirty} />
+      ) : (
+        <StudyJournalForm onDirtyChange={setDirty} />
+      )}
+    </section>
+  );
 }
