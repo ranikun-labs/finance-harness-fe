@@ -37,13 +37,13 @@ export function JournalNewPage({ createPort }: Props) {
   const attemptRef = useRef(0);
   const mountedRef = useRef(true);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
       mountedRef.current = false;
       attemptRef.current += 1;
-    },
-    [],
-  );
+    };
+  }, []);
 
   if (!resolution.ok) {
     return (

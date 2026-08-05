@@ -25,11 +25,27 @@ describe('DeterministicJournalCreatePort', () => {
     await expect(port.create(command)).rejects.toThrow('expected');
   });
 
+  it('returns a configured immediate result and records every call', async () => {
+    const port = new DeterministicJournalCreatePort({ result: { journalId: 'configured-id' } });
+
+    await expect(port.create(command)).resolves.toEqual({ journalId: 'configured-id' });
+    await expect(port.create(command)).resolves.toEqual({ journalId: 'configured-id' });
+    expect(port.calls).toHaveLength(2);
+  });
+
   it('keeps pending creates controlled until explicitly resolved', async () => {
     const port = new DeterministicJournalCreatePort({ pending: true });
     const promise = port.create(command);
     port.resolve({ journalId: 'known-id' });
 
     await expect(promise).resolves.toEqual({ journalId: 'known-id' });
+  });
+
+  it('can explicitly reject a pending create', async () => {
+    const port = new DeterministicJournalCreatePort({ pending: true });
+    const promise = port.create(command);
+    port.reject(new Error('controlled failure'));
+
+    await expect(promise).rejects.toThrow('controlled failure');
   });
 });

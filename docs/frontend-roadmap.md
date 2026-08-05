@@ -17,9 +17,9 @@
 - **완료:** STEP 0~9 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI)
 - **현재:** **STEP 10 진행** — RPL-43에서 Journal New 입력·클라이언트 검증 UI를 완료했고, RPL-44에서 test-only Create Port와 제출 상태 경계를 추가했다.
 - **아직 안 함:** 실제 저장·수정·삭제, API·persistence, Auth, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** PR #14를 일반 Merge Commit으로 병합한 뒤 그 최종 master Merge
-  Commit을 기준으로 Template을 추출하고, 그 다음 Journal New Form·경량 상태·모의
-  데이터 흐름을 STEP 10 별도 PR에서 시작한다.
+- **다음 행동:** STEP 10의 남은 Form·상태 경계를 점검하고, 실제 저장·API·persistence는
+  백엔드 계약이 확정되는 STEP 11에서만 시작한다. RPL-44의 Test Adapter는 test-only이며
+  production persistence나 Detail 성공 흐름을 의미하지 않는다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -350,12 +350,8 @@ React 기반 하나의 프론트엔드 코드베이스
 - [x] Gate 이력: 초기 `verify:full` 통과 → 문서 추가 후 실행이 Prettier 불일치에서
       중단 → 문서 포맷 보정 → 최종 unchanged Head `verify:full` 통과. 최종 판정 A
 
-React Template extraction 기준은 PR #14가 **일반 Merge Commit**으로 병합된 후
-생성되는 최종 master Merge Commit SHA다. 아직 Merge Commit은 생성되지 않았으며,
-Template 추출은 STEP 10 구현 전에 수행한다.
-
 **다음 실행 항목:**
 
-1. [ ] PR #14를 일반 Merge Commit으로 병합
-2. [ ] 최종 master Merge Commit SHA를 기준으로 Template 추출
-3. [ ] STEP 10 — Journal New Form·경량 상태·모의 데이터 흐름을 별도 PR로 구현
+1. [ ] STEP 10의 남은 Form·상태 scope를 별도 Slice로 확정
+2. [ ] 백엔드 계약 확정 후 STEP 11에서 production Create Adapter·실제 Detail data flow를 설계
+3. [ ] STEP 10 전체 완료 여부는 남은 Slice와 독립 검증 뒤에만 판정

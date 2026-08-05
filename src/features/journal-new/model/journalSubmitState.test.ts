@@ -32,5 +32,22 @@ describe('journal submit state', () => {
     ).toBe(initialJournalSubmitState);
     const submitting = journalSubmitReducer(initialJournalSubmitState, { type: 'submitStarted' });
     expect(journalSubmitReducer(submitting, { type: 'formEdited' })).toBe(submitting);
+    expect(journalSubmitReducer(submitting, { type: 'submitStarted' })).toBe(submitting);
+    expect(
+      journalSubmitReducer(
+        journalSubmitReducer(submitting, { type: 'submitSucceeded', journalId: 'id' }),
+        { type: 'submitFailed', error: 'create_failed' },
+      ),
+    ).toEqual({ status: 'succeeded', journalId: 'id' });
+  });
+
+  it('retains invalid-result failure as a generic application error code', () => {
+    const submitting = journalSubmitReducer(initialJournalSubmitState, { type: 'submitStarted' });
+    expect(
+      journalSubmitReducer(submitting, { type: 'submitFailed', error: 'invalid_result' }),
+    ).toEqual({
+      status: 'failed',
+      error: 'invalid_result',
+    });
   });
 });
