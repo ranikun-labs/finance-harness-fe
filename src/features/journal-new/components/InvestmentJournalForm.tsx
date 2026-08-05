@@ -173,7 +173,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
         }
         choices={RECORD_ACTIONS.map((value) => ({ value, label: actionLabels[value] }))}
         value={values.action}
-        radioRefs={actionRefs.current}
+        radioRefs={actionRefs}
         onChange={(value) => update('action', value as RecordAction)}
       />
       <JournalFormField
@@ -217,7 +217,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
         }
         choices={EMOTION_TAGS.map((value) => ({ value, label: emotionLabels[value] }))}
         value={values.emotion}
-        radioRefs={emotionRefs.current}
+        radioRefs={emotionRefs}
         onChange={(value) => update('emotion', value as EmotionTag)}
         extra={
           <label className="border-input focus-within:ring-ring flex min-h-11 cursor-pointer items-center rounded-md border px-3 text-sm font-medium focus-within:ring-2">

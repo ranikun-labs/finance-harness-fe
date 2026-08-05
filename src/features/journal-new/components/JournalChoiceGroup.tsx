@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 
 interface Choice {
   value: string;
@@ -12,7 +12,7 @@ interface JournalChoiceGroupProps {
   choices: readonly Choice[];
   value: string;
   onChange: (value: string) => void;
-  radioRefs?: Record<string, HTMLInputElement | null>;
+  radioRefs?: RefObject<Record<string, HTMLInputElement | null>>;
   extra?: ReactNode;
 }
 export function JournalChoiceGroup({
@@ -42,7 +42,7 @@ export function JournalChoiceGroup({
           >
             <input
               ref={(node) => {
-                if (radioRefs) radioRefs[choice.value] = node;
+                if (radioRefs) radioRefs.current[choice.value] = node;
               }}
               className="sr-only"
               type="radio"

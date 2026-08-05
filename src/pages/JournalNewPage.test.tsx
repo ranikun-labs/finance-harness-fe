@@ -71,6 +71,14 @@ describe('JournalNewPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('아직 저장되지 않았습니다');
   });
 
+  it('focuses the first action radio when action is the first invalid field', async () => {
+    renderPage(buildAppJournalNewPath('investment'));
+    fireEvent.change(screen.getByLabelText('종목'), { target: { value: '기업 A' } });
+    fireEvent.change(screen.getByLabelText('기록 시각'), { target: { value: '2026-08-03T09:30' } });
+    fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
+    await waitFor(() => expect(screen.getByLabelText('관심')).toHaveFocus());
+  });
+
   it('maps study open questions by line and exposes no bottom navigation', () => {
     renderPage(buildAppJournalNewPath('study'));
     expect(screen.getByLabelText(/다음에 확인할 것/)).toHaveValue('');
