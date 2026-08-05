@@ -165,6 +165,11 @@ export const en: Messages = {
         optional: 'Optional',
         checkEntries: 'Check entries',
         validUnsaved: 'Your entries are valid. They have not been saved yet.',
+        testFlowNotice: 'This is a test flow and does not save your entry.',
+        submitTest: 'Submit test entry',
+        submitting: 'Submitting test entry',
+        failed: 'The test submission failed. Check your input and try again.',
+        retry: 'Try again',
         validationSummary: 'Please check the entries below.',
         validation: {
           required: 'This field is required.',

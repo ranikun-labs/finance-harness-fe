@@ -4,6 +4,7 @@ import { JournalFormField } from '@/features/journal-new/components/JournalFormF
 import { JournalValidationSummary } from '@/features/journal-new/components/JournalValidationSummary';
 import { JOURNAL_VALIDATION_MESSAGE_KEYS } from '@/features/journal-new/model/journalFormMessages';
 import type { StudyJournalFormState } from '@/features/journal-new/model/journalFormTypes';
+import type { JournalSubmitState } from '@/features/journal-new/model/journalSubmitState';
 import {
   validateStudyJournalForm,
   type StudyJournalField,
@@ -19,7 +20,19 @@ const initialValues: StudyJournalFormState = {
 function areStringArraysEqual(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
-export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+type Props = {
+  onDirtyChange: (dirty: boolean) => void;
+  onValidSubmit?: (state: StudyJournalFormState) => void;
+  onFormEdited?: () => void;
+  submitState?: JournalSubmitState;
+};
+
+export function StudyJournalForm({
+  onDirtyChange,
+  onValidSubmit,
+  onFormEdited,
+  submitState,
+}: Props) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
   const [touched, setTouched] = useState<Partial<Record<StudyJournalField, boolean>>>({});
@@ -50,6 +63,7 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
     setConfirmed(false);
+    onFormEdited?.();
   };
   const focus = (field: StudyJournalField) => controls.current[field]?.focus();
   const submit = (event: React.FormEvent) => {
@@ -58,6 +72,10 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
     if (!result.valid) {
       setConfirmed(false);
       requestAnimationFrame(() => focus(result.errors[0].field as StudyJournalField));
+      return;
+    }
+    if (onValidSubmit) {
+      onValidSubmit(values);
       return;
     }
     setConfirmed(true);
@@ -74,6 +92,8 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
       t(messageKey),
     ]),
   );
+  const submitting = submitState?.status === 'submitting';
+  const testFlow = Boolean(onValidSubmit);
   return (
     <form
       noValidate
@@ -106,6 +126,7 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
             id="title"
             type="text"
             maxLength={120}
+            disabled={submitting}
             value={values.title}
             placeholder={t('app.journalNew.form.study.title.placeholder')}
             onBlur={() => setTouched((v) => ({ ...v, title: true }))}
@@ -131,6 +152,7 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
             }}
             id="occurredAt"
             type="datetime-local"
+            disabled={submitting}
             value={values.occurredAt}
             onBlur={() => setTouched((v) => ({ ...v, occurredAt: true }))}
             onChange={(event) => update('occurredAt', event.target.value)}
@@ -156,6 +178,7 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
               }}
               id="keyContent"
               maxLength={6000}
+              disabled={submitting}
               value={values.keyContent}
               placeholder={t('app.journalNew.form.study.keyContent.placeholder')}
               onBlur={() => setTouched((v) => ({ ...v, keyContent: true }))}
@@ -183,6 +206,7 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
               controls.current.openQuestions = node;
             }}
             id="openQuestions"
+            disabled={submitting}
             value={values.openQuestions.join('\n')}
             placeholder={t('app.journalNew.form.study.openQuestions.placeholder')}
             onBlur={() => setTouched((v) => ({ ...v, openQuestions: true }))}
@@ -194,13 +218,19 @@ export function StudyJournalForm({ onDirtyChange }: { onDirtyChange: (dirty: boo
           />
         )}
       </JournalFormField>
-      {confirmed && (
+      {confirmed && !testFlow && (
         <p role="status" className="text-foreground text-sm">
           {t('app.journalNew.form.validUnsaved')}
         </p>
       )}
-      <Button type="submit" size="lg">
-        {t('app.journalNew.form.checkEntries')}
+      <Button type="submit" size="lg" disabled={submitting}>
+        {testFlow
+          ? submitState?.status === 'failed'
+            ? t('app.journalNew.form.retry')
+            : submitting
+              ? t('app.journalNew.form.submitting')
+              : t('app.journalNew.form.submitTest')
+          : t('app.journalNew.form.checkEntries')}
       </Button>
     </form>
   );

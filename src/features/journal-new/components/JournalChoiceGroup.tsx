@@ -12,6 +12,7 @@ interface JournalChoiceGroupProps {
   choices: readonly Choice[];
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
   radioRefs?: RefObject<Record<string, HTMLInputElement | null>>;
   extra?: ReactNode;
 }
@@ -23,6 +24,7 @@ export function JournalChoiceGroup({
   choices,
   value,
   onChange,
+  disabled = false,
   radioRefs,
   extra,
 }: JournalChoiceGroupProps) {
@@ -51,6 +53,7 @@ export function JournalChoiceGroup({
               checked={value === choice.value}
               onChange={() => onChange(choice.value)}
               aria-invalid={Boolean(error)}
+              disabled={disabled}
             />
             {choice.label}
           </label>

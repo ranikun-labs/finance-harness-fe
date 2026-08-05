@@ -1,23 +1,39 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
+import {
+  APP_ROUTE_PATHS,
+  buildAppJournalDetailPath,
+  buildAppJournalNewPath,
+} from '@/constants/routes';
+import type { JournalCreatePort } from '@/features/journal-new/model/journalCreatePort';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { JournalNewPage } from '@/pages/JournalNewPage';
 
-function renderPage(path: string, locale: 'ko' | 'en' = 'ko') {
+function renderPage(path: string, locale: 'ko' | 'en' = 'ko', createPort?: JournalCreatePort) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <I18nProvider locale={locale}>
         <Routes>
-          <Route path={APP_ROUTE_PATHS.journalNew} element={<JournalNewPage />} />
+          <Route
+            path={APP_ROUTE_PATHS.journalNew}
+            element={<JournalNewPage createPort={createPort} />}
+          />
+          <Route path={APP_ROUTE_PATHS.journalDetail} element={<p>detail destination</p>} />
         </Routes>
       </I18nProvider>
     </MemoryRouter>,
   );
+}
+
+function fillInvestmentForm() {
+  fireEvent.change(screen.getByLabelText('종목'), { target: { value: ' 기업 A ' } });
+  fireEvent.change(screen.getByLabelText('기록 시각'), { target: { value: '2026-08-03T09:30' } });
+  fireEvent.click(screen.getByLabelText('관심'));
+  fireEvent.change(screen.getByLabelText('판단 이유'), { target: { value: ' 근거를 적는다. ' } });
 }
 
 describe('JournalNewPage', () => {
@@ -128,5 +144,57 @@ describe('JournalNewPage', () => {
     ).toBeInTheDocument();
 
     confirmSpy.mockRestore();
+  });
+
+  it('keeps the production flow validation-only when no port is injected', () => {
+    renderPage(buildAppJournalNewPath('investment'));
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '입력 확인' }));
+
+    expect(screen.getByRole('status')).toHaveTextContent('아직 저장되지 않았습니다');
+    expect(screen.queryByText('테스트 흐름이며 저장되지 않습니다.')).not.toBeInTheDocument();
+  });
+
+  it('submits a valid command once and navigates with the encoded result id', async () => {
+    let resolveCreate: (result: { journalId: string }) => void;
+    const create = vi.fn(
+      () =>
+        new Promise<{ journalId: string }>((resolve) => {
+          resolveCreate = resolve;
+        }),
+    );
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    fireEvent.submit(screen.getByRole('button', { name: '테스트 제출 중' }).closest('form')!);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(create).toHaveBeenCalledWith({
+      type: 'investment',
+      assetName: '기업 A',
+      occurredAt: '2026-08-03T09:30',
+      action: 'interest',
+      reasoning: '근거를 적는다.',
+      emotion: undefined,
+    });
+    await act(async () => resolveCreate!({ journalId: 'test/id' }));
+    expect(screen.getByText('detail destination')).toBeInTheDocument();
+    expect(buildAppJournalDetailPath('test/id')).toBe('/app/journal/test%2Fid');
+  });
+
+  it('preserves values and permits an explicit retry after test-port failure', async () => {
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('nope'))
+      .mockResolvedValueOnce({ journalId: 'id' });
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('테스트 제출에 실패'));
+    expect(screen.getByLabelText('종목')).toHaveValue(' 기업 A ');
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
   });
 });

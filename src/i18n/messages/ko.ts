@@ -162,6 +162,11 @@ export const ko: Messages = {
         optional: '선택',
         checkEntries: '입력 확인',
         validUnsaved: '입력 형식을 확인했습니다. 아직 저장되지 않았습니다.',
+        testFlowNotice: '테스트 흐름이며 저장되지 않습니다.',
+        submitTest: '테스트 제출',
+        submitting: '테스트 제출 중',
+        failed: '테스트 제출에 실패했습니다. 입력을 확인한 뒤 다시 시도하세요.',
+        retry: '다시 시도',
         validationSummary: '입력 내용을 확인해주세요.',
         validation: {
           required: '필수 입력 항목입니다.',
