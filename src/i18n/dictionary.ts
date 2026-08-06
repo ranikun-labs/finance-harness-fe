@@ -122,6 +122,11 @@ export interface Messages {
         optional: string;
         checkEntries: string;
         validUnsaved: string;
+        testFlowNotice: string;
+        submitTest: string;
+        submitting: string;
+        failed: string;
+        retry: string;
         validationSummary: string;
         validation: {
           required: string;

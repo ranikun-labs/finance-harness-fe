@@ -12,6 +12,7 @@ import { JournalFormField } from '@/features/journal-new/components/JournalFormF
 import { JournalValidationSummary } from '@/features/journal-new/components/JournalValidationSummary';
 import { JOURNAL_VALIDATION_MESSAGE_KEYS } from '@/features/journal-new/model/journalFormMessages';
 import type { InvestmentJournalFormState } from '@/features/journal-new/model/journalFormTypes';
+import type { JournalSubmitState } from '@/features/journal-new/model/journalSubmitState';
 import {
   validateInvestmentJournalForm,
   type InvestmentJournalField,
@@ -26,9 +27,19 @@ const initialValues: InvestmentJournalFormState = {
   reasoning: '',
   emotion: '',
 };
-type Props = { onDirtyChange: (dirty: boolean) => void };
+type Props = {
+  onDirtyChange: (dirty: boolean) => void;
+  onValidSubmit?: (state: InvestmentJournalFormState) => void;
+  onFormEdited?: () => void;
+  submitState?: JournalSubmitState;
+};
 
-export function InvestmentJournalForm({ onDirtyChange }: Props) {
+export function InvestmentJournalForm({
+  onDirtyChange,
+  onValidSubmit,
+  onFormEdited,
+  submitState,
+}: Props) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
   const [touched, setTouched] = useState<Partial<Record<InvestmentJournalField, boolean>>>({});
@@ -57,6 +68,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
     setConfirmed(false);
+    onFormEdited?.();
   };
   const focus = (field: InvestmentJournalField) => {
     const node =
@@ -73,6 +85,10 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
     if (!result.valid) {
       setConfirmed(false);
       requestAnimationFrame(() => focus(result.errors[0].field as InvestmentJournalField));
+      return;
+    }
+    if (onValidSubmit) {
+      onValidSubmit(values);
       return;
     }
     setConfirmed(true);
@@ -103,6 +119,8 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
     관망: t('recordTags.emotion.관망'),
     혼란: t('recordTags.emotion.혼란'),
   };
+  const submitting = submitState?.status === 'submitting';
+  const testFlow = Boolean(onValidSubmit);
   return (
     <form
       noValidate
@@ -138,6 +156,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
             maxLength={120}
             autoComplete="off"
             spellCheck={false}
+            disabled={submitting}
             value={values.assetName}
             placeholder={t('app.journalNew.form.investment.assetName.placeholder')}
             onBlur={() => setTouched((v) => ({ ...v, assetName: true }))}
@@ -163,6 +182,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
             }}
             id="occurredAt"
             type="datetime-local"
+            disabled={submitting}
             value={values.occurredAt}
             onBlur={() => setTouched((v) => ({ ...v, occurredAt: true }))}
             onChange={(event) => update('occurredAt', event.target.value)}
@@ -181,6 +201,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
         value={values.action}
         radioRefs={actionRefs}
         onChange={(value) => update('action', value as RecordAction)}
+        disabled={submitting}
       />
       <JournalFormField
         id="reasoning"
@@ -200,6 +221,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
               }}
               id="reasoning"
               maxLength={4000}
+              disabled={submitting}
               value={values.reasoning}
               placeholder={t('app.journalNew.form.investment.reasoning.placeholder')}
               onBlur={() => setTouched((v) => ({ ...v, reasoning: true }))}
@@ -225,6 +247,7 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
         value={values.emotion}
         radioRefs={emotionRefs}
         onChange={(value) => update('emotion', value as EmotionTag)}
+        disabled={submitting}
         extra={
           <label className="border-input focus-within:ring-ring flex min-h-11 cursor-pointer items-center rounded-md border px-3 text-sm font-medium focus-within:ring-2">
             <input
@@ -232,19 +255,26 @@ export function InvestmentJournalForm({ onDirtyChange }: Props) {
               type="radio"
               name="emotion"
               checked={values.emotion === ''}
+              disabled={submitting}
               onChange={() => update('emotion', '')}
             />
             {t('app.journalNew.form.investment.emotion.none')}
           </label>
         }
       />
-      {confirmed && (
+      {confirmed && !testFlow && (
         <p role="status" className="text-foreground text-sm">
           {t('app.journalNew.form.validUnsaved')}
         </p>
       )}
-      <Button type="submit" size="lg">
-        {t('app.journalNew.form.checkEntries')}
+      <Button type="submit" size="lg" disabled={submitting}>
+        {testFlow
+          ? submitState?.status === 'failed'
+            ? t('app.journalNew.form.retry')
+            : submitting
+              ? t('app.journalNew.form.submitting')
+              : t('app.journalNew.form.submitTest')
+          : t('app.journalNew.form.checkEntries')}
       </Button>
     </form>
   );
