@@ -14,12 +14,10 @@
 
 ## 결론 먼저 — 현재 위치
 
-- **완료:** STEP 0~9 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI)
-- **현재:** **STEP 10 진행** — RPL-43에서 Journal New 입력·클라이언트 검증 UI를 완료했고, RPL-44에서 test-only Create Port와 제출 상태 경계를 추가했다.
-- **아직 안 함:** 실제 저장·수정·삭제, API·persistence, Auth, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** STEP 10의 남은 Form·상태 경계를 점검하고, 실제 저장·API·persistence는
-  백엔드 계약이 확정되는 STEP 11에서만 시작한다. RPL-44의 Test Adapter는 test-only이며
-  production persistence나 Detail 성공 흐름을 의미하지 않는다.
+- **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)
+- **현재:** **STEP 11 진입 준비** — RPL-18·RPL-43·RPL-44가 모두 완료되어 master에 반영됐고, STEP 10 Functional Blocking Slice는 0개다.
+- **아직 안 함:** 실제 Backend/API/Persistence/Auth, 실제 Journal 저장·수정·삭제와 Production 저장 성공 흐름, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
+- **다음 행동:** STEP 11 Backend Create API Contract Preflight를 수행한다. RPL-44의 Test Adapter는 test-only이며, Device-local Draft는 사용자 Product 승인 전까지 보류한다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -66,7 +64,7 @@ React 기반 하나의 프론트엔드 코드베이스
 | NotFound     | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                                                                                  | ✅            |
 | 하단 탭      | [`BOTTOM_TABS`](../src/constants/navigation.ts) 3개(홈/질문/기록) 단일 소스                                                                                                                                                                                                                                                                               | ✅            |
 | 레이아웃     | 모바일 AppShell · TabLayout · BottomNavigation                                                                                                                                                                                                                                                                                                            | ✅            |
-| 화면         | 앱 Home·Onboarding·Ask(결과/빈 상태)·Journal List·Detail·Review 실 UI 완료. Journal New는 STEP 10 전까지 의도된 placeholder 유지. 공개 Home·Features·Learn은 locale별 placeholder 유지                                                                                                                                                                    | ✅(STEP 9)    |
+| 화면         | 앱 Home·Onboarding·Ask(결과/빈 상태)·Journal List·Detail·Review 실 UI 완료. Journal New Form·클라이언트 검증·Create/Submit 경계는 STEP 10에서 완료했으며 실제 저장·persistence는 STEP 11 범위다. 공개 Home·Features·Learn은 locale별 placeholder 유지                                                                                                     | ✅(STEP 9~10) |
 | 디자인 토큰  | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                                                                        | ✅            |
 | Capacitor    | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                                                                                     | ✅(설정 한정) |
 | Pre-render   | 공개 고정 경로 6개(`/ko`, `/en`, `/:locale/features`, `/:locale/learn`) 정적 HTML 생성. Vite 코어 `--ssr`([`entry-server.tsx`](../src/entry-server.tsx)) + `renderToString`, 매니페스트는 [`prerender/manifest.ts`](../src/prerender/manifest.ts)에서 파생(하드코딩 없음), 신규 dependency 0개                                                            | ✅            |
@@ -129,24 +127,24 @@ React 기반 하나의 프론트엔드 코드베이스
 > 설계)** 과 **렌더링 설정** 책임을 구분해 기록한다. 모든 STEP의 규모가 동일하지 않으며,
 > **실제 개발량은 화면 구현(STEP 9)과 API 연동(STEP 11)에 집중**된다.
 
-| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태                                                                                                   | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
-| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------- | -------------------------- |
-| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅                                                                                                     | 정책 PR                 | 화면 구현                  |
-| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅                                                                                                     | 문서 PR                 | 실제 라우팅 코드           |
-| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅                                                                                                     | (외부 산출물)           | 저장소 반입                |
-| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅                                                                                                     | PR #1                   | 실 UI·API                  |
-| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅                                                                                                     | 자산·매핑 문서 PR       | 실 UI 구현·라우팅 전환     |
-| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계 + 라우트 코드   | STEP 4                   | 경계·라우트 계약 합의·구현      | ✅                                                                                                     | 라우팅 경계 PR          | Pre-render 설정            |
-| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | ✅                                                                                                     | 렌더링 설정 PR          | 번역·실 UI                 |
-| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5, 6                | ko/en 전환 동작                 | ✅                                                                                                     | i18n PR                 | 번역 SaaS·실 UI            |
-| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ✅                                                                                                     | 디자인 시스템 PR        | 화면별 로직                |
-| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ✅                                                                                                     | **화면/흐름별 다수 PR** | API 연동                   |
-| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태 설계                     | STEP 9                   | 흐름 동작(모의 데이터)          | 🔶 RPL-43 Slice 2 입력·클라이언트 검증 UI 완료; RPL-44 Slice 3 Create Port·제출 상태 완료(테스트 전용) | 상태/폼 PR              | 백엔드 연동                |
-| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜                                                                                                     | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
-| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜                                                                                                     | 품질 PR                 | 네이티브                   |
-| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒                                                                                                   | 네이티브 PR             | 출시 설정과 혼재           |
-| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜                                                                                                     | 테스트 PR               | 신규 기능                  |
-| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜                                                                                                     | 출시 설정 PR            | 신규 기능                  |
+| STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태                                                                                                                    | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
+| ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
+| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅                                                                                                                      | 정책 PR                 | 화면 구현                  |
+| 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅                                                                                                                      | 문서 PR                 | 실제 라우팅 코드           |
+| 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅                                                                                                                      | (외부 산출물)           | 저장소 반입                |
+| 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅                                                                                                                      | PR #1                   | 실 UI·API                  |
+| 4    | 와이어프레임 반입·매핑  | 시안 원본을 저장소에 반입, 화면↔라우트 매핑 | 와이어프레임 자산, 매핑 문서     | STEP 3                   | 매핑 표 확정, 자산 반입         | ✅                                                                                                                      | 자산·매핑 문서 PR       | 실 UI 구현·라우팅 전환     |
+| 5    | 라우팅 경계 설계        | 공개 웹/앱 경계·`/app/*` 결정               | 라우팅 경계 설계 + 라우트 코드   | STEP 4                   | 경계·라우트 계약 합의·구현      | ✅                                                                                                                      | 라우팅 경계 PR          | Pre-render 설정            |
+| 6    | Pre-render·SPA 구성     | 공개 웹 Pre-render + `/app/*` SPA 설정      | 렌더링 설정, fallback 갱신       | STEP 5                   | 공개 웹 정적 산출, SPA 동작     | ✅                                                                                                                      | 렌더링 설정 PR          | 번역·실 UI                 |
+| 7    | i18n 기반               | 한국어·영어 기반                            | i18n 로딩·locale 라우팅 기반     | STEP 5, 6                | ko/en 전환 동작                 | ✅                                                                                                                      | i18n PR                 | 번역 SaaS·실 UI            |
+| 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ✅                                                                                                                      | 디자인 시스템 PR        | 화면별 로직                |
+| 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ✅                                                                                                                      | **화면/흐름별 다수 PR** | API 연동                   |
+| 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태·Create/Submit 경계       | STEP 9                   | 흐름 동작(모의 데이터)          | ✅ RPL-18·RPL-43·RPL-44 완료; Form/Valid UI, Create/Submit, Retry, lifecycle, test-only Adapter 완료, Merge Commit 반영 | 상태/폼 PR              | 백엔드 연동                |
+| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜                                                                                                                      | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
+| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜                                                                                                                      | 품질 PR                 | 네이티브                   |
+| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒                                                                                                                    | 네이티브 PR             | 출시 설정과 혼재           |
+| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜                                                                                                                      | 테스트 PR               | 신규 기능                  |
+| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜                                                                                                                      | 출시 설정 PR            | 신규 기능                  |
 
 ---
 
@@ -258,13 +256,28 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ## 11. 현재 위치와 다음 행동
 
-**STEP 10 진행 상태:**
+## STEP 10 완료
 
-- ✅ RPL-18: Journal New Form과 클라이언트 검증 완료
-- ✅ RPL-43: Form focus recovery 완료
-- 🔶 RPL-44: test-only Create Port·제출 상태를 보정·검증 중
-- 실제 저장·API·persistence는 백엔드 계약 이후 STEP 11에서만 시작한다.
-- STEP 10 전체 완료는 남은 Slice와 독립 검증 뒤에만 판정한다.
+- ✅ RPL-18: Strict Type Resolver, Form Domain, Client Validation
+- ✅ RPL-43: Investment/Study Form UI, Validation, Focus, Responsive UI
+- ✅ RPL-44: Create Command, JournalCreatePort, Submit State, Test Adapter, Retry, Duplicate Guard, StrictMode, stale result, unmount, synchronous throw 복구
+- Functional Blocking Slice: 0개
+- 전체 Feature가 master에 일반 Merge Commit으로 반영됨
+
+## Product Decision Deferred
+
+- Device-local Draft는 사용자 Product 승인 전 보류
+- 승인 시 별도 Slice로 검토
+- 자동 저장과 Background queue는 이번 STEP 10 범위에서 제외
+- Device-local Draft 보류는 STEP 10 미완료 근거가 아님
+
+## 다음 행동
+
+- STEP 11 Backend Create API Contract Preflight
+- Backend Repository와 ownership 확인
+- Create endpoint, Request/Response DTO, `journalId` 의미, Error taxonomy, Auth 모델 확인
+- FE Command와 API DTO 매핑 경계 정의
+- STEP 11 구현은 이번 문서 PR에 포함하지 않으며, 실제 Production Persistence와 Detail read model 연결은 이후 단계에서 다룬다.
 
 **STEP 5 산출물:**
 
@@ -324,8 +337,8 @@ React 기반 하나의 프론트엔드 코드베이스
 **STEP 9 완료 기준 (RPL-29 Final Gate):**
 
 - [x] 앱 화면: Home, Onboarding, Ask 결과/빈 상태, Journal List·Detail·Review 완료.
-      Journal New의 `investment`·`study` 진입은 제목만 표시하는 placeholder이며 실제
-      Form·save·submit·persistence는 STEP 10으로 보류
+      Journal New의 `investment`·`study` Form·클라이언트 검증·Create/Submit 경계는 STEP 10에서
+      완료했으며 실제 save·persistence는 STEP 11 범위다.
 - [x] 공개 화면: `/ko`, `/en`, locale별 Features·Learn과 unsupported locale
       NotFound를 ko/en으로 검증. 고정 Pre-render는 `/ko`, `/en`, `/ko/features`,
       `/en/features`, `/ko/learn`, `/en/learn` 6개
@@ -352,6 +365,6 @@ React 기반 하나의 프론트엔드 코드베이스
 
 **다음 실행 항목:**
 
-1. [ ] STEP 10의 남은 Form·상태 scope를 별도 Slice로 확정
-2. [ ] 백엔드 계약 확정 후 STEP 11에서 production Create Adapter·실제 Detail data flow를 설계
-3. [ ] STEP 10 전체 완료 여부는 남은 Slice와 독립 검증 뒤에만 판정
+1. [ ] STEP 11 Backend Create API Contract Preflight
+2. [ ] Backend Repository와 ownership, Create endpoint, Request/Response DTO, `journalId`, Error taxonomy, Auth 모델 확인
+3. [ ] FE Command와 API DTO 매핑 경계를 정의한 뒤 STEP 11 구현 범위를 별도 PR로 계획
