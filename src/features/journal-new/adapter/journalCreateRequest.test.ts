@@ -75,6 +75,8 @@ describe('toCreateJournalRequest', () => {
       openQuestions: ['First', 'Second', 'First'],
     });
     expect(command).toEqual(before);
+    expect(request.type).toBe('study');
+    if (request.type !== 'study') throw new Error('expected a study request');
     expect(request.openQuestions).toEqual(['First', 'Second', 'First']);
   });
 });

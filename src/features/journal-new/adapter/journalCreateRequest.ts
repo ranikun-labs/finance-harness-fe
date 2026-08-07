@@ -20,9 +20,7 @@ export type StudyJournalCreateRequest = {
   openQuestions: string[];
 };
 
-export type JournalCreateRequest =
-  | InvestmentJournalCreateRequest
-  | StudyJournalCreateRequest;
+export type JournalCreateRequest = InvestmentJournalCreateRequest | StudyJournalCreateRequest;
 
 export function toCreateJournalRequest(
   command: JournalCreateCommand,
