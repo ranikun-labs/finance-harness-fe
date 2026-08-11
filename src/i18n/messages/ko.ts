@@ -34,12 +34,30 @@ export const ko: Messages = {
     home: {
       title: 'Home',
       hero: {
-        eyebrow: '판단 전 확인',
-        heading: '판단 전에 질문부터 시작하세요',
-        description: '궁금한 내용을 질문하고 확인할 항목을 살펴보세요.',
-        action: '질문 시작하기',
-        ariaLabel: '궁금한 내용 묻기',
+        eyebrow: '검토',
+        heading: '지금 판단하려는 것을 검토해 보세요',
+        description:
+          '사겠다/팔겠다는 답을 드리지 않습니다. 확인해야 할 것, 근거 있는 사실, 아직 모르는 것을 정리해 드립니다.',
+        action: '검토 시작',
+        ariaLabel: '검토 시작',
       },
+      question: {
+        label: '내가 한 질문',
+        placeholder: '예) 보유 중인 반도체 ETF를 지금 추가 매수해도 될까?',
+        helper: '질문을 그대로 남기면 확인 항목과 근거를 나눠 정리합니다.',
+        submit: '검토 시작',
+        required: '검토할 내용을 입력해 주세요.',
+      },
+      examples: {
+        heading: '이런 질문으로 시작해 보세요',
+        items: {
+          etf: '보유 중인 반도체 ETF를 지금 추가 매수해도 될까?',
+          earnings: '이번 분기 실적 전망에서 먼저 확인할 것은 무엇일까?',
+          loss: '손실 중인 종목을 계속 보유할 때 어떤 근거를 확인해야 할까?',
+        },
+      },
+      policyNotice:
+        '검토는 매수·매도 추천이나 수익률 예측을 제공하지 않습니다. 확인하지 못한 내용은 모르는 것으로 남깁니다.',
       recentRecords: {
         heading: '최근 기록',
         viewAll: '전체 기록 보기',
@@ -47,15 +65,15 @@ export const ko: Messages = {
       empty: {
         title: '아직 기록이 없어요',
         description: '질문에서 확인할 항목을 살펴보고 첫 기록을 준비해보세요.',
-        action: '질문 시작하기',
+        action: '검토 시작',
       },
     },
     ask: {
       title: 'Ask 결과',
       titleWithQuery: 'Ask 결과 — {{query}}',
       header: {
-        title: 'AI 체크',
-        backLabel: '홈으로 돌아가기',
+        title: '검토',
+        backLabel: '검토 시작으로 돌아가기',
       },
       empty: {
         title: '아직 확인할 질문이 없어요',
@@ -106,6 +124,59 @@ export const ko: Messages = {
       },
       fixtureNotice:
         '이 화면은 기능 확인용 예시이며, 실제 질문 분석이나 투자 자문 결과가 아닙니다.',
+      loading: {
+        eyebrow: '검토 중',
+        title: '검토 결과를 정리하고 있어요',
+        description: '질문을 유지한 채 확인 항목과 근거를 나눠 정리합니다.',
+        steps: {
+          question: '질문을 확인 항목으로 정리',
+          evidence: '확인 가능한 근거 찾기',
+          unknown: '모르는 것 표시',
+        },
+        provenance:
+          '확인 가능한 근거만 사실로 제시합니다. 확인하지 못한 것은 ‘모르는 것’으로 남겨 둡니다.',
+      },
+      error: {
+        title: '검토를 완성하지 못했습니다',
+        description:
+          '일부 근거를 확인하지 못한 것과는 다릅니다 — 검토 자체가 처리되지 못했습니다. 입력한 질문은 그대로 남아 있습니다.',
+        retry: '다시 시도',
+        edit: '질문 수정',
+      },
+      structured: {
+        resultTitle: '검토 결과',
+        fixtureLabel: '예시 데이터',
+        questionLabel: '내가 한 질문',
+        checklist: {
+          heading: '확인할 항목',
+          helper: '직접 확인한 상태를 표시할 수 있어요.',
+          progress: '{{checked}}/{{total}} 확인',
+        },
+        fact: {
+          heading: '확인된 사실',
+          helper: '각 사실에는 출처와 기준일을 함께 표시합니다.',
+          sourceLabel: '출처',
+          asOfLabel: '기준일',
+        },
+        inference: {
+          heading: '해석',
+          helper: '사실이 아닌 추론입니다.',
+          basisLabel: '근거로 삼은 사실',
+        },
+        unknown: {
+          heading: '아직 모르는 것',
+          helper: '확인 불가 · 정보 부족 · 최신성 부족을 분리합니다.',
+        },
+        generatedAt: '생성 {{timestamp}}',
+        reviewedAt: '검토 {{timestamp}}',
+        timestampsHeading: '생성 및 검토 시각',
+        provenance:
+          '이 결과는 화면 흐름 확인을 위한 예시 데이터입니다. 실제 질문 분석이나 투자 자문 결과가 아닙니다.',
+        partialTitle: '근거를 일부만 확인했습니다',
+        partialDescription:
+          '확인되지 않은 내용은 사실로 승격하지 않았습니다. 필요한 경우 추론을 생략하고 모르는 것으로 남겼습니다.',
+        partialNarrow: '부분 결과는 오류가 아니라 정상적인 불완전 결과입니다.',
+      },
       recordQuestions: {
         heading: '다음 기록에 남길 질문',
         items: {

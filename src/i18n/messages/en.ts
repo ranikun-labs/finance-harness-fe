@@ -35,12 +35,30 @@ export const en: Messages = {
     home: {
       title: 'Home',
       hero: {
-        eyebrow: 'Check before deciding',
-        heading: 'Start with a question before you decide',
-        description: 'Ask what you are curious about and review the points worth checking.',
-        action: 'Start a question',
-        ariaLabel: 'Explore a question',
+        eyebrow: 'Review',
+        heading: 'Review what you are deciding now',
+        description:
+          'I won’t tell you to buy or sell. I’ll organize what to check, evidence-based facts, and what is still unknown.',
+        action: 'Start review',
+        ariaLabel: 'Start a review',
       },
+      question: {
+        label: 'My question',
+        placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
+        helper: 'Keep your question intact while the review separates checks from evidence.',
+        submit: 'Start review',
+        required: 'Enter something to review.',
+      },
+      examples: {
+        heading: 'Try a question like this',
+        items: {
+          etf: 'Should I add to my semiconductor ETF position now?',
+          earnings: 'What should I check first in this quarter’s earnings outlook?',
+          loss: 'What evidence should I check before holding a losing position?',
+        },
+      },
+      policyNotice:
+        'A review does not provide buy/sell recommendations or return predictions. Anything not verified remains unknown.',
       recentRecords: {
         heading: 'Recent records',
         viewAll: 'View all records',
@@ -48,15 +66,15 @@ export const en: Messages = {
       empty: {
         title: 'No records yet',
         description: 'Ask a question and review what to check before preparing your first record.',
-        action: 'Start a question',
+        action: 'Start review',
       },
     },
     ask: {
       title: 'Ask Result',
       titleWithQuery: 'Ask Result — {{query}}',
       header: {
-        title: 'AI Check',
-        backLabel: 'Back to home',
+        title: 'Review',
+        backLabel: 'Back to review start',
       },
       empty: {
         title: 'No question to review yet',
@@ -108,6 +126,59 @@ export const en: Messages = {
       },
       fixtureNotice:
         'This screen is a functional example only. It is not an analysis of your actual question or investment advice.',
+      loading: {
+        eyebrow: 'Reviewing',
+        title: 'Organizing your review',
+        description: 'Your question stays visible while checks and evidence are separated.',
+        steps: {
+          question: 'Turn the question into checks',
+          evidence: 'Find verifiable evidence',
+          unknown: 'Mark what is unknown',
+        },
+        provenance:
+          'Only verifiable evidence is presented as fact. Anything not verified remains unknown.',
+      },
+      error: {
+        title: 'The review could not be completed',
+        description:
+          'This is different from missing evidence: the review itself was not processed. Your question is still here.',
+        retry: 'Try again',
+        edit: 'Edit question',
+      },
+      structured: {
+        resultTitle: 'Review result',
+        fixtureLabel: 'Example data',
+        questionLabel: 'My question',
+        checklist: {
+          heading: 'What to check',
+          helper: 'You can mark the checks you have confirmed.',
+          progress: '{{checked}}/{{total}} checked',
+        },
+        fact: {
+          heading: 'Facts checked',
+          helper: 'Each fact keeps its source and as-of date together.',
+          sourceLabel: 'Source',
+          asOfLabel: 'As of',
+        },
+        inference: {
+          heading: 'Interpretation',
+          helper: 'This is inference, not fact.',
+          basisLabel: 'Fact used as basis',
+        },
+        unknown: {
+          heading: 'What is still unknown',
+          helper: 'Keep unverifiable, incomplete, and stale information separate from facts.',
+        },
+        generatedAt: 'Generated {{timestamp}}',
+        reviewedAt: 'Reviewed {{timestamp}}',
+        timestampsHeading: 'Generated and reviewed at',
+        provenance:
+          'This result is example data for checking the screen flow. It is not analysis of your actual question or investment advice.',
+        partialTitle: 'Only some evidence was confirmed',
+        partialDescription:
+          'Unconfirmed content was not promoted to fact. Inference may be omitted and unknowns are kept visible.',
+        partialNarrow: 'A partial result is an expected incomplete result, not an error.',
+      },
       recordQuestions: {
         heading: 'Questions for your next record',
         items: {

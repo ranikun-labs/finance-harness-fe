@@ -51,6 +51,18 @@ export interface Messages {
         action: string;
         ariaLabel: string;
       };
+      question: {
+        label: string;
+        placeholder: string;
+        helper: string;
+        submit: string;
+        required: string;
+      };
+      examples: {
+        heading: string;
+        items: { etf: string; earnings: string; loss: string };
+      };
+      policyNotice: string;
       recentRecords: {
         heading: string;
         viewAll: string;
@@ -92,6 +104,30 @@ export interface Messages {
         };
       };
       fixtureNotice: string;
+      loading: {
+        eyebrow: string;
+        title: string;
+        description: string;
+        steps: { question: string; evidence: string; unknown: string };
+        provenance: string;
+      };
+      error: { title: string; description: string; retry: string; edit: string };
+      structured: {
+        resultTitle: string;
+        fixtureLabel: string;
+        questionLabel: string;
+        checklist: { heading: string; helper: string; progress: string };
+        fact: { heading: string; helper: string; sourceLabel: string; asOfLabel: string };
+        inference: { heading: string; helper: string; basisLabel: string };
+        unknown: { heading: string; helper: string };
+        generatedAt: string;
+        reviewedAt: string;
+        timestampsHeading: string;
+        provenance: string;
+        partialTitle: string;
+        partialDescription: string;
+        partialNarrow: string;
+      };
       recordQuestions: {
         heading: string;
         items: {

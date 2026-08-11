@@ -142,21 +142,50 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     }
   });
 
-  test('Home Hero starts Ask without a query and browser back returns Home', async ({ page }) => {
+  test('Review Start keeps the question and opens the Review Result flow', async ({ page }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const heroLink = page.getByRole('link', {
-      name: ko.app.home.hero.ariaLabel,
-    });
-    await expect(heroLink).toHaveAttribute('href', buildAppAskPath());
-    await heroLink.click();
+    const question = '실적 전망을 검토하고 싶어요';
+    await page.getByRole('textbox', { name: ko.app.home.question.label }).fill(question);
+    await page.getByRole('button', { name: ko.app.home.question.submit }).click();
 
     const askUrl = new URL(page.url());
     expect(askUrl.pathname).toBe(APP_ROUTE_PATHS.ask);
-    expect(askUrl.search).toBe('');
+    expect(askUrl.searchParams.get('q')).toBe(question);
     await expect(
-      page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
+      page.getByRole('heading', {
+        level: 1,
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
     ).toBeVisible();
+    await expect(
+      page.getByRole('status', {
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('status', {
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: ko.app.ask.structured.resultTitle,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.ask.structured.fact.heading,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText(question)).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.appHome}$`));
@@ -210,9 +239,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(reviewTab).toHaveAttribute('aria-current', 'page');
     await expect(journalTab).not.toHaveAttribute('aria-current');
 
-    await expect(
-      page.locator('main form, main input, main textarea, main [role="textbox"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('main form')).toHaveCount(1);
+    await expect(page.locator('main textarea, main [role="textbox"]')).toHaveCount(1);
     for (const name of [
       /시장 체크|관심종목 체크/,
       /Watchlist|관심종목/,
@@ -525,18 +553,18 @@ test.describe('Ask empty and result states', () => {
     });
   }
 
-  test('renders an encoded question with the static fixture notice', async ({ page }) => {
+  test('renders an encoded question with structured fixture provenance', async ({ page }) => {
     const question = '실적 전망 & 산업 흐름은 어떻게 확인할까?';
     await page.goto(buildAppAskPath(question));
 
     await expect(page.getByText(question)).toBeVisible();
-    await expect(page.getByRole('note')).toHaveText(ko.app.ask.fixtureNotice);
+    await expect(page.getByRole('note')).toHaveText(ko.app.ask.structured.provenance);
     await expect(
-      page.getByRole('heading', { name: ko.app.ask.perspectives.heading }),
+      page.getByRole('heading', { name: ko.app.ask.structured.fact.heading }),
     ).toBeVisible();
   });
 
-  test('navigates through all three result CTAs without transferring the question', async ({
+  test('navigates through the two result CTAs without transferring the question', async ({
     page,
   }) => {
     const question = 'CTA 경로 확인';
@@ -548,10 +576,6 @@ test.describe('Ask empty and result states', () => {
       {
         label: ko.app.ask.navigation.investmentRecord,
         target: buildAppJournalNewPath('investment'),
-      },
-      {
-        label: ko.app.ask.navigation.askAgain,
-        target: APP_ROUTE_PATHS.appHome,
       },
     ];
 
@@ -572,10 +596,9 @@ test.describe('Ask empty and result states', () => {
       await expect(navigation).toHaveCount(0);
     } else {
       await expect(navigation).toBeVisible();
-      await expect(page.getByRole('link', { name: ko.nav.review })).toHaveAttribute(
-        'aria-current',
-        'page',
-      );
+      await expect(
+        page.getByTestId('primary-navigation').getByRole('link', { name: ko.nav.review }),
+      ).toHaveAttribute('aria-current', 'page');
     }
   });
 
@@ -624,8 +647,10 @@ test.describe('Ask English locale', () => {
     const question = 'How should I review the business assumptions?';
     await page.goto(buildAppAskPath(question));
     await expect(page.getByText(question)).toBeVisible();
-    await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
-    await expect(page.getByRole('link', { name: en.app.ask.navigation.askAgain })).toBeVisible();
+    await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
+    await expect(
+      page.getByRole('heading', { name: en.app.ask.structured.fact.heading }),
+    ).toBeVisible();
   });
 });
 
@@ -643,10 +668,8 @@ test.describe('Home English locale', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: en.app.home.recentRecords.heading }),
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: en.app.home.hero.ariaLabel })).toHaveAttribute(
-      'href',
-      buildAppAskPath(),
-    );
+    await expect(page.getByRole('textbox', { name: en.app.home.question.label })).toBeVisible();
+    await expect(page.getByRole('button', { name: en.app.home.question.submit })).toBeVisible();
     await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });

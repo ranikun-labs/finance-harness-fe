@@ -185,7 +185,7 @@ test.describe('모바일 세로 스크롤 계약', () => {
     expect(scrollContract.mainScrollable).toBe(true);
     expect(scrollContract.overflowingAncestorCount).toBe(0);
 
-    const lastCta = page.getByRole('link', { name: ko.app.ask.navigation.askAgain });
+    const lastCta = page.getByRole('link', { name: ko.app.ask.navigation.investmentRecord });
     await lastCta.scrollIntoViewIfNeeded();
     const ctaBox = (await lastCta.boundingBox())!;
     await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
@@ -229,12 +229,10 @@ test.describe('Home 모바일 레이아웃', () => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
     const viewportHeight = page.viewportSize()!.height;
-    const heroLink = page.getByRole('link', {
-      name: ko.app.home.hero.ariaLabel,
-    });
-    const heroBox = (await heroLink.boundingBox())!;
-    expect(heroBox.y).toBeGreaterThanOrEqual(0);
-    expect(heroBox.y).toBeLessThan(viewportHeight);
+    const questionInput = page.getByRole('textbox', { name: ko.app.home.question.label });
+    const questionBox = (await questionInput.boundingBox())!;
+    expect(questionBox.y).toBeGreaterThanOrEqual(0);
+    expect(questionBox.y).toBeLessThan(viewportHeight);
 
     const contract = await page.evaluate(() => {
       const main = document.querySelector('main')!;
@@ -405,7 +403,7 @@ test.describe('Ask 영어 모바일 레이아웃', () => {
   test('영어 CTA와 fixture가 375px에서 수평 overflow를 만들지 않는다', async ({ page }) => {
     await page.goto(buildAppAskPath('How should I review this question?'));
 
-    await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
+    await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
     await expect(
       page.getByRole('link', { name: en.app.ask.navigation.investmentRecord }),
     ).toBeVisible();
