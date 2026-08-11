@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { BOTTOM_TABS } from '@/constants/navigation';
 import {
@@ -20,11 +20,25 @@ const STUDY_ID = 'journal-2026-06-27-01';
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
+async function expectJournalPrimaryNavigation(page: Page) {
+  const navigation = page.getByTestId('primary-navigation');
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await expect(navigation).toBeHidden();
+    return;
+  }
+
+  await expect(navigation).toBeVisible();
+  await expect(page.getByRole('link', { name: ko.nav.journal, exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+}
+
 const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
   { path: APP_ROUTE_PATHS.appHome, heading: ko.app.home.hero.heading },
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
-  { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
+  { path: APP_ROUTE_PATHS.journalList, heading: ko.app.journalList.title },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
   {
     path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
@@ -68,6 +82,25 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
   }
 
+  test('journal app routes expose exactly one main landmark', async ({ page }) => {
+    const landmarkRoutes = [
+      APP_ROUTE_PATHS.journalList,
+      buildAppJournalNewPath('investment'),
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath('unknown-record-id'),
+      buildAppJournalReviewPath('unknown-record-id'),
+      `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A`,
+      `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A/review`,
+    ];
+
+    for (const route of landmarkRoutes) {
+      await page.goto(route);
+      expect(await page.locator('main').count()).toBe(1);
+      await expect(page.getByRole('main')).toHaveCount(1);
+    }
+  });
+
   test('renders public NotFound for an unsupported locale (no redirect)', async ({ page }) => {
     await page.goto('/fr');
     await expect(page).toHaveURL(/\/fr$/);
@@ -109,21 +142,50 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     }
   });
 
-  test('Home Hero starts Ask without a query and browser back returns Home', async ({ page }) => {
+  test('Review Start keeps the question and opens the Review Result flow', async ({ page }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const heroLink = page.getByRole('link', {
-      name: ko.app.home.hero.ariaLabel,
-    });
-    await expect(heroLink).toHaveAttribute('href', buildAppAskPath());
-    await heroLink.click();
+    const question = '실적 전망을 검토하고 싶어요';
+    await page.getByRole('textbox', { name: ko.app.home.question.label }).fill(question);
+    await page.getByRole('button', { name: ko.app.home.question.submit }).click();
 
     const askUrl = new URL(page.url());
     expect(askUrl.pathname).toBe(APP_ROUTE_PATHS.ask);
-    expect(askUrl.search).toBe('');
+    expect(askUrl.searchParams.get('q')).toBe(question);
     await expect(
-      page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
+      page.getByRole('heading', {
+        level: 1,
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
     ).toBeVisible();
+    await expect(
+      page.getByRole('status', {
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('status', {
+        name: ko.app.ask.loading.title,
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: ko.app.ask.structured.resultTitle,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.ask.structured.fact.heading,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText(question)).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.appHome}$`));
@@ -167,21 +229,18 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     ).toBeVisible();
   });
 
-  test('Home keeps only its tab active and exposes no input or excluded feature controls', async ({
+  test('Review Start keeps only its primary item active and exposes no excluded controls', async ({
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const homeTab = page.getByRole('link', { name: ko.nav.home, exact: true });
-    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
+    const reviewTab = page.getByRole('link', { name: ko.nav.review, exact: true });
     const journalTab = page.getByRole('link', { name: ko.nav.journal, exact: true });
-    await expect(homeTab).toHaveAttribute('aria-current', 'page');
-    await expect(askTab).not.toHaveAttribute('aria-current');
+    await expect(reviewTab).toHaveAttribute('aria-current', 'page');
     await expect(journalTab).not.toHaveAttribute('aria-current');
 
-    await expect(
-      page.locator('main form, main input, main textarea, main [role="textbox"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('main form')).toHaveCount(1);
+    await expect(page.locator('main textarea, main [role="textbox"]')).toHaveCount(1);
     for (const name of [
       /시장 체크|관심종목 체크/,
       /Watchlist|관심종목/,
@@ -277,7 +336,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
         page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
       ).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: detail.heading })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+      await expectJournalPrimaryNavigation(page);
     });
   }
 
@@ -293,6 +352,53 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
     ).toBeVisible();
+  });
+
+  test('journal detail survives reload and browser back without stale selection', async ({
+    page,
+  }) => {
+    const detailPath = buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID);
+
+    await page.goto(detailPath);
+    const detailUrl = page.url();
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
+    ).toHaveAttribute('href', detailPath);
+
+    await page.reload();
+    await expect(page).toHaveURL(detailUrl);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
+    ).toHaveAttribute('href', detailPath);
+
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    await page.locator(`a[href="${detailPath}"]`).first().click();
+    await expect(page).toHaveURL(detailPath);
+    await page.goBack();
+    await expect(page).toHaveURL(APP_ROUTE_PATHS.journalList);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+    ).toBeVisible();
+    await expect(page.locator('.journal-workspace-list-pane a[aria-current="page"]')).toHaveCount(
+      0,
+    );
+    const detailPrompt = page.getByRole('heading', {
+      level: 2,
+      name: ko.app.journalWorkspace.detailPrompt.heading,
+    });
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      await expect(detailPrompt).toBeHidden();
+    } else {
+      await expect(detailPrompt).toBeVisible();
+    }
   });
 
   test('journal detail resolves an encoded existing id and builds a canonical review href', async ({
@@ -366,7 +472,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       ).toBeVisible();
       await expect(page.getByText(review.subject, { exact: true })).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: review.section })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+      await expectJournalPrimaryNavigation(page);
     });
   }
 
@@ -378,13 +484,11 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       name: ko.app.journalReview.navigation.detail,
     });
 
-    await expect(detailLinks).toHaveCount(2);
-    for (let index = 0; index < 2; index += 1) {
-      await expect(detailLinks.nth(index)).toHaveAttribute(
-        'href',
-        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
-      );
-    }
+    await expect(detailLinks).toHaveCount(1);
+    await expect(detailLinks).toHaveAttribute(
+      'href',
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    );
     await detailLinks.last().click();
     await expect(page).toHaveURL(
       new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
@@ -434,7 +538,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       await expect(
         page.getByRole('link', { name: ko.app.journalReview.navigation.detail }),
       ).toHaveCount(0);
-      const links = page.getByRole('link');
+      const links = page.locator('main').getByRole('link');
       for (let index = 0; index < (await links.count()); index += 1) {
         await expect(links.nth(index)).toHaveAttribute('href', APP_ROUTE_PATHS.journalList);
       }
@@ -442,15 +546,27 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
   }
 
-  test('journal review exposes no mutation form or save and submit controls', async ({ page }) => {
+  test('journal review exposes the separate retrospective editor without mutation controls', async ({
+    page,
+  }) => {
     await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
 
-    await expect(page.locator('form, input, textarea, [type="submit"]')).toHaveCount(0);
-    await expect(page.getByRole('button')).toHaveCount(0);
+    await expect(page.getByTestId('retrospective-editor')).toBeVisible();
+    await expect(
+      page.getByRole('textbox', {
+        name: ko.app.journalReview.retrospective.bodyLabel,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: ko.app.journalReview.retrospective.save,
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: /저장|제출|수정|삭제/ })).toHaveCount(0);
   });
 
-  test('journal list: the last record card is not covered by the bottom navigation', async ({
+  test('journal list: the last record card is not covered by adaptive primary navigation', async ({
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
@@ -466,7 +582,11 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     const cardBox = (await lastCard.boundingBox())!;
     const nav = page.getByRole('navigation', { name: ko.nav.ariaLabel });
     const navBox = (await nav.boundingBox())!;
-    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+    if (page.viewportSize()!.width < 768) {
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+    } else {
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+    }
   });
 });
 
@@ -490,18 +610,18 @@ test.describe('Ask empty and result states', () => {
     });
   }
 
-  test('renders an encoded question with the static fixture notice', async ({ page }) => {
+  test('renders an encoded question with structured fixture provenance', async ({ page }) => {
     const question = '실적 전망 & 산업 흐름은 어떻게 확인할까?';
     await page.goto(buildAppAskPath(question));
 
     await expect(page.getByText(question)).toBeVisible();
-    await expect(page.getByRole('note')).toHaveText(ko.app.ask.fixtureNotice);
+    await expect(page.getByRole('note')).toHaveText(ko.app.ask.structured.provenance);
     await expect(
-      page.getByRole('heading', { name: ko.app.ask.perspectives.heading }),
+      page.getByRole('heading', { name: ko.app.ask.structured.fact.heading }),
     ).toBeVisible();
   });
 
-  test('navigates through all three result CTAs without transferring the question', async ({
+  test('navigates through the two result CTAs without transferring the question', async ({
     page,
   }) => {
     const question = 'CTA 경로 확인';
@@ -514,10 +634,6 @@ test.describe('Ask empty and result states', () => {
         label: ko.app.ask.navigation.investmentRecord,
         target: buildAppJournalNewPath('investment'),
       },
-      {
-        label: ko.app.ask.navigation.askAgain,
-        target: APP_ROUTE_PATHS.appHome,
-      },
     ];
 
     for (const item of cases) {
@@ -529,12 +645,18 @@ test.describe('Ask empty and result states', () => {
     }
   });
 
-  test('keeps the Ask bottom tab active in the result state', async ({ page }) => {
+  test('keeps Review Result in Review IA without a phone bottom navigation', async ({ page }) => {
     await page.goto(buildAppAskPath('활성 탭 확인'));
 
-    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
-    await expect(askTab).toHaveAttribute('aria-current', 'page');
-    await expect(askTab.getByTestId('bottom-tab-active-indicator')).toBeVisible();
+    const navigation = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+    if (page.viewportSize()!.width < 768) {
+      await expect(navigation).toHaveCount(0);
+    } else {
+      await expect(navigation).toBeVisible();
+      await expect(
+        page.getByTestId('primary-navigation').getByRole('link', { name: ko.nav.review }),
+      ).toHaveAttribute('aria-current', 'page');
+    }
   });
 
   test('renders HTML-like input as inert text', async ({ page }) => {
@@ -582,8 +704,10 @@ test.describe('Ask English locale', () => {
     const question = 'How should I review the business assumptions?';
     await page.goto(buildAppAskPath(question));
     await expect(page.getByText(question)).toBeVisible();
-    await expect(page.getByRole('note')).toHaveText(en.app.ask.fixtureNotice);
-    await expect(page.getByRole('link', { name: en.app.ask.navigation.askAgain })).toBeVisible();
+    await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
+    await expect(
+      page.getByRole('heading', { name: en.app.ask.structured.fact.heading }),
+    ).toBeVisible();
   });
 });
 
@@ -601,10 +725,8 @@ test.describe('Home English locale', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: en.app.home.recentRecords.heading }),
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: en.app.home.hero.ariaLabel })).toHaveAttribute(
-      'href',
-      buildAppAskPath(),
-    );
+    await expect(page.getByRole('textbox', { name: en.app.home.question.label })).toBeVisible();
+    await expect(page.getByRole('button', { name: en.app.home.question.submit })).toBeVisible();
     await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });
@@ -631,7 +753,12 @@ test.describe('Journal detail English locale', () => {
         name: en.app.journalDetail.investment.questionHeading,
       }),
     ).toBeVisible();
-    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    const questionSection = page
+      .getByRole('heading', {
+        name: en.app.journalDetail.investment.questionHeading,
+      })
+      .locator('..');
+    await expect(questionSection.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });
 
@@ -654,6 +781,6 @@ test.describe('Journal review English locale', () => {
         name: en.app.journalReview.investment.reflectionHeading,
       }),
     ).toBeVisible();
-    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    await expect(page.getByText('반도체 기업 A 요즘 어때?', { exact: true }).first()).toBeVisible();
   });
 });

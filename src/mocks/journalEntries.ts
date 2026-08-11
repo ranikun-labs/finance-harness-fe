@@ -1,5 +1,7 @@
 import type { EmotionTag, RecordAction } from '@/constants/policy';
 import type { SampleSubjectKey } from '@/i18n/dictionary';
+import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
+import { SAMPLE_DECISION_CONTEXT } from '@/mocks/decisionContext';
 
 export interface JournalChecklistItem {
   text: string;
@@ -14,6 +16,7 @@ interface BaseJournalEntry {
   emotion?: EmotionTag;
   checkedCount: number;
   totalCount: number;
+  decisionContext?: DecisionContextSnapshot;
 }
 
 type InvestmentJournalEntry = BaseJournalEntry & {
@@ -47,6 +50,7 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     question: '반도체 기업 A 요즘 어때?',
     memo: 'HBM 수요 기대가 꺾이지 않았고, 외국인 누적 매수가 며칠째 이어지고 있어서 지켜보기로 했다.',
     emotion: '확신',
+    decisionContext: SAMPLE_DECISION_CONTEXT,
     checkedCount: 2,
     totalCount: 3,
     aiChecklist: [

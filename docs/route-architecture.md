@@ -15,11 +15,11 @@
 
 URL은 세 갈래로 소유된다.
 
-| 소유 도메인    | 경로                      | 렌더링                           | 레이아웃                             | NotFound             |
-| -------------- | ------------------------- | -------------------------------- | ------------------------------------ | -------------------- |
-| 루트 redirect  | `/`                       | 콘텐츠 없음(redirect)            | —                                    | —                    |
-| 공개 웹        | `/:locale/*` (`ko`\|`en`) | 정적 Pre-render **목표**(STEP 6) | `PublicLayout`                       | `PublicNotFoundPage` |
-| 웹앱·Capacitor | `/app/*`                  | SPA                              | `AppShell` (+ 하단 탭은 `TabLayout`) | `NotFoundPage`       |
+| 소유 도메인    | 경로                      | 렌더링                           | 레이아웃                                                 | NotFound             |
+| -------------- | ------------------------- | -------------------------------- | -------------------------------------------------------- | -------------------- |
+| 루트 redirect  | `/`                       | 콘텐츠 없음(redirect)            | —                                                        | —                    |
+| 공개 웹        | `/:locale/*` (`ko`\|`en`) | 정적 Pre-render **목표**(STEP 6) | `PublicLayout`                                           | `PublicNotFoundPage` |
+| 웹앱·Capacitor | `/app/*`                  | SPA                              | adaptive `AppShell` (+ primary navigation은 `TabLayout`) | `NotFoundPage`       |
 
 STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브러리·호스팅 rewrite·정적
 산출물 검증은 STEP 6에서 다룬다.
@@ -35,13 +35,13 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 /:locale/*                → PublicNotFoundPage
   ※ 미지원 locale(/fr 등)도 PublicLayout에서 PublicNotFoundPage로 처리(redirect 아님)
 
-/app                      → HomePage              (index, 하단 탭 O)
-/app/ask                  → AskPage               (하단 탭 O, ?q=)
-/app/journal              → JournalListPage       (하단 탭 O)
+/app                      → HomePage              (검토 시작 owner, index)
+/app/ask                  → AskPage               (내부 검토 결과, ?q=)
+/app/journal              → JournalListPage       (저널 Primary Surface)
 /app/onboarding           → OnboardingPage        (하단 탭 X)
-/app/journal/new          → JournalNewPage        (하단 탭 X, ?type=investment|study)
-/app/journal/:id          → JournalDetailPage     (하단 탭 X)
-/app/journal/:id/review   → JournalReviewPage     (하단 탭 X)
+/app/journal/new          → JournalNewPage        (Phone 하단 탭 X; Tablet 이상 primary nav, ?type=investment|study)
+/app/journal/:id          → JournalDetailPage     (Phone 하단 탭 X; Tablet 이상 primary nav)
+/app/journal/:id/review   → JournalReviewPage     (Phone 하단 탭 X; Tablet 이상 primary nav)
 /app/*                    → NotFoundPage(app)     (하단 탭 X)
 ```
 
@@ -89,6 +89,9 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 - 중첩 라우트 상대경로는 `toRelativeUnder(base, absolute)`로 파생(문자열 중복 방지).
 
 ### 3.5 레이아웃·NotFound 경계
+
+> 아래 3-tab/480px 설명은 STEP 5 당시 구현 이력이다. 현재 adaptive presentation
+> contract는 §7이 supersede한다.
 
 - **앱 URL 경계(`/app/*` = `AppShell`)와 하단 탭 셸 경계(`TabLayout`)는 동일하지 않다.**
   하단 탭은 `TabLayout` 하위 3개(home/ask/journal)에만 붙는다. `onboarding`·journal
@@ -253,6 +256,27 @@ WebView에서도 동일하게 동작한다(§2 "서버 전용 기능에 의존�
 각각 명시적으로 만족해야 한다(`typeof` 파생이 아님 — 리터럴 타입 widening 문제
 회피). 키 누락·shape 불일치는 `pnpm typecheck`에서 컴파일 에러로 즉시 잡힌다.
 `BOTTOM_TABS`(`src/constants/navigation.ts`)에는 번역된 문구나 키를 두지 않는다 —
-`id`/`path`/`end` 같은 구조적 metadata만 유지하고, label 번역 조회는
+`id`/`path` 같은 구조적 metadata만 유지하고, label 번역 조회는
 `BottomNavigation`이 렌더 시점에 한다. route path·query key·journal type
 (`investment`/`study`) 같은 도메인 식별자는 번역 대상이 아니다.
+
+## 7. RPL-68 Adaptive P0 Presentation Contract
+
+RPL-68은 STEP 5·6의 URL 소유권, BrowserRouter, Pre-render, SPA fallback을 바꾸지 않고
+앱 presentation contract만 갱신한다.
+
+- `/app`은 검토 시작의 canonical owner다. Home dashboard route가 아니다.
+- `/app/ask`는 deep link와 query 계약을 유지하는 내부 검토 결과 route다.
+- Primary IA는 검토/저널 두 개이며 `BOTTOM_TABS`도 이 두 destination만 가진다.
+- Phone은 단일 column과 검토/저널 Bottom Navigation을 사용한다. 내부 결과·작성·상세·
+  복기에서는 context navigation을 사용하며 Bottom Navigation은 숨긴다.
+- Tablet Portrait는 480px frame을 사용하지 않고 최대 760px readable content host를
+  가진다. 검토/저널 primary navigation은 상단에 유지된다.
+- Tablet Landscape와 Desktop은 rail navigation foundation을 사용한다. 내부 저널 신규·
+  상세·복기 화면도 동일한 primary navigation을 유지한다. 앱 host는 viewport를 사용하되
+  Desktop에서 최대 1360px다.
+- 허용된 2-pane은 Journal List | Detail과 Original Journal | Retrospective뿐이며 이후
+  RPL-68 Slice에서 구현한다. Review Question | Result 강제 2-pane과 3-pane은 금지한다.
+
+이 변경은 route path, path builder, locale ownership, NotFound, hydration, fallback,
+Capacitor 경계를 변경하지 않는다.

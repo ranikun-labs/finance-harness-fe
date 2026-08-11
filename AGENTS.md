@@ -13,7 +13,7 @@
 - 라우트 정의의 유일한 소스는 `src/constants/routes.ts`이다. 경로 문자열을
   컴포넌트에 하드코딩하지 않는다.
 - 라우트 목록의 기준 문서는 `docs/nav-map.md`이다.
-- 하단 탭(홈/질문/기록)은 `src/constants/navigation.ts`의 `BOTTOM_TABS` 하나로
+- Primary navigation(검토/저널)은 `src/constants/navigation.ts`의 `BOTTOM_TABS` 하나로
   관리한다.
 
 ## 아키텍처 개요

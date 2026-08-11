@@ -22,12 +22,16 @@ const FORBIDDEN_POLICY_TEXT = ['목표가', '손절가', '수익률 보장', '�
 describe('JournalListPage', () => {
   it('renders the ko heading', () => {
     renderPage('ko');
-    expect(screen.getByRole('heading', { level: 1, name: '기록' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+    ).toBeInTheDocument();
   });
 
   it('renders the en heading', () => {
     renderPage('en');
-    expect(screen.getByRole('heading', { level: 1, name: 'Records' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: en.app.journalList.title }),
+    ).toBeInTheDocument();
   });
 
   it('renders the ko sample subject names from mock fixtures', () => {

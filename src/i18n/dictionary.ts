@@ -20,8 +20,7 @@ export interface Messages {
     appName: string;
   };
   nav: {
-    home: string;
-    ask: string;
+    review: string;
     journal: string;
     ariaLabel: string;
   };
@@ -52,6 +51,18 @@ export interface Messages {
         action: string;
         ariaLabel: string;
       };
+      question: {
+        label: string;
+        placeholder: string;
+        helper: string;
+        submit: string;
+        required: string;
+      };
+      examples: {
+        heading: string;
+        items: { etf: string; earnings: string; loss: string };
+      };
+      policyNotice: string;
       recentRecords: {
         heading: string;
         viewAll: string;
@@ -93,6 +104,30 @@ export interface Messages {
         };
       };
       fixtureNotice: string;
+      loading: {
+        eyebrow: string;
+        title: string;
+        description: string;
+        steps: { question: string; evidence: string; unknown: string };
+        provenance: string;
+      };
+      error: { title: string; description: string; retry: string; edit: string };
+      structured: {
+        resultTitle: string;
+        fixtureLabel: string;
+        questionLabel: string;
+        checklist: { heading: string; helper: string; progress: string };
+        fact: { heading: string; helper: string; sourceLabel: string; asOfLabel: string };
+        inference: { heading: string; helper: string; basisLabel: string };
+        unknown: { heading: string; helper: string };
+        generatedAt: string;
+        reviewedAt: string;
+        timestampsHeading: string;
+        provenance: string;
+        partialTitle: string;
+        partialDescription: string;
+        partialNarrow: string;
+      };
       recordQuestions: {
         heading: string;
         items: {
@@ -108,16 +143,37 @@ export interface Messages {
       filters: { groupLabel: string; all: string; investment: string; study: string };
       emotionLabel: string;
       noEmotion: string;
+      reasoningLabel: string;
       checkedProgress: string;
       countLabel: string;
       emptyAll: { title: string; description: string; cta: string; hint: string };
       emptyFilter: { title: string; description: string; resetAction: string };
       subjects: Record<SampleSubjectKey, string>;
     };
+    journalWorkspace: {
+      listPaneLabel: string;
+      detailPaneLabel: string;
+      detailPrompt: { heading: string; description: string };
+    };
     journalNew: {
       investment: string;
       study: string;
       typeSwitch: { investment: string; study: string; dirtyConfirm: string };
+      decisionContext: {
+        title: string;
+        switchLabel: string;
+        enabledDescription: string;
+        disabledDescription: string;
+        minimumLabel: string;
+        originalQuestionLabel: string;
+        checklistLabel: string;
+        capturedAtLabel: string;
+        checked: string;
+        unchecked: string;
+        optionalLabel: string;
+        optionalDescription: string;
+        immutableNotice: string;
+      };
       form: {
         optional: string;
         checkEntries: string;
@@ -181,6 +237,19 @@ export interface Messages {
       checkedProgress: string;
       checkedStatus: string;
       uncheckedStatus: string;
+      decisionContext: {
+        heading: string;
+        snapshotLabel: string;
+        originalQuestionLabel: string;
+        checklistLabel: string;
+        versionLabel: string;
+        capturedAtLabel: string;
+        checked: string;
+        unchecked: string;
+        optionalEvidenceLabel: string;
+        noOptionalEvidence: string;
+        immutableNotice: string;
+      };
       navigation: { review: string; list: string };
       notFound: { heading: string; description: string; listAction: string };
     };
@@ -219,6 +288,35 @@ export interface Messages {
           revisit: string;
           nextQuestion: string;
         };
+      };
+      retrospective: {
+        originalHeading: string;
+        editorHeading: string;
+        editorDescription: string;
+        timestampLabel: string;
+        bodyLabel: string;
+        bodyPrompt: string;
+        bodyPlaceholder: string;
+        outcomeHeading: string;
+        outcomeDescription: string;
+        outcomeLabel: string;
+        outcomePlaceholder: string;
+        qualityHeading: string;
+        qualityDescription: string;
+        qualityLabel: string;
+        qualityPlaceholder: string;
+        nextCheckLabel: string;
+        nextCheckPlaceholder: string;
+        save: string;
+        saving: string;
+        saveError: string;
+        retry: string;
+        savedHeading: string;
+        savedNotice: string;
+        savedAtLabel: string;
+        separateRecordNotice: string;
+        immutableNotice: string;
+        validationRequired: string;
       };
       policyNotice: string;
       navigation: { detail: string };

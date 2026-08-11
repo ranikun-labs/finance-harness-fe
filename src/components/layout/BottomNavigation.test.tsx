@@ -3,15 +3,20 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import {
+  APP_ROUTE_PATHS,
+  buildAppJournalDetailPath,
+  buildAppJournalNewPath,
+  buildAppJournalReviewPath,
+} from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 
 // useTranslation()은 provider 없이 호출되면 throw하므로(암묵적 fallback 없음),
 // 이 컴포넌트를 단독 렌더하는 모든 테스트는 명시적으로 <I18nProvider>로 감싼다.
-function renderWithLocale(entry: string) {
+function renderWithLocale(entry: string, locale: 'ko' | 'en' = 'ko') {
   return render(
     <MemoryRouter initialEntries={[entry]}>
-      <I18nProvider locale="ko">
+      <I18nProvider locale={locale}>
         <BottomNavigation />
       </I18nProvider>
     </MemoryRouter>,
@@ -19,42 +24,59 @@ function renderWithLocale(entry: string) {
 }
 
 describe('BottomNavigation', () => {
-  it('marks the active tab with aria-current and a dedicated indicator, and not the others', () => {
+  it('exposes only the Review and Journal primary destinations', () => {
     renderWithLocale(APP_ROUTE_PATHS.ask);
 
-    const homeLink = screen.getByRole('link', { name: '홈' });
-    const askLink = screen.getByRole('link', { name: '질문' });
-    const journalLink = screen.getByRole('link', { name: '기록' });
+    const links = screen.getAllByRole('link');
+    const reviewLink = screen.getByRole('link', { name: '검토' });
+    const journalLink = screen.getByRole('link', { name: '저널' });
 
-    expect(askLink).toHaveAttribute('aria-current', 'page');
-    expect(homeLink).not.toHaveAttribute('aria-current');
+    expect(links).toHaveLength(2);
+    expect(reviewLink).toHaveAttribute('href', APP_ROUTE_PATHS.appHome);
+    expect(journalLink).toHaveAttribute('href', APP_ROUTE_PATHS.journalList);
+    expect(screen.queryByRole('link', { name: '홈' })).toBeNull();
+    expect(screen.queryByRole('link', { name: '질문' })).toBeNull();
+  });
+
+  it('keeps Review active for the internal Review Result route', () => {
+    renderWithLocale(APP_ROUTE_PATHS.ask);
+
+    const navigation = screen.getByRole('navigation', { name: '주요 화면 이동' });
+    const reviewLink = screen.getByRole('link', { name: '검토' });
+    const journalLink = screen.getByRole('link', { name: '저널' });
+
+    expect(navigation).toHaveClass('hidden', 'md:flex');
+    expect(reviewLink).toHaveAttribute('aria-current', 'page');
     expect(journalLink).not.toHaveAttribute('aria-current');
-
-    expect(within(askLink).getByTestId('bottom-tab-active-indicator')).toBeInTheDocument();
-    expect(within(homeLink).queryByTestId('bottom-tab-active-indicator')).toBeNull();
+    expect(within(reviewLink).getByTestId('bottom-tab-active-indicator')).toBeInTheDocument();
     expect(within(journalLink).queryByTestId('bottom-tab-active-indicator')).toBeNull();
   });
 
-  it('moves the active indicator when the active route changes', () => {
-    renderWithLocale(APP_ROUTE_PATHS.appHome);
-
-    const homeLink = screen.getByRole('link', { name: '홈' });
-    const askLink = screen.getByRole('link', { name: '질문' });
-
-    expect(homeLink).toHaveAttribute('aria-current', 'page');
-    expect(within(homeLink).getByTestId('bottom-tab-active-indicator')).toBeInTheDocument();
-    expect(askLink).not.toHaveAttribute('aria-current');
-    expect(within(askLink).queryByTestId('bottom-tab-active-indicator')).toBeNull();
-  });
-
-  it('keeps the home tab inactive on nested journal routes (end matching)', () => {
+  it('moves the active state to Journal on the journal list route', () => {
     renderWithLocale(APP_ROUTE_PATHS.journalList);
 
-    const homeLink = screen.getByRole('link', { name: '홈' });
-    const journalLink = screen.getByRole('link', { name: '기록' });
+    const reviewLink = screen.getByRole('link', { name: '검토' });
+    const journalLink = screen.getByRole('link', { name: '저널' });
 
-    // 홈 탭 경로(/app)가 /app/journal의 접두어지만 end=true라 활성되면 안 된다.
-    expect(homeLink).not.toHaveAttribute('aria-current');
+    expect(reviewLink).not.toHaveAttribute('aria-current');
     expect(journalLink).toHaveAttribute('aria-current', 'page');
+  });
+
+  it.each([
+    buildAppJournalNewPath('investment'),
+    buildAppJournalDetailPath('journal-2026-06-28-01'),
+    buildAppJournalReviewPath('journal-2026-06-28-01'),
+  ])('keeps Journal active on nested journal route %s', (path) => {
+    renderWithLocale(path);
+
+    expect(screen.getByRole('link', { name: '저널' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '검토' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('renders the matching English labels from the same structural config', () => {
+    renderWithLocale(APP_ROUTE_PATHS.appHome, 'en');
+
+    expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Journal' })).toBeInTheDocument();
   });
 });

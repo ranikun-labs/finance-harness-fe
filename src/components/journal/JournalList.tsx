@@ -15,15 +15,17 @@ import type { JournalEntry } from '@/mocks/journalEntries';
 
 interface JournalListProps {
   entries: JournalEntry[];
+  selectedId?: string;
 }
 
 /**
  * 전체 없음 / populated / 필터 결과 없음 세 상태를 분기하는 presentational composition.
  * 선택 필터는 이 컴포넌트가 소유하는 유일한 local UI state다.
  */
-export function JournalList({ entries }: JournalListProps) {
+export function JournalList({ entries, selectedId }: JournalListProps) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<JournalTypeFilterValue>('all');
+  const Heading = selectedId ? 'h2' : 'h1';
 
   const hasAnyEntries = entries.length > 0;
   const filteredEntries =
@@ -31,9 +33,9 @@ export function JournalList({ entries }: JournalListProps) {
 
   return (
     <div className="flex min-h-full flex-col gap-4 p-4">
-      <h1 className="text-foreground text-2xl font-extrabold tracking-tight">
+      <Heading className="text-foreground text-2xl font-extrabold tracking-tight">
         {t('app.journalList.title')}
-      </h1>
+      </Heading>
 
       {!hasAnyEntries ? (
         <EmptyState
@@ -76,7 +78,11 @@ export function JournalList({ entries }: JournalListProps) {
             <>
               <div className="flex flex-col gap-3">
                 {filteredEntries.map((entry) => (
-                  <JournalRecordCard key={entry.id} entry={entry} />
+                  <JournalRecordCard
+                    key={entry.id}
+                    entry={entry}
+                    selected={entry.id === selectedId}
+                  />
                 ))}
               </div>
               <p className="text-muted-foreground pt-2 pb-1 text-center text-xs">

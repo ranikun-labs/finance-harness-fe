@@ -10,6 +10,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { expect, test } from '@playwright/test';
 
 import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { ko } from '@/i18n/messages/ko';
 import { PRERENDER_MANIFEST } from '@/prerender/manifest';
 import { PRERENDER_MARKER_ATTRIBUTE, PRERENDER_MARKER_VALUE } from '@/prerender/shouldHydrate';
 
@@ -207,7 +208,7 @@ test.describe('provider-neutral fixture: 브라우저 hydration 검증', () => {
     page.on('pageerror', (err) => pageErrors.push(err.message));
 
     await page.goto(`${fixture.baseURL}${APP_ROUTE_PATHS.appHome}`);
-    await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: ko.app.home.hero.heading })).toBeVisible();
     expect(pageErrors).toEqual([]);
   });
 });

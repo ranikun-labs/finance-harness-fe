@@ -5,10 +5,12 @@ import { Card } from '@/components/ui/card';
 import { buildAppJournalDetailPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { formatLocalizedDate } from '@/lib/date';
+import { cn } from '@/lib/utils';
 import type { JournalEntry } from '@/mocks/journalEntries';
 
 interface JournalRecordCardProps {
   entry: JournalEntry;
+  selected?: boolean;
 }
 
 /**
@@ -16,14 +18,23 @@ interface JournalRecordCardProps {
  * Link이므로 내부에 중첩 button/link를 두지 않는다 — 감정 배지·행동 배지도 모두
  * 비interactive 요소(span)로만 구성된다.
  */
-export function JournalRecordCard({ entry }: JournalRecordCardProps) {
+export function JournalRecordCard({ entry, selected = false }: JournalRecordCardProps) {
   const { t, locale } = useTranslation();
   const title =
     entry.type === 'investment' ? t(`app.journalList.subjects.${entry.subjectKey}`) : entry.title;
 
   return (
-    <Link to={buildAppJournalDetailPath(entry.id)} className="block">
-      <Card className="flex flex-col gap-3 p-[18px]">
+    <Link
+      to={buildAppJournalDetailPath(entry.id)}
+      aria-current={selected ? 'page' : undefined}
+      className="focus-visible:ring-ring/50 block rounded-xl outline-none focus-visible:ring-3"
+    >
+      <Card
+        className={cn(
+          'flex flex-col gap-3 p-[18px] transition-colors',
+          selected && 'border-primary/50 bg-primary/5',
+        )}
+      >
         <div className="flex items-start justify-between gap-2.5">
           <div className="flex flex-1 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -47,7 +58,12 @@ export function JournalRecordCard({ entry }: JournalRecordCardProps) {
           </span>
         </div>
 
-        <p className="text-foreground/80 line-clamp-2 text-sm leading-relaxed">{entry.memo}</p>
+        <div className="space-y-1">
+          <span className="text-muted-foreground text-[11px] font-semibold">
+            {t('app.journalList.reasoningLabel')}
+          </span>
+          <p className="text-foreground/80 line-clamp-2 text-sm leading-relaxed">{entry.memo}</p>
+        </div>
 
         <div className="flex items-center justify-between pt-0.5">
           {entry.emotion ? (

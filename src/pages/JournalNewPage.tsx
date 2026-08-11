@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
+import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
 import { buildAppJournalDetailPath, buildAppJournalNewPath } from '@/constants/routes';
@@ -19,6 +20,7 @@ import {
 } from '@/features/journal-new/model/journalSubmitState';
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
 import { useTranslation } from '@/i18n/I18nContext';
+import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
 
 /**
  * `type` 쿼리 값('investment'/'study')은 도메인 식별자이며 번역 대상이 아니다 —
@@ -26,11 +28,30 @@ import { useTranslation } from '@/i18n/I18nContext';
  */
 type Props = { createPort?: JournalCreatePort };
 
+interface JournalNewLocationState {
+  decisionContext?: DecisionContextSnapshot;
+}
+
 export function JournalNewPage({ createPort }: Props) {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const resolution = resolveJournalType(searchParams);
+  const locationState = location.state as JournalNewLocationState | null;
+  const incomingDecisionContext = locationState?.decisionContext;
+  const [decisionContext, setDecisionContext] = useState<DecisionContextSnapshot | undefined>(() =>
+    incomingDecisionContext
+      ? {
+          ...incomingDecisionContext,
+          checklist: incomingDecisionContext.checklist.map((item) => ({ ...item })),
+          optionalEvidence: incomingDecisionContext.optionalEvidence.map((item) => ({ ...item })),
+        }
+      : undefined,
+  );
+  const [decisionContextEnabled, setDecisionContextEnabled] = useState(
+    Boolean(incomingDecisionContext),
+  );
   const [dirty, setDirty] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
   const inFlightRef = useRef(false);
@@ -104,7 +125,18 @@ export function JournalNewPage({ createPort }: Props) {
           return;
         }
         dispatch({ type: 'submitSucceeded', journalId });
-        navigate(buildAppJournalDetailPath(journalId), { replace: true });
+        const savedDecisionContext =
+          decisionContextEnabled && decisionContext
+            ? {
+                ...decisionContext,
+                checklist: decisionContext.checklist.map((item) => ({ ...item })),
+                optionalEvidence: decisionContext.optionalEvidence.map((item) => ({ ...item })),
+              }
+            : undefined;
+        navigate(buildAppJournalDetailPath(journalId), {
+          replace: true,
+          state: savedDecisionContext ? { decisionContext: savedDecisionContext } : undefined,
+        });
       })
       .catch(() => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;
@@ -140,6 +172,27 @@ export function JournalNewPage({ createPort }: Props) {
           </button>
         </div>
       </header>
+      {decisionContext && (
+        <DecisionContextCapturePanel
+          context={decisionContext}
+          enabled={decisionContextEnabled}
+          onEnabledChange={setDecisionContextEnabled}
+          onEvidenceChange={(evidenceId) => {
+            setDecisionContext((current) =>
+              current
+                ? {
+                    ...current,
+                    optionalEvidence: current.optionalEvidence.map((evidence) =>
+                      evidence.id === evidenceId
+                        ? { ...evidence, included: !evidence.included }
+                        : evidence,
+                    ),
+                  }
+                : current,
+            );
+          }}
+        />
+      )}
       {resolution.type === 'investment' ? (
         <InvestmentJournalForm
           onDirtyChange={setDirty}

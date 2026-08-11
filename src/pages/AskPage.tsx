@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { PolicyNotice } from '@/components/common/PolicyNotice';
@@ -6,68 +7,456 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
-import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
+import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
+import { getReviewFixture, localize } from '@/mocks/reviewResult';
 
-const PERSPECTIVE_KEYS: MessageKey[] = [
-  'app.ask.perspectives.items.businessContext',
-  'app.ask.perspectives.items.industryTrends',
-  'app.ask.perspectives.items.earningsAssumptions',
-  'app.ask.perspectives.items.pricedInExpectations',
-  'app.ask.perspectives.items.currencyAndRates',
-  'app.ask.perspectives.items.biasAndCounterEvidence',
-];
+type ReviewPhase = 'loading' | 'result' | 'error';
 
-const CHECKLIST_KEYS: Array<{ title: MessageKey; description: MessageKey }> = [
-  {
-    title: 'app.ask.checklist.items.businessContext.title',
-    description: 'app.ask.checklist.items.businessContext.description',
-  },
-  {
-    title: 'app.ask.checklist.items.industryTrends.title',
-    description: 'app.ask.checklist.items.industryTrends.description',
-  },
-  {
-    title: 'app.ask.checklist.items.earningsAssumptions.title',
-    description: 'app.ask.checklist.items.earningsAssumptions.description',
-  },
-  {
-    title: 'app.ask.checklist.items.pricedInExpectations.title',
-    description: 'app.ask.checklist.items.pricedInExpectations.description',
-  },
-  {
-    title: 'app.ask.checklist.items.currencyAndRates.title',
-    description: 'app.ask.checklist.items.currencyAndRates.description',
-  },
-  {
-    title: 'app.ask.checklist.items.biasAndCounterEvidence.title',
-    description: 'app.ask.checklist.items.biasAndCounterEvidence.description',
-  },
-];
+interface ReviewLocationState {
+  reviewFlow?: 'loading';
+}
 
-const RECORD_QUESTION_KEYS: MessageKey[] = [
-  'app.ask.recordQuestions.items.businessAssumption',
-  'app.ask.recordQuestions.items.evidenceToCheck',
-  'app.ask.recordQuestions.items.counterEvidence',
-];
+function formatReviewTime(value: string, locale: 'ko' | 'en'): string {
+  return new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul',
+  }).format(new Date(value));
+}
+
+function LoadingReview({ question }: { question: string }) {
+  const { t } = useTranslation();
+  const steps = [
+    t('app.ask.loading.steps.question'),
+    t('app.ask.loading.steps.evidence'),
+    t('app.ask.loading.steps.unknown'),
+  ];
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex min-w-0 flex-col gap-2">
+        <p className="text-primary text-xs font-bold tracking-wider uppercase">
+          {t('app.ask.loading.eyebrow')}
+        </p>
+        <h1 className="text-2xl leading-tight font-extrabold tracking-tight">
+          {t('app.ask.loading.title')}
+        </h1>
+        <p className="text-muted-foreground text-sm leading-6">
+          {t('app.ask.loading.description')}
+        </p>
+      </header>
+
+      <section aria-labelledby="loading-question-heading" className="space-y-2">
+        <h2
+          id="loading-question-heading"
+          className="text-text-tertiary text-xs font-bold tracking-wider"
+        >
+          {t('app.ask.structured.questionLabel')}
+        </h2>
+        <Card className="border-l-primary border-l-4 p-4">
+          <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
+        </Card>
+      </section>
+
+      <section
+        aria-label={t('app.ask.loading.title')}
+        aria-live="polite"
+        role="status"
+        className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-xl border p-5"
+      >
+        <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+          <div className="bg-primary h-full w-2/3 animate-pulse rounded-full" />
+        </div>
+        <ol className="flex min-w-0 flex-col gap-3">
+          {steps.map((step, index) => (
+            <li key={step} className="flex min-w-0 items-start gap-3 text-sm leading-6">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  index === 0
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {index + 1}
+              </span>
+              <span className={cn(index === 0 ? 'font-semibold' : 'text-muted-foreground')}>
+                {step}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <PolicyNotice>
+          <p>{t('app.ask.loading.provenance')}</p>
+        </PolicyNotice>
+      </section>
+    </div>
+  );
+}
+
+function ReviewError({
+  question,
+  onRetry,
+  onEdit,
+}: {
+  question: string;
+  onRetry: () => void;
+  onEdit: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex min-w-0 flex-col gap-2">
+        <p className="text-destructive text-xs font-bold tracking-wider uppercase">
+          {t('app.ask.header.title')}
+        </p>
+        <h1 className="text-2xl leading-tight font-extrabold tracking-tight">
+          {t('app.ask.error.title')}
+        </h1>
+      </header>
+
+      <section aria-labelledby="error-question-heading" className="space-y-2">
+        <h2
+          id="error-question-heading"
+          className="text-text-tertiary text-xs font-bold tracking-wider"
+        >
+          {t('app.ask.structured.questionLabel')}
+        </h2>
+        <Card className="border-l-primary border-l-4 p-4">
+          <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
+        </Card>
+      </section>
+
+      <Card role="alert" className="border-destructive/30 bg-destructive/5 flex flex-col gap-3 p-5">
+        <p className="text-destructive text-sm leading-6">{t('app.ask.error.description')}</p>
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={onRetry}
+            className={cn(buttonVariants(), 'min-h-11 flex-1')}
+          >
+            {t('app.ask.error.retry')}
+          </button>
+          <button
+            type="button"
+            onClick={onEdit}
+            className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11 flex-1')}
+          >
+            {t('app.ask.error.edit')}
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function StructuredReviewResult({ question, partial }: { question: string; partial: boolean }) {
+  const { locale, t } = useTranslation();
+  const fixture = useMemo(() => getReviewFixture(partial), [partial]);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
+  );
+  const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+  const decisionContext = useMemo(
+    () => createDecisionContextSnapshot(question, fixture, checkedItems),
+    [checkedItems, fixture, question],
+  );
+  const formattedGeneratedAt = formatReviewTime(fixture.generatedAt, locale);
+  const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
+
+  function toggleChecklistItem(id: string) {
+    setCheckedItems((current) => ({ ...current, [id]: !current[id] }));
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex min-w-0 items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-primary text-xs font-bold tracking-wider uppercase">
+            {t('app.ask.header.title')}
+          </p>
+          <h1 className="min-w-0 text-2xl leading-tight font-extrabold tracking-tight">
+            {t('app.ask.structured.resultTitle')}
+          </h1>
+        </div>
+        <Badge tone="info">{t('app.ask.structured.fixtureLabel')}</Badge>
+      </header>
+
+      <section aria-labelledby="result-question-heading" className="space-y-2">
+        <h2
+          id="result-question-heading"
+          className="text-text-tertiary text-xs font-bold tracking-wider"
+        >
+          {t('app.ask.structured.questionLabel')}
+        </h2>
+        <Card className="border-l-primary border-l-4 p-4">
+          <p className="min-w-0 text-xl leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
+        </Card>
+      </section>
+
+      {partial && (
+        <section
+          role="status"
+          aria-live="polite"
+          className="border-border bg-muted/50 flex min-w-0 flex-col gap-1 rounded-xl border p-4"
+        >
+          <h2 className="text-base font-bold">{t('app.ask.structured.partialTitle')}</h2>
+          <p className="text-muted-foreground text-sm leading-6">
+            {t('app.ask.structured.partialDescription')}
+          </p>
+          <p className="text-muted-foreground text-xs leading-5">
+            {t('app.ask.structured.partialNarrow')}
+          </p>
+        </section>
+      )}
+
+      <section aria-labelledby="review-checklist-heading" className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <h2 id="review-checklist-heading" className="text-base font-bold">
+              {t('app.ask.structured.checklist.heading')}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-5">
+              {t('app.ask.structured.checklist.helper')}
+            </p>
+          </div>
+          <Badge>
+            {t('app.ask.structured.checklist.progress', {
+              checked: String(checkedCount),
+              total: String(fixture.checklist.length),
+            })}
+          </Badge>
+        </div>
+        <Card>
+          <ul className="divide-border divide-y">
+            {fixture.checklist.map((item, index) => {
+              const checked = Boolean(checkedItems[item.id]);
+              return (
+                <li key={item.id} className="min-w-0 p-3">
+                  <button
+                    type="button"
+                    aria-pressed={checked}
+                    onClick={() => toggleChecklistItem(item.id)}
+                    className="focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-11 w-full min-w-0 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-3"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-bold',
+                        checked
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {checked ? '✓' : index + 1}
+                    </span>
+                    <span
+                      className={cn('min-w-0 pt-1 text-sm leading-6', checked && 'font-semibold')}
+                    >
+                      {localize(item.title, locale)}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      </section>
+
+      <section aria-labelledby="review-facts-heading" className="flex min-w-0 flex-col gap-3">
+        <div className="space-y-1">
+          <h2 id="review-facts-heading" className="text-base font-bold">
+            {t('app.ask.structured.fact.heading')}
+          </h2>
+          <p className="text-muted-foreground text-sm leading-5">
+            {t('app.ask.structured.fact.helper')}
+          </p>
+        </div>
+        <ul className="flex min-w-0 flex-col gap-3">
+          {fixture.facts.map((fact) => (
+            <li key={fact.id} className="min-w-0">
+              <Card className="flex min-w-0 flex-col gap-3 p-4">
+                <p className="min-w-0 text-sm leading-6 font-semibold [overflow-wrap:anywhere]">
+                  {localize(fact.claim, locale)}
+                </p>
+                <dl className="text-muted-foreground grid min-w-0 gap-2 text-xs leading-5 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <dt className="font-semibold">{t('app.ask.structured.fact.sourceLabel')}</dt>
+                    <dd className="[overflow-wrap:anywhere]">{localize(fact.source, locale)}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold">{t('app.ask.structured.fact.asOfLabel')}</dt>
+                    <dd>
+                      <time dateTime={fact.asOf}>{fact.asOf}</time>
+                    </dd>
+                  </div>
+                </dl>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {fixture.inferences.length > 0 && (
+        <section aria-labelledby="review-inference-heading" className="flex min-w-0 flex-col gap-3">
+          <div className="space-y-1">
+            <h2 id="review-inference-heading" className="text-base font-bold">
+              {t('app.ask.structured.inference.heading')}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-5">
+              {t('app.ask.structured.inference.helper')}
+            </p>
+          </div>
+          <ul className="flex min-w-0 flex-col gap-3">
+            {fixture.inferences.map((inference) => (
+              <li key={inference.id} className="min-w-0">
+                <Card className="border-primary/20 bg-primary/5 flex min-w-0 flex-col gap-3 p-4">
+                  <p className="min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">
+                    {localize(inference.text, locale)}
+                  </p>
+                  <p className="text-muted-foreground text-xs leading-5">
+                    <span className="font-semibold">
+                      {t('app.ask.structured.inference.basisLabel')}:
+                    </span>{' '}
+                    {localize(inference.basis, locale)}
+                  </p>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section aria-labelledby="review-unknown-heading" className="flex min-w-0 flex-col gap-3">
+        <div className="space-y-1">
+          <h2 id="review-unknown-heading" className="text-base font-bold">
+            {t('app.ask.structured.unknown.heading')}
+          </h2>
+          <p className="text-muted-foreground text-sm leading-5">
+            {t('app.ask.structured.unknown.helper')}
+          </p>
+        </div>
+        <ul className="flex min-w-0 flex-col gap-3">
+          {fixture.unknowns.map((unknown) => (
+            <li key={unknown.id} className="min-w-0">
+              <Card className="flex min-w-0 flex-col gap-2 p-4">
+                <Badge tone="neutral">{localize(unknown.tag, locale)}</Badge>
+                <p className="min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">
+                  {localize(unknown.text, locale)}
+                </p>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="review-time-heading" className="flex min-w-0 flex-col gap-3">
+        <h2 id="review-time-heading" className="text-base font-bold">
+          {t('app.ask.structured.timestampsHeading')}
+        </h2>
+        <dl className="text-muted-foreground grid gap-2 text-xs leading-5 sm:grid-cols-2">
+          <div>
+            <dt className="font-semibold">
+              {t('app.ask.structured.generatedAt', { timestamp: '' }).trim()}
+            </dt>
+            <dd>
+              <time dateTime={fixture.generatedAt}>{formattedGeneratedAt}</time>
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">
+              {t('app.ask.structured.reviewedAt', { timestamp: '' }).trim()}
+            </dt>
+            <dd>
+              <time dateTime={fixture.reviewedAt}>{formattedReviewedAt}</time>
+            </dd>
+          </div>
+        </dl>
+        <PolicyNotice>
+          <p>{t('app.ask.structured.provenance')}</p>
+        </PolicyNotice>
+      </section>
+
+      <nav
+        className="grid min-w-0 gap-2 sm:grid-cols-2"
+        aria-label={t('app.ask.structured.resultTitle')}
+      >
+        <Link
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            'h-auto min-h-12 text-center whitespace-normal',
+          )}
+          to={buildAppJournalNewPath('study')}
+          state={{ decisionContext }}
+        >
+          {t('app.ask.navigation.studyNote')}
+        </Link>
+        <Link
+          className={cn(
+            buttonVariants({ variant: 'default' }),
+            'h-auto min-h-12 text-center whitespace-normal',
+          )}
+          to={buildAppJournalNewPath('investment')}
+          state={{ decisionContext }}
+        >
+          {t('app.ask.navigation.investmentRecord')}
+        </Link>
+      </nav>
+    </div>
+  );
+}
 
 export function AskPage() {
   const [searchParams] = useSearchParams();
-  const question = (searchParams.get('q') ?? '').trim();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
+  const question = (searchParams.get('q') ?? '').trim();
+  const requestedFixture = searchParams.get('fixture');
+  const locationState = location.state as ReviewLocationState | null;
+  const [phase, setPhase] = useState<ReviewPhase>(() => {
+    if (requestedFixture === 'error') return 'error';
+    return locationState?.reviewFlow === 'loading' ? 'loading' : 'result';
+  });
+  const [partial, setPartial] = useState(requestedFixture === 'partial');
+
+  useEffect(() => {
+    if (phase !== 'loading') return undefined;
+    const timer = window.setTimeout(() => {
+      setPartial(requestedFixture === 'partial');
+      setPhase('result');
+    }, 550);
+    return () => window.clearTimeout(timer);
+  }, [phase, requestedFixture]);
+
+  function retryReview() {
+    setPartial(false);
+    setPhase('loading');
+  }
+
+  function editQuestion() {
+    navigate(APP_ROUTE_PATHS.appHome, { state: { prefill: question } });
+  }
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-8">
       <header className="relative flex min-h-11 items-center justify-center">
         <Link
           aria-label={t('app.ask.header.backLabel')}
-          className="text-text-secondary absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold"
+          className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"
           to={APP_ROUTE_PATHS.appHome}
         >
           <span aria-hidden="true">←</span>
         </Link>
-        <h1 className="text-base font-bold">{t('app.ask.header.title')}</h1>
+        {question === '' ? (
+          <h1 className="text-base font-bold">{t('app.ask.header.title')}</h1>
+        ) : (
+          <p className="text-base font-bold">{t('app.ask.header.title')}</p>
+        )}
       </header>
 
       {question === '' ? (
@@ -86,114 +475,12 @@ export function AskPage() {
             }
           />
         </Card>
+      ) : phase === 'loading' ? (
+        <LoadingReview question={question} />
+      ) : phase === 'error' ? (
+        <ReviewError question={question} onRetry={retryReview} onEdit={editQuestion} />
       ) : (
-        <>
-          <section className="space-y-2" aria-labelledby="ask-question-heading">
-            <h2
-              id="ask-question-heading"
-              className="text-text-tertiary text-xs font-bold tracking-wider"
-            >
-              {t('app.ask.questionLabel')}
-            </h2>
-            <Card className="border-l-primary border-l-4 p-4">
-              <p className="min-w-0 text-xl leading-7 font-bold [overflow-wrap:anywhere]">
-                {question}
-              </p>
-            </Card>
-          </section>
-
-          <section className="space-y-3" aria-labelledby="ask-perspectives-heading">
-            <h2 id="ask-perspectives-heading" className="text-text-secondary text-sm font-semibold">
-              {t('app.ask.perspectives.heading')}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {PERSPECTIVE_KEYS.map((key) => (
-                <Badge key={key} tone="info">
-                  {t(key)}
-                </Badge>
-              ))}
-            </div>
-            <PolicyNotice>
-              <p>{t('app.ask.fixtureNotice')}</p>
-            </PolicyNotice>
-          </section>
-
-          <section className="space-y-3" aria-labelledby="ask-checklist-heading">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="ask-checklist-heading" className="text-base font-bold">
-                {t('app.ask.checklist.heading')}
-              </h2>
-              <Badge>{t('app.ask.checklist.count')}</Badge>
-            </div>
-            <Card>
-              <ul className="divide-border divide-y">
-                {CHECKLIST_KEYS.map((item, index) => (
-                  <li className="flex gap-3 p-4" key={item.title}>
-                    <span
-                      aria-hidden="true"
-                      className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-bold"
-                    >
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0 space-y-1">
-                      <p className="font-semibold">{t(item.title)}</p>
-                      <p className="text-text-secondary text-sm leading-6">{t(item.description)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </section>
-
-          <section className="space-y-3" aria-labelledby="ask-record-questions-heading">
-            <h2 id="ask-record-questions-heading" className="text-base font-bold">
-              {t('app.ask.recordQuestions.heading')}
-            </h2>
-            <ul className="space-y-2">
-              {RECORD_QUESTION_KEYS.map((key) => (
-                <li
-                  className="border-border bg-card flex gap-3 rounded-md border p-4 text-sm leading-6"
-                  key={key}
-                >
-                  <span aria-hidden="true" className="text-primary text-xl leading-5">
-                    “
-                  </span>
-                  <span>{t(key)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <nav className="grid grid-cols-2 gap-2" aria-label={t('app.ask.header.title')}>
-            <Link
-              className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'h-auto min-h-[50px] text-center whitespace-normal',
-              )}
-              to={buildAppJournalNewPath('study')}
-            >
-              {t('app.ask.navigation.studyNote')}
-            </Link>
-            <Link
-              className={cn(
-                buttonVariants({ variant: 'default' }),
-                'h-auto min-h-[50px] text-center whitespace-normal',
-              )}
-              to={buildAppJournalNewPath('investment')}
-            >
-              {t('app.ask.navigation.investmentRecord')}
-            </Link>
-            <Link
-              className={cn(
-                buttonVariants({ variant: 'secondary' }),
-                'col-span-2 h-auto min-h-[50px] text-center whitespace-normal',
-              )}
-              to={APP_ROUTE_PATHS.appHome}
-            >
-              {t('app.ask.navigation.askAgain')}
-            </Link>
-          </nav>
-        </>
+        <StructuredReviewResult question={question} partial={partial} />
       )}
     </div>
   );

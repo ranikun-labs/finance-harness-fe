@@ -1,6 +1,7 @@
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { DecisionContextSnapshotView } from '@/components/journal/DecisionContextPanel';
 import { RecordTagBadge } from '@/components/common/RecordTagBadge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { APP_ROUTE_PATHS, buildAppJournalReviewPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { formatLocalizedDate } from '@/lib/date';
 import { cn } from '@/lib/utils';
+import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
 import {
   JOURNAL_ENTRIES,
   type JournalChecklistItem,
@@ -18,6 +20,10 @@ interface StatusChecklistProps {
   items: JournalChecklistItem[];
   checkedLabel: string;
   uncheckedLabel: string;
+}
+
+interface JournalDetailLocationState {
+  decisionContext?: DecisionContextSnapshot;
 }
 
 function StatusChecklist({ items, checkedLabel, uncheckedLabel }: StatusChecklistProps) {
@@ -132,12 +138,15 @@ function EntrySummary({ entry }: { entry: JournalEntry }) {
 
 export function JournalDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { t } = useTranslation();
   const entry = JOURNAL_ENTRIES.find((item) => item.id === id);
+  const locationState = location.state as JournalDetailLocationState | null;
+  const decisionContext = locationState?.decisionContext ?? entry?.decisionContext;
 
   if (!entry) {
     return (
-      <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+      <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <DetailHeader
           title={t('app.journalDetail.notFound.heading')}
           backLabel={t('app.journalDetail.backLabel')}
@@ -155,12 +164,12 @@ export function JournalDetailPage() {
             }
           />
         </Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <DetailHeader
         title={t('app.journalDetail.headerTitle')}
         backLabel={t('app.journalDetail.backLabel')}
@@ -272,6 +281,8 @@ export function JournalDetailPage() {
         </>
       )}
 
+      {decisionContext && <DecisionContextSnapshotView context={decisionContext} />}
+
       <nav aria-label={t('app.journalDetail.headerTitle')}>
         <Link
           className={cn(
@@ -283,6 +294,6 @@ export function JournalDetailPage() {
           {t('app.journalDetail.navigation.review')}
         </Link>
       </nav>
-    </main>
+    </div>
   );
 }

@@ -39,6 +39,30 @@ export const APP_ROUTE_PATHS = {
   journalReview: `${APP_BASE}/journal/:id/review`,
 } as const;
 
+export type AppJournalRouteKind = 'list' | 'new' | 'detail' | 'review' | null;
+
+/**
+ * Classifies app Journal pathnames after the router has removed the query string.
+ * The static `/journal/new` route is checked before the dynamic `:id` shape so
+ * presentation shells cannot mistake the New screen for a selected Detail.
+ */
+export function getAppJournalRouteKind(pathname: string): AppJournalRouteKind {
+  if (pathname === APP_ROUTE_PATHS.journalList) return 'list';
+  if (pathname === APP_ROUTE_PATHS.journalNew) return 'new';
+
+  const journalPrefix = `${APP_ROUTE_PATHS.journalList}/`;
+  if (!pathname.startsWith(journalPrefix)) return null;
+
+  const remainder = pathname.slice(journalPrefix.length);
+  const reviewSuffix = '/review';
+  if (remainder.endsWith(reviewSuffix)) {
+    const id = remainder.slice(0, -reviewSuffix.length);
+    return id !== '' && !id.includes('/') ? 'review' : null;
+  }
+
+  return remainder !== '' && !remainder.includes('/') ? 'detail' : null;
+}
+
 export type JournalEntryType = 'investment' | 'study';
 
 /**

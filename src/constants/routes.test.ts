@@ -14,6 +14,7 @@ import {
   buildLearnPath,
   buildLocaleHomePath,
   buildLocalePeerPath,
+  getAppJournalRouteKind,
   isSupportedLocale,
   toRelativeUnder,
 } from '@/constants/routes';
@@ -116,6 +117,29 @@ describe('app route paths', () => {
     for (const path of Object.values(PUBLIC_ROUTE_PATHS)) {
       expect(path.startsWith('/:locale')).toBe(true);
     }
+  });
+});
+
+describe('app Journal route classification', () => {
+  it.each([
+    [APP_ROUTE_PATHS.journalList, 'list'],
+    [APP_ROUTE_PATHS.journalNew, 'new'],
+    [buildAppJournalDetailPath('journal-1'), 'detail'],
+    [buildAppJournalReviewPath('journal-1'), 'review'],
+  ] as const)('classifies %s as %s', (pathname, expected) => {
+    expect(getAppJournalRouteKind(pathname)).toBe(expected);
+  });
+
+  it('does not classify the static New route as a Detail route', () => {
+    expect(getAppJournalRouteKind(`${APP_ROUTE_PATHS.journalNew}`)).toBe('new');
+    expect(getAppJournalRouteKind('/app/journal/new/')).toBeNull();
+  });
+
+  it('rejects non-canonical Journal shapes', () => {
+    expect(getAppJournalRouteKind('/app/journal')).toBe('list');
+    expect(getAppJournalRouteKind('/app/journal/')).toBeNull();
+    expect(getAppJournalRouteKind('/app/journal/id/extra')).toBeNull();
+    expect(getAppJournalRouteKind('/app/other/id')).toBeNull();
   });
 });
 

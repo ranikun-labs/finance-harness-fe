@@ -83,7 +83,7 @@ test.describe('앱(/app/*) locale: 저장·복원·잘못된 값 처리', () => 
       [APP_LOCALE_STORAGE_KEY, 'en'],
     );
     await page.goto(APP_ROUTE_PATHS.appHome);
-    await expect(page.getByRole('link', { name: 'Ask' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Review' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('en');
   });
 
@@ -96,7 +96,7 @@ test.describe('앱(/app/*) locale: 저장·복원·잘못된 값 처리', () => 
       [APP_LOCALE_STORAGE_KEY, 'xx-not-a-locale'],
     );
     await page.goto(APP_ROUTE_PATHS.appHome);
-    await expect(page.getByRole('link', { name: '질문' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '검토' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('ko');
   });
 
@@ -106,10 +106,10 @@ test.describe('앱(/app/*) locale: 저장·복원·잘못된 값 처리', () => 
       [APP_LOCALE_STORAGE_KEY, 'en'],
     );
     await page.goto(APP_ROUTE_PATHS.appHome);
-    await expect(page.getByRole('link', { name: 'Ask' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Review' })).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('link', { name: 'Ask' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Review' })).toBeVisible();
   });
 
   test('앱 locale 변경이 공개 URL에 영향을 주지 않는다(독립성)', async ({ page, context }) => {

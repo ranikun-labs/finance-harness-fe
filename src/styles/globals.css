@@ -116,3 +116,161 @@
     font-family: var(--font-sans);
   }
 }
+
+/*
+ * The adaptive host has a width-independent portrait contract at tablet sizes:
+ * a top primary navigation and a readable single-column surface. The desktop
+ * rail utilities remain the default for landscape/tablet-wide and desktop; this
+ * narrow media query only corrects the 1024px portrait edge where `lg:` alone
+ * would otherwise classify the device as a rail layout.
+ */
+@media (min-width: 1024px) and (orientation: portrait) {
+  .adaptive-shell-layout {
+    flex-direction: column;
+  }
+
+  .adaptive-content-main {
+    order: 2;
+  }
+
+  .adaptive-primary-navigation {
+    order: 1;
+    width: 100%;
+    height: auto;
+    min-height: 4rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .adaptive-primary-navigation > :first-child {
+    width: auto;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .adaptive-primary-navigation > :last-child {
+    width: auto;
+    margin-top: 0;
+    flex-direction: row;
+  }
+
+  .adaptive-primary-navigation > :last-child > a {
+    width: auto;
+  }
+}
+
+/* Journal List | Detail is a contextual wide layout only. Phone and portrait
+ * keep one route surface and the existing main scroll owner. */
+.journal-workspace {
+  display: flex;
+  min-height: 100%;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.journal-workspace-list-pane,
+.journal-workspace-detail-pane {
+  min-width: 0;
+}
+
+.journal-workspace-detail-pane {
+  display: none;
+}
+
+.journal-workspace.is-detail-route .journal-workspace-list-pane {
+  display: none;
+}
+
+.journal-workspace.is-detail-route .journal-workspace-detail-pane {
+  display: block;
+}
+
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {
+  .journal-workspace-host {
+    max-width: none;
+  }
+
+  .journal-workspace-main {
+    overflow: hidden;
+  }
+
+  .journal-workspace {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.38fr) minmax(0, 1fr);
+    min-height: 100%;
+  }
+
+  .journal-workspace-list-pane,
+  .journal-workspace-detail-pane {
+    display: block;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .journal-workspace.is-detail-route .journal-workspace-list-pane {
+    display: block;
+  }
+
+  .journal-workspace-list-pane {
+    border-right: 1px solid var(--border);
+  }
+}
+
+/* Original Journal | Retrospective is the only review two-pane surface. Phone
+ * and portrait remain one readable column with main as the scroll owner. */
+.retrospective-workspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.retrospective-original-pane,
+.retrospective-editor-pane {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {
+  .retrospective-workspace-main {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .retrospective-workspace-host {
+    max-width: none;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .retrospective-route {
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .retrospective-workspace {
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1fr);
+  }
+
+  .retrospective-original-pane,
+  .retrospective-editor-pane {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .retrospective-original-pane {
+    border-right: 1px solid var(--border);
+  }
+}

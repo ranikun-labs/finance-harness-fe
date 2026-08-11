@@ -1,56 +1,149 @@
-import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { APP_ROUTE_PATHS, buildAppAskPath, buildAppJournalDetailPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS, buildAppJournalDetailPath } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { JOURNAL_ENTRIES, type JournalEntry } from '@/mocks/journalEntries';
 import { HomePage } from '@/pages/HomePage';
 
+function LocationProbe() {
+  const location = useLocation();
+  const state = location.state as { reviewFlow?: string } | null;
+
+  return (
+    <>
+      <output data-testid="location">
+        {location.pathname}
+        {location.search}
+      </output>
+      <output data-testid="location-state">{state?.reviewFlow ?? ''}</output>
+    </>
+  );
+}
+
 function renderPage(locale: 'ko' | 'en' = 'ko') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[APP_ROUTE_PATHS.appHome]}>
       <I18nProvider locale={locale}>
         <HomePage />
+        <LocationProbe />
       </I18nProvider>
     </MemoryRouter>,
   );
 }
 
-describe('HomePage', () => {
-  it('preserves the existing home title contract', () => {
-    expect(ko.app.home.title).toBe('Home');
-    expect(en.app.home.title).toBe('Home');
-  });
-
-  it('renders one Korean h1 and one semantic Hero link to Ask without a query', () => {
-    const { container } = renderPage();
+describe('HomePage / Review Start', () => {
+  it('renders the approved Review Start hierarchy and primary question form', () => {
+    renderPage();
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { level: 1, name: new RegExp(ko.app.home.hero.heading) }),
+      screen.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
     ).toBeInTheDocument();
-
-    const heroLink = screen.getByRole('link', { name: ko.app.home.hero.ariaLabel });
-    expect(heroLink).toHaveAttribute('href', buildAppAskPath());
-    expect(new URL(heroLink.getAttribute('href')!, 'https://example.test').search).toBe('');
-    expect(heroLink.querySelectorAll('a, button, input, textarea')).toHaveLength(0);
-
-    expect(container.querySelector('form, input, textarea, [type="submit"]')).toBeNull();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: ko.app.home.question.label })).toHaveAttribute(
+      'placeholder',
+      ko.app.home.question.placeholder,
+    );
+    expect(screen.getByRole('button', { name: ko.app.home.question.submit })).toHaveAttribute(
+      'type',
+      'submit',
+    );
+    expect(screen.getByRole('heading', { name: ko.app.home.examples.heading })).toBeInTheDocument();
+    expect(screen.getByRole('note')).toHaveTextContent(ko.app.home.policyNotice);
   });
 
-  it('renders matching English Hero and section messages', () => {
+  it('blocks whitespace-only review and clears the inline error when typing begins', () => {
+    renderPage();
+
+    const question = screen.getByRole('textbox', { name: ko.app.home.question.label });
+    fireEvent.change(question, { target: { value: '   ' } });
+    fireEvent.submit(
+      screen.getByRole('button', { name: ko.app.home.question.submit }).closest('form')!,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(ko.app.home.question.required);
+    expect(question).toHaveValue('   ');
+    expect(question).toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.change(question, { target: { value: '실적을 확인하고 싶어요' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(question).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it.each([
+    ['Ctrl+Enter', { ctrlKey: true }],
+    ['Meta+Enter', { metaKey: true }],
+  ] as const)(
+    'blocks an empty question with %s and keeps focus semantics',
+    (_shortcut, modifiers) => {
+      renderPage();
+
+      const question = screen.getByRole('textbox', { name: ko.app.home.question.label });
+      question.focus();
+      fireEvent.keyDown(question, { key: 'Enter', ...modifiers });
+
+      expect(screen.getByTestId('location').textContent).toBe(APP_ROUTE_PATHS.appHome);
+      expect(screen.getByTestId('location-state')).toHaveTextContent('');
+      expect(screen.getByRole('alert')).toHaveTextContent(ko.app.home.question.required);
+      expect(question).toHaveValue('');
+      expect(question).toHaveAttribute('aria-invalid', 'true');
+      expect(question).toHaveFocus();
+      expect(question).toHaveAttribute('aria-describedby', 'review-question-error');
+    },
+  );
+
+  it.each([
+    ['Ctrl+Enter', { ctrlKey: true }],
+    ['Meta+Enter', { metaKey: true }],
+  ] as const)(
+    'blocks a whitespace question with %s and preserves the connected alert',
+    (_shortcut, modifiers) => {
+      renderPage();
+
+      const question = screen.getByRole('textbox', { name: ko.app.home.question.label });
+      fireEvent.change(question, { target: { value: '   ' } });
+      question.focus();
+      fireEvent.keyDown(question, { key: 'Enter', ...modifiers });
+
+      expect(screen.getByTestId('location').textContent).toBe(APP_ROUTE_PATHS.appHome);
+      expect(screen.getByRole('alert')).toHaveTextContent(ko.app.home.question.required);
+      expect(question).toHaveValue('   ');
+      expect(question).toHaveAttribute('aria-invalid', 'true');
+      expect(question).toHaveAttribute('aria-describedby', 'review-question-error');
+      expect(question).toHaveFocus();
+    },
+  );
+
+  it.each([
+    ['Ctrl+Enter', { ctrlKey: true }],
+    ['Meta+Enter', { metaKey: true }],
+  ] as const)('starts the loading route with a valid question on %s', (_shortcut, modifiers) => {
+    renderPage();
+
+    const question = screen.getByRole('textbox', { name: ko.app.home.question.label });
+    fireEvent.change(question, { target: { value: '실적 전망을 확인하고 싶어요' } });
+    question.focus();
+    fireEvent.keyDown(question, { key: 'Enter', ...modifiers });
+
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      `${APP_ROUTE_PATHS.ask}?q=%EC%8B%A4%EC%A0%81+%EC%A0%84%EB%A7%9D%EC%9D%84+%ED%99%95%EC%9D%B8%ED%95%98%EA%B3%A0+%EC%8B%B6%EC%96%B4%EC%9A%94`,
+    );
+    expect(screen.getByTestId('location-state')).toHaveTextContent('loading');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('renders English labels and preserves the display-only recent journal surface', () => {
     renderPage('en');
 
     expect(
-      screen.getByRole('heading', { level: 1, name: new RegExp(en.app.home.hero.heading) }),
+      screen.getByRole('heading', { level: 1, name: en.app.home.hero.heading }),
     ).toBeInTheDocument();
-    expect(screen.getByText(en.app.home.hero.description)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: en.app.home.question.label })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 2, name: en.app.home.recentRecords.heading }),
+      screen.getByRole('heading', { name: en.app.home.recentRecords.heading }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: en.app.home.recentRecords.viewAll })).toHaveAttribute(
       'href',
@@ -58,12 +151,12 @@ describe('HomePage', () => {
     );
   });
 
-  it('derives the newest two mixed entries without mutating the fixture order', () => {
+  it('derives the newest two mixed entries without mutating fixture order', () => {
     const originalIds = JOURNAL_ENTRIES.map((entry) => entry.id);
     renderPage();
 
     const section = screen
-      .getByRole('heading', { level: 2, name: ko.app.home.recentRecords.heading })
+      .getByRole('heading', { name: ko.app.home.recentRecords.heading })
       .closest('section')!;
     const items = within(section).getAllByRole('listitem');
 
@@ -83,35 +176,21 @@ describe('HomePage', () => {
     expect(JOURNAL_ENTRIES.map((entry) => entry.id)).toEqual(originalIds);
   });
 
-  it('links to the full journal list without exposing a journal-new action', () => {
-    renderPage();
-
-    expect(screen.getByRole('link', { name: ko.app.home.recentRecords.viewAll })).toHaveAttribute(
-      'href',
-      APP_ROUTE_PATHS.journalList,
-    );
-    expect(screen.queryByRole('link', { name: /기록 작성|저장하기/ })).not.toBeInTheDocument();
-  });
-
-  it('renders the shared EmptyState with one Ask action when the fixture is empty', () => {
+  it('uses the shared empty state without creating a persistence action', () => {
     const savedEntries = [...JOURNAL_ENTRIES];
     JOURNAL_ENTRIES.length = 0;
 
     try {
       renderPage();
 
-      expect(
-        screen.getByRole('heading', { level: 2, name: ko.app.home.recentRecords.heading }),
-      ).toBeInTheDocument();
       expect(screen.getByText(ko.app.home.empty.title)).toBeInTheDocument();
       expect(screen.getByText(ko.app.home.empty.description)).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: ko.app.home.empty.action })).toHaveAttribute(
-        'href',
-        buildAppAskPath(),
-      );
+      const recentSection = screen
+        .getByRole('heading', { name: ko.app.home.recentRecords.heading })
+        .closest('section')!;
       expect(
-        screen.queryByRole('link', { name: ko.app.home.recentRecords.viewAll }),
-      ).not.toBeInTheDocument();
+        within(recentSection).getByRole('button', { name: ko.app.home.empty.action }),
+      ).toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /기록 작성|저장하기/ })).not.toBeInTheDocument();
     } finally {
       JOURNAL_ENTRIES.push(...savedEntries);
@@ -144,7 +223,7 @@ describe('HomePage', () => {
     }
   });
 
-  it('does not expose excluded or recommendation-like Home controls', () => {
+  it('does not expose excluded dashboard or recommendation controls', () => {
     renderPage();
 
     for (const name of [

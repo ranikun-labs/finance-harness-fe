@@ -39,11 +39,11 @@ const ENTRY_WITH_ENCODABLE_ID: JournalEntry = {
   id: 'journal entry/needs encoding',
 };
 
-function renderCard(entry: JournalEntry) {
+function renderCard(entry: JournalEntry, selected = false) {
   return render(
     <MemoryRouter>
       <I18nProvider locale="ko">
-        <JournalRecordCard entry={entry} />
+        <JournalRecordCard entry={entry} selected={selected} />
       </I18nProvider>
     </MemoryRouter>,
   );
@@ -96,6 +96,11 @@ describe('JournalRecordCard', () => {
     renderCard(INVESTMENT_ENTRY);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', buildAppJournalDetailPath(INVESTMENT_ENTRY.id));
+  });
+
+  it('exposes the selected detail item as the current page', () => {
+    renderCard(INVESTMENT_ENTRY, true);
+    expect(screen.getByRole('link')).toHaveAttribute('aria-current', 'page');
   });
 
   it('url-encodes ids that need encoding', () => {

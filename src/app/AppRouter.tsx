@@ -31,9 +31,11 @@ const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
  * - `/app/*`    → 웹앱 SPA (AppShell 셸, 앱 NotFound 소유)
  *
  * `/app`은 정적 세그먼트라 동적 `/:locale`보다 우선 매칭된다(테스트로 고정).
- * 앱 URL 경계(`/app/*` = AppShell)와 하단 탭 셸 경계(TabLayout)는 동일하지 않다 —
- * 하단 탭은 TabLayout 하위 3개 화면(home/ask/journal)에만 붙고, onboarding·journal
- * 상세/신규/복기는 AppShell 직속이라 BottomNavigation을 상속하지 않는다.
+ * 앱 URL 경계(`/app/*` = AppShell)와 primary navigation 셸 경계(TabLayout)는 동일하지 않다 —
+ * `TabLayout`은 검토 시작(`/app`)·검토 결과(`/app/ask`)·저널 primary surface를 소유한다.
+ * Phone에서는 검토 시작/저널 목록에만 하단 navigation이 노출된다. journal
+ * 신규/상세/복기는 같은 adaptive primary navigation 셸을 상속하되, Phone에서는
+ * context-specific 화면으로서 하단 navigation을 숨긴다.
  */
 export function AppRouter() {
   return (
@@ -57,7 +59,7 @@ export function AppRouter() {
 
       {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
       <Route path={APP_BASE} element={<AppShell />}>
-        {/* 하단 탭 셸(TabLayout) = home/ask/journal 3개 화면 한정 */}
+        {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
         <Route element={<TabLayout />}>
           <Route index element={<HomePage />} />
           <Route path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)} element={<AskPage />} />
@@ -65,24 +67,24 @@ export function AppRouter() {
             path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalList)}
             element={<JournalListPage />}
           />
+          <Route
+            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
+            element={<JournalNewPage />}
+          />
+          <Route
+            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
+            element={<JournalDetailPage />}
+          />
+          <Route
+            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
+            element={<JournalReviewPage />}
+          />
         </Route>
 
-        {/* 하단 탭 없는 앱 화면 (AppShell 직속) */}
+        {/* Primary navigation을 상속하지 않는 앱 화면 (AppShell 직속) */}
         <Route
           path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.onboarding)}
           element={<OnboardingPage />}
-        />
-        <Route
-          path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
-          element={<JournalNewPage />}
-        />
-        <Route
-          path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
-          element={<JournalDetailPage />}
-        />
-        <Route
-          path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
-          element={<JournalReviewPage />}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

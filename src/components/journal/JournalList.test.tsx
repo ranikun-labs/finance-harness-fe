@@ -33,11 +33,11 @@ const STUDY_ENTRY: JournalEntry = {
   nextChecks: [{ text: '기관 수급을 확인한다.', checked: true }],
 };
 
-function renderList(entries: JournalEntry[]) {
+function renderList(entries: JournalEntry[], selectedId?: string) {
   return render(
     <MemoryRouter>
       <I18nProvider locale="ko">
-        <JournalList entries={entries} />
+        <JournalList entries={entries} selectedId={selectedId} />
       </I18nProvider>
     </MemoryRouter>,
   );
@@ -47,6 +47,12 @@ describe('JournalList', () => {
   it('renders exactly one h1', () => {
     renderList([]);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
+  it('uses a pane heading for the selected list in the detail workspace', () => {
+    renderList([INVESTMENT_ENTRY], INVESTMENT_ENTRY.id);
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: '저널' })).toBeInTheDocument();
   });
 
   describe('전체 entries 없음', () => {

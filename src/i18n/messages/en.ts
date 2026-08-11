@@ -5,8 +5,7 @@ export const en: Messages = {
     appName: 'AI Investment Checklist',
   },
   nav: {
-    home: 'Home',
-    ask: 'Ask',
+    review: 'Review',
     journal: 'Journal',
     ariaLabel: 'Primary navigation',
   },
@@ -36,12 +35,30 @@ export const en: Messages = {
     home: {
       title: 'Home',
       hero: {
-        eyebrow: 'Check before deciding',
-        heading: 'Start with a question before you decide',
-        description: 'Ask what you are curious about and review the points worth checking.',
-        action: 'Start a question',
-        ariaLabel: 'Explore a question',
+        eyebrow: 'Review',
+        heading: 'Review what you are deciding now',
+        description:
+          'I won’t tell you to buy or sell. I’ll organize what to check, evidence-based facts, and what is still unknown.',
+        action: 'Start review',
+        ariaLabel: 'Start a review',
       },
+      question: {
+        label: 'My question',
+        placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
+        helper: 'Keep your question intact while the review separates checks from evidence.',
+        submit: 'Start review',
+        required: 'Enter something to review.',
+      },
+      examples: {
+        heading: 'Try a question like this',
+        items: {
+          etf: 'Should I add to my semiconductor ETF position now?',
+          earnings: 'What should I check first in this quarter’s earnings outlook?',
+          loss: 'What evidence should I check before holding a losing position?',
+        },
+      },
+      policyNotice:
+        'A review does not provide buy/sell recommendations or return predictions. Anything not verified remains unknown.',
       recentRecords: {
         heading: 'Recent records',
         viewAll: 'View all records',
@@ -49,15 +66,15 @@ export const en: Messages = {
       empty: {
         title: 'No records yet',
         description: 'Ask a question and review what to check before preparing your first record.',
-        action: 'Start a question',
+        action: 'Start review',
       },
     },
     ask: {
       title: 'Ask Result',
       titleWithQuery: 'Ask Result — {{query}}',
       header: {
-        title: 'AI Check',
-        backLabel: 'Back to home',
+        title: 'Review',
+        backLabel: 'Back to review start',
       },
       empty: {
         title: 'No question to review yet',
@@ -109,6 +126,59 @@ export const en: Messages = {
       },
       fixtureNotice:
         'This screen is a functional example only. It is not an analysis of your actual question or investment advice.',
+      loading: {
+        eyebrow: 'Reviewing',
+        title: 'Organizing your review',
+        description: 'Your question stays visible while checks and evidence are separated.',
+        steps: {
+          question: 'Turn the question into checks',
+          evidence: 'Find verifiable evidence',
+          unknown: 'Mark what is unknown',
+        },
+        provenance:
+          'Only verifiable evidence is presented as fact. Anything not verified remains unknown.',
+      },
+      error: {
+        title: 'The review could not be completed',
+        description:
+          'This is different from missing evidence: the review itself was not processed. Your question is still here.',
+        retry: 'Try again',
+        edit: 'Edit question',
+      },
+      structured: {
+        resultTitle: 'Review result',
+        fixtureLabel: 'Example data',
+        questionLabel: 'My question',
+        checklist: {
+          heading: 'What to check',
+          helper: 'You can mark the checks you have confirmed.',
+          progress: '{{checked}}/{{total}} checked',
+        },
+        fact: {
+          heading: 'Facts checked',
+          helper: 'Each fact keeps its source and as-of date together.',
+          sourceLabel: 'Source',
+          asOfLabel: 'As of',
+        },
+        inference: {
+          heading: 'Interpretation',
+          helper: 'This is inference, not fact.',
+          basisLabel: 'Fact used as basis',
+        },
+        unknown: {
+          heading: 'What is still unknown',
+          helper: 'Keep unverifiable, incomplete, and stale information separate from facts.',
+        },
+        generatedAt: 'Generated {{timestamp}}',
+        reviewedAt: 'Reviewed {{timestamp}}',
+        timestampsHeading: 'Generated and reviewed at',
+        provenance:
+          'This result is example data for checking the screen flow. It is not analysis of your actual question or investment advice.',
+        partialTitle: 'Only some evidence was confirmed',
+        partialDescription:
+          'Unconfirmed content was not promoted to fact. Inference may be omitted and unknowns are kept visible.',
+        partialNarrow: 'A partial result is an expected incomplete result, not an error.',
+      },
       recordQuestions: {
         heading: 'Questions for your next record',
         items: {
@@ -125,7 +195,7 @@ export const en: Messages = {
       },
     },
     journalList: {
-      title: 'Records',
+      title: 'Journal',
       filters: {
         groupLabel: 'Filter by record type',
         all: 'All',
@@ -134,6 +204,7 @@ export const en: Messages = {
       },
       emotionLabel: 'Emotion',
       noEmotion: 'No emotion tag',
+      reasoningLabel: 'Key reasoning',
       checkedProgress: 'Checked {{checked}}/{{total}}',
       countLabel: '{{count}} records',
       emptyAll: {
@@ -153,6 +224,14 @@ export const en: Messages = {
         batteryCompanyC: 'Battery Company C',
       },
     },
+    journalWorkspace: {
+      listPaneLabel: 'Journal list',
+      detailPaneLabel: 'Journal detail',
+      detailPrompt: {
+        heading: 'Select a record',
+        description: 'Choose a record from the list to review its reasoning and context here.',
+      },
+    },
     journalNew: {
       investment: 'Save Entry (Investment)',
       study: 'Save Study Note',
@@ -160,6 +239,23 @@ export const en: Messages = {
         investment: 'Investment record',
         study: 'Study record',
         dirtyConfirm: 'Your current entries will be discarded. Change record type?',
+      },
+      decisionContext: {
+        title: 'Keep the review context at the time',
+        switchLabel: 'Include Decision Context',
+        enabledDescription:
+          'The question and check status are always kept; only selected evidence is included.',
+        disabledDescription: 'This record will not include the review context from that time.',
+        minimumLabel: 'Always included · minimum record',
+        originalQuestionLabel: 'Question at the time',
+        checklistLabel: 'Checks and their status at the time',
+        capturedAtLabel: 'Saved at',
+        checked: 'Checked',
+        unchecked: 'Not checked',
+        optionalLabel: 'Optional · verified evidence',
+        optionalDescription: 'Choose which evidence to keep with this record.',
+        immutableNotice:
+          'This content is fixed when saved and is not updated if later review results change.',
       },
       form: {
         optional: 'Optional',
@@ -259,6 +355,20 @@ export const en: Messages = {
       checkedProgress: '{{checked}} / {{total}}',
       checkedStatus: 'Checked',
       uncheckedStatus: 'Not checked',
+      decisionContext: {
+        heading: 'Review context at the time',
+        snapshotLabel: 'Saved as-is · unchanged',
+        originalQuestionLabel: 'Question at the time',
+        checklistLabel: 'Checks and their status at the time',
+        versionLabel: 'Checklist version',
+        capturedAtLabel: 'Saved at',
+        checked: 'Checked',
+        unchecked: 'Not checked',
+        optionalEvidenceLabel: 'Verified evidence kept with this record',
+        noOptionalEvidence: 'No optional evidence was selected.',
+        immutableNotice:
+          'This context is a snapshot from the saved time. It does not update when later review results or checklists change.',
+      },
       navigation: {
         review: 'Review with AI',
         list: 'Back to records',
@@ -304,6 +414,39 @@ export const en: Messages = {
           revisit: 'What would you revisit or explain more clearly now?',
           nextQuestion: 'What study question would you explore next?',
         },
+      },
+      retrospective: {
+        originalHeading: 'Original Journal',
+        editorHeading: 'New retrospective',
+        editorDescription:
+          'Keep the original decision intact and record what you learned from today’s perspective.',
+        timestampLabel: 'Original recorded at',
+        bodyLabel: 'Looking back now, what is different?',
+        bodyPrompt: 'One sentence is enough. Write what you know or see differently now.',
+        bodyPlaceholder: 'e.g. The earnings release showed that my concern was too strong.',
+        outcomeHeading: 'Outcome observation (optional)',
+        outcomeDescription:
+          'Record what actually happened separately from the quality of the decision process.',
+        outcomeLabel: 'Outcome observation',
+        outcomePlaceholder: 'e.g. The earnings release matched the expectation 30 days later.',
+        qualityHeading: 'Decision process',
+        qualityDescription:
+          'Revisit how you reasoned at the time, separately from whether the outcome was good or bad.',
+        qualityLabel: 'What I learned about my process (optional)',
+        qualityPlaceholder: 'e.g. I should have checked counter-evidence first.',
+        nextCheckLabel: 'What to check next (optional)',
+        nextCheckPlaceholder: 'e.g. Set the next check date before making the decision.',
+        save: 'Save retrospective',
+        saving: 'Saving retrospective',
+        saveError: 'Retrospective could not be saved. Your writing is still here.',
+        retry: 'Try again',
+        savedHeading: 'Retrospective saved',
+        savedNotice: 'It was saved as a separate record for today.',
+        savedAtLabel: 'Retrospective recorded at',
+        separateRecordNotice:
+          'The original Journal action, emotion, reasoning, and context were not changed.',
+        immutableNotice: 'The original Journal is reference-only and cannot be edited here.',
+        validationRequired: 'Add at least one line to your retrospective before saving.',
       },
       policyNotice:
         'This screen does not judge whether your decision was correct. It helps you revisit what you checked and the reasoning you used at the time.',
