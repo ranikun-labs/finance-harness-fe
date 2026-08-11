@@ -484,13 +484,11 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       name: ko.app.journalReview.navigation.detail,
     });
 
-    await expect(detailLinks).toHaveCount(2);
-    for (let index = 0; index < 2; index += 1) {
-      await expect(detailLinks.nth(index)).toHaveAttribute(
-        'href',
-        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
-      );
-    }
+    await expect(detailLinks).toHaveCount(1);
+    await expect(detailLinks).toHaveAttribute(
+      'href',
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    );
     await detailLinks.last().click();
     await expect(page).toHaveURL(
       new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
@@ -548,11 +546,23 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
   }
 
-  test('journal review exposes no mutation form or save and submit controls', async ({ page }) => {
+  test('journal review exposes the separate retrospective editor without mutation controls', async ({
+    page,
+  }) => {
     await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
 
-    await expect(page.locator('form, input, textarea, [type="submit"]')).toHaveCount(0);
-    await expect(page.getByRole('button')).toHaveCount(0);
+    await expect(page.getByTestId('retrospective-editor')).toBeVisible();
+    await expect(
+      page.getByRole('textbox', {
+        name: ko.app.journalReview.retrospective.bodyLabel,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: ko.app.journalReview.retrospective.save,
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: /저장|제출|수정|삭제/ })).toHaveCount(0);
   });
 
@@ -771,6 +781,6 @@ test.describe('Journal review English locale', () => {
         name: en.app.journalReview.investment.reflectionHeading,
       }),
     ).toBeVisible();
-    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    await expect(page.getByText('반도체 기업 A 요즘 어때?', { exact: true }).first()).toBeVisible();
   });
 });

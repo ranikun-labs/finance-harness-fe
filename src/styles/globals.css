@@ -220,3 +220,57 @@
     border-right: 1px solid var(--border);
   }
 }
+
+/* Original Journal | Retrospective is the only review two-pane surface. Phone
+ * and portrait remain one readable column with main as the scroll owner. */
+.retrospective-workspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.retrospective-original-pane,
+.retrospective-editor-pane {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {
+  .retrospective-workspace-main {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .retrospective-workspace-host {
+    max-width: none;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .retrospective-route {
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .retrospective-workspace {
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1fr);
+  }
+
+  .retrospective-original-pane,
+  .retrospective-editor-pane {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .retrospective-original-pane {
+    border-right: 1px solid var(--border);
+  }
+}

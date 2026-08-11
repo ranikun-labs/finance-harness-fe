@@ -11,6 +11,7 @@ export function TabLayout() {
   const isReviewResult = pathname === APP_ROUTE_PATHS.ask;
   const journalRouteKind = getAppJournalRouteKind(pathname);
   const isJournalWorkspace = journalRouteKind === 'list' || journalRouteKind === 'detail';
+  const isRetrospectiveWorkspace = journalRouteKind === 'review';
 
   return (
     <div className="adaptive-shell-layout flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
@@ -18,6 +19,7 @@ export function TabLayout() {
         className={cn(
           'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
           isJournalWorkspace && 'journal-workspace-main',
+          isRetrospectiveWorkspace && 'retrospective-workspace-main',
         )}
       >
         <div
@@ -27,7 +29,9 @@ export function TabLayout() {
               ? 'max-w-[760px]'
               : isJournalWorkspace
                 ? 'journal-workspace-host max-w-[660px]'
-                : 'max-w-[660px]',
+                : isRetrospectiveWorkspace
+                  ? 'retrospective-workspace-host max-w-[660px]'
+                  : 'max-w-[660px]',
           )}
           data-testid="adaptive-content-host"
         >
