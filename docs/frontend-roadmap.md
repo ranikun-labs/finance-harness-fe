@@ -14,14 +14,14 @@
 
 ## 결론 먼저 — 현재 위치
 
-- **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)
-- **현재:** **RPL-68 Adaptive P0 구현 진행** — 승인된 검토/저널 Primary IA와 adaptive
-  contract를 Slice 1~5로 반영한다. 현재 범위는 Slice 1(Docs Sync + Adaptive
-  Shell/Navigation)이다.
-- **아직 안 함:** 실제 Backend/API/Persistence/Auth, 실제 Journal 저장·수정·삭제와 Production 저장 성공 흐름, LLM runtime, 결제·개인화·실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** RPL-68 Slice 1을 검증·리뷰한 뒤 Slice 2(Review Surface + Structured
-  Review Result)로 진행한다. RPL-48 HTTP adapter와 Create contract는 보호하며 Production
-  Create는 계속 OFF다.
+- **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)와 RPL-68 Slice 1–4 Adaptive P0 frontend contract
+- **현재:** **RPL-68 Adaptive P0 Slice 5 Final Regression Hardening** — 승인된
+  검토/저널 Primary IA와 adaptive contract를 Slice 1–4에서 구현했고, 현재는
+  Slice 1–4 통합 회귀와 최종 검증 증거를 확인한다.
+- **아직 안 함:** Finance Backend/API integration, production persistence와 Production Create activation, Decision Context/Retrospective backend persistence, 실제 AI/RAG runtime, Auth, 결제·개인화·실시간 데이터, 네이티브 프로젝트
+- **다음 행동:** RPL-68 Slice 5 최종 검증·Independent Review를 완료한 뒤, 승인된
+  backend/API/Persistence/Auth 계약이 마련될 때까지 STEP 11 범위를 시작하지 않는다.
+  RPL-48 HTTP adapter와 Create contract는 보호하며 Production Create는 계속 OFF다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -60,29 +60,30 @@ React 기반 하나의 프론트엔드 코드베이스
 
 아래는 **실제 로컬 저장소에서 확인된 완료 사항만** 기록한다. 미구현 항목을 완료로 적지 않는다.
 
-| 영역               | 완료 내용                                                                                                                                                                                                                                                                                                                                                 | 상태          |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| 빌드 스택          | Vite 8 · React 19 · TypeScript 6                                                                                                                                                                                                                                                                                                                          | ✅            |
-| 라우팅 골격        | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                                                                                                                                                                                                             | ✅            |
-| 라우트 계약        | 라우트 정의 단일 소스 [`routes.ts`](../src/constants/routes.ts) — 공개 웹 `PUBLIC_ROUTE_PATHS`(`/:locale`, `/:locale/features`, `/:locale/learn/*`)와 웹앱 `APP_ROUTE_PATHS`(`/app` 프리픽스 7종)로 분리. 루트 `/`는 `/ko` redirect. 경계 설계는 [`route-architecture.md`](./route-architecture.md)                                                       | ✅            |
-| NotFound           | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                                                                                  | ✅            |
-| Primary navigation | [`BOTTOM_TABS`](../src/constants/navigation.ts) 2개(검토/저널) 구조적 단일 소스                                                                                                                                                                                                                                                                           | 🔶 RPL-68     |
-| 레이아웃           | 1360px adaptive AppShell · Phone bottom / Tablet top / Landscape·Desktop rail navigation                                                                                                                                                                                                                                                                  | 🔶 RPL-68     |
-| 화면               | 앱 Home·Onboarding·Ask(결과/빈 상태)·Journal List·Detail·Review 실 UI 완료. Journal New Form·클라이언트 검증·Create/Submit 경계는 STEP 10에서 완료했으며 실제 저장·persistence는 STEP 11 범위다. 공개 Home·Features·Learn은 locale별 placeholder 유지                                                                                                     | ✅(STEP 9~10) |
-| 디자인 토큰        | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                                                                        | ✅            |
-| Capacitor          | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                                                                                     | ✅(설정 한정) |
-| Pre-render         | 공개 고정 경로 6개(`/ko`, `/en`, `/:locale/features`, `/:locale/learn`) 정적 HTML 생성. Vite 코어 `--ssr`([`entry-server.tsx`](../src/entry-server.tsx)) + `renderToString`, 매니페스트는 [`prerender/manifest.ts`](../src/prerender/manifest.ts)에서 파생(하드코딩 없음), 신규 dependency 0개                                                            | ✅            |
-| Hydration          | Pre-render 결과는 `hydrateRoot`, 그 외(`/app/*` 포함)는 `createRoot` — root의 `data-render-mode` marker로 분기([`main.tsx`](../src/main.tsx), [`shouldHydrate.ts`](../src/prerender/shouldHydrate.ts))                                                                                                                                                    | ✅            |
-| SPA fallback       | provider-neutral clean URL 계약(자산 우선 → directory-index → asset 404 → HTML document fallback → 404)을 [`route-architecture.md`](./route-architecture.md) §5.4에 명시, `e2e/support/fixtureServer.ts`로 검증                                                                                                                                           | ✅            |
-| 문서               | 제품 정책·화면/라우트 기준 문서, README의 Pre-render/SPA fallback 계약                                                                                                                                                                                                                                                                                    | ✅            |
-| 검증               | Vitest 유닛 5종 + Playwright 3종(`e2e/`), `verify`/`verify:full` 스크립트 + 자동 build 검증(`scripts/verify-prerender-output.mjs`) + 별도 idempotency 명령(`pnpm verify:build-idempotency`)                                                                                                                                                               | ✅            |
-| 품질 회귀          | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                                                                                                                                                                                                    | ✅            |
-| i18n 기반          | 신규 dependency 0개(React Context + 타입 안전 로컬 dictionary, [`src/i18n/`](../src/i18n)). 공개 웹은 URL `:locale`이 유일 기준(`PublicLayout` 주입), 앱(`/app/*`)은 `localStorage`→`navigator.language`→`DEFAULT_LOCALE` 우선순위로 독립 저장·복원. Pre-render 6개 산출물의 `<html lang>` 정합성, `document.documentElement.lang` 클라이언트 동기화 포함 | ✅            |
+| 영역               | 완료 내용                                                                                                                                                                                                                                                                                                                                                                | 상태          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| 빌드 스택          | Vite 8 · React 19 · TypeScript 6                                                                                                                                                                                                                                                                                                                                         | ✅            |
+| 라우팅 골격        | `react-router` 8 SPA, `BrowserRouter`([`src/main.tsx`](../src/main.tsx)), 라우트 트리 단일 정의처 [`AppRouter.tsx`](../src/app/AppRouter.tsx)                                                                                                                                                                                                                            | ✅            |
+| 라우트 계약        | 라우트 정의 단일 소스 [`routes.ts`](../src/constants/routes.ts) — 공개 웹 `PUBLIC_ROUTE_PATHS`(`/:locale`, `/:locale/features`, `/:locale/learn/*`)와 웹앱 `APP_ROUTE_PATHS`(`/app` 프리픽스 7종)로 분리. 루트 `/`는 `/ko` redirect. 경계 설계는 [`route-architecture.md`](./route-architecture.md)                                                                      | ✅            |
+| NotFound           | 공개(`PublicNotFoundPage`)·앱(`NotFoundPage`) NotFound 분리. `*` catch-all은 **`AppRouter.tsx`의 라우트**이며 `PUBLIC_ROUTE_PATHS`/`APP_ROUTE_PATHS`에는 포함되지 않는다                                                                                                                                                                                                 | ✅            |
+| Primary navigation | [`BOTTOM_TABS`](../src/constants/navigation.ts) 2개(검토/저널) 구조적 단일 소스                                                                                                                                                                                                                                                                                          | ✅ RPL-68     |
+| 레이아웃           | 1360px adaptive AppShell · Phone bottom / Tablet top / Landscape·Desktop rail navigation                                                                                                                                                                                                                                                                                 | ✅ RPL-68     |
+| 화면               | 검토 시작·검토 결과·Journal List·Detail·Review·Journal New 실 UI 완료. 실제 저장·persistence는 여전히 STEP 11 범위다. 공개 Home·Features·Learn은 locale별 placeholder 유지                                                                                                                                                                                               | ✅(RPL-68)    |
+| 디자인 토큰        | Tailwind v4 + shadcn/ui, Pretendard self-host, 토큰(`globals.css`)                                                                                                                                                                                                                                                                                                       | ✅            |
+| Capacitor          | Capacitor 8 기본 설정([`capacitor.config.ts`](../capacitor.config.ts)). **`appId` 미확정**, `ios/`·`android/` 미생성, `loggingBehavior: 'debug'` 고정                                                                                                                                                                                                                    | ✅(설정 한정) |
+| Pre-render         | 공개 고정 경로 6개(`/ko`, `/en`, `/:locale/features`, `/:locale/learn`) 정적 HTML 생성. Vite 코어 `--ssr`([`entry-server.tsx`](../src/entry-server.tsx)) + `renderToString`, 매니페스트는 [`prerender/manifest.ts`](../src/prerender/manifest.ts)에서 파생(하드코딩 없음), 신규 dependency 0개                                                                           | ✅            |
+| Hydration          | Pre-render 결과는 `hydrateRoot`, 그 외(`/app/*` 포함)는 `createRoot` — root의 `data-render-mode` marker로 분기([`main.tsx`](../src/main.tsx), [`shouldHydrate.ts`](../src/prerender/shouldHydrate.ts))                                                                                                                                                                   | ✅            |
+| SPA fallback       | provider-neutral clean URL 계약(자산 우선 → directory-index → asset 404 → HTML document fallback → 404)을 [`route-architecture.md`](./route-architecture.md) §5.4에 명시, `e2e/support/fixtureServer.ts`로 검증                                                                                                                                                          | ✅            |
+| 문서               | 제품 정책·화면/라우트 기준 문서, README의 Pre-render/SPA fallback 계약                                                                                                                                                                                                                                                                                                   | ✅            |
+| 검증               | Vitest 유닛 5종 + Playwright 3종(`e2e/`), `verify`/`verify:full` 스크립트 + 자동 build 검증(`scripts/verify-prerender-output.mjs`) + 별도 idempotency 명령(`pnpm verify:build-idempotency`)                                                                                                                                                                              | ✅            |
+| 품질 회귀          | 모바일 스크롤·접근성·라우트 안전성 e2e                                                                                                                                                                                                                                                                                                                                   | ✅            |
+| i18n               | 신규 dependency 0개(React Context + 타입 안전 로컬 dictionary, [`src/i18n/`](../src/i18n)). 공개 웹은 URL `:locale`이 유일 기준(`PublicLayout` 주입), 앱(`/app/*`)은 `localStorage`→`navigator.language`→`DEFAULT_LOCALE` 우선순위로 독립 저장·복원. ko/en app UI와 Pre-render 6개 산출물의 `<html lang>` 정합성, `document.documentElement.lang` 클라이언트 동기화 포함 | ✅            |
 
-> **아직 완료가 아닌 것:** 공개 웹 실제 UI(현재 placeholder), Journal New 실제 Form,
-> 저장·수정·삭제와 데이터 흐름, API 연동, 네이티브 프로젝트 생성, 출시 설정,
-> hosting provider 확정(공개 웹/앱 라우팅 경계·Pre-render/SPA fallback 계약·i18n
-> 기반 자체는 STEP 5·6·7에서 완료됨 — 위 표 참고).
+> **아직 완료가 아닌 것:** Finance Backend/API 연동, production persistence와 Production
+> Create activation, Decision Context/Retrospective backend persistence, 실제 AI/RAG
+> runtime, Journal 저장·수정·삭제의 production data flow, 공개/secondary 실제 UI(현재
+> 일부 placeholder), 네이티브 프로젝트 생성, 출시 설정, hosting provider 확정.
+> Adaptive P0 app UI와 ko/en app i18n은 위 표와 RPL-68 Slice 1–4에서 완료됐다.
 
 ---
 
@@ -90,7 +91,8 @@ React 기반 하나의 프론트엔드 코드베이스
 
 > ⚠️ 아래 라우트 트리는 STEP 5에서, **렌더링 방향(Pre-render/SPA fallback)은 STEP 6에서
 > 구현 완료**되었다(`BrowserRouter` SPA + 공개 웹 6개 고정 경로 Pre-render). 실제
-> hosting provider 설정·i18n·실 UI는 아직 후속 단계다.
+> hosting provider 설정과 공개/secondary UI 일부는 후속 단계지만, Adaptive P0 app UI와
+> ko/en app i18n은 RPL-68에서 구현 완료됐다.
 
 ```text
 공개 웹 (정적 Pre-render 완료 — /:locale/learn/*는 인덱스만, 하위 slug는 SPA fallback)
@@ -280,11 +282,11 @@ React 기반 하나의 프론트엔드 코드베이스
 ## RPL-68 Adaptive P0
 
 - Final Design Gate: `DESIGN_APPROVED` (Blocking/Major/Minor/NIT 0)
-- Slice 1: Canonical Docs Sync + Adaptive Shell/Navigation
-- Slice 2: Review Surface + Structured Review Result
-- Slice 3: Journal Adaptive Presentation + Decision Context Presentation
-- Slice 4: Retrospective Presentation + Validation/Error/Retry State
-- Slice 5: Regression Hardening
+- Slice 1: Canonical Docs Sync + Adaptive Shell/Navigation — 완료
+- Slice 2: Review Surface + Structured Review Result — 완료
+- Slice 3: Journal Adaptive Presentation + Decision Context Presentation — 완료
+- Slice 4: Retrospective Presentation + Validation/Error/Retry State — 완료
+- Slice 5: Final Regression Hardening — 현재
 
 RPL-68에서는 RPL-48의 `JournalCreateCommand`, `JournalCreateRequest`,
 `HttpJournalCreatePort`, `POST /finance/journals` mapping과 Production Create OFF 상태를
@@ -387,6 +389,6 @@ fixture, view-model까지만 다루며 persistence contract를 만들지 않는�
 
 **다음 실행 항목:**
 
-1. [ ] RPL-68 Slice 1 review
-2. [ ] RPL-68 Slice 2~5를 순서대로 구현
+1. [x] RPL-68 Slice 1–4 구현·review 완료
+2. [ ] RPL-68 Slice 5 final regression hardening·Independent Review
 3. [ ] RPL-48 transport와 Production Create OFF 상태를 각 Slice에서 회귀 검증

@@ -3,9 +3,15 @@
 Capacitor 기반 iOS/Android 출시를 목표로 하는 Vite + React + TypeScript SPA.
 SSR/Next.js/React Router Framework Mode는 사용하지 않는다.
 
-이 시점은 **빌드 · 라우팅(공개 웹/앱 URL 경계) · 모바일 레이아웃 골격 · 공개 웹
-Pre-render/SPA fallback 계약 · 한국어·영어 i18n 기반**까지 구현된 단계다. 실제
-와이어프레임 UI, API 연동, 데이터, 정책 로직 구현은 다음 단계에서 진행한다.
+현재 `/app/*` 앱 영역은 승인된 **Adaptive P0 frontend contract** 구현이 완료된 상태다.
+Review Start, Structured Review Result, Journal New, Journal List/Detail, Decision Context
+presentation, Retrospective presentation/lifecycle, ko/en app UI와 Phone·Tablet·Landscape·
+Desktop adaptive UI를 포함한다. 공개/secondary `/:locale/*` 화면 중 일부는 여전히
+placeholder다.
+
+별도 후속 범위는 Finance Backend/API integration, production persistence와 Production
+Journal Create activation, Decision Context/Retrospective backend persistence, 실제 AI/RAG
+runtime integration이다.
 
 단계별 실행 순서와 PR 경계는 [`docs/frontend-roadmap.md`](./docs/frontend-roadmap.md)를 따른다.
 
@@ -92,7 +98,7 @@ pnpm exec playwright install chromium
 src/
 ├── app/          # 라우터(AppRouter.tsx) — 유일한 라우트 트리 정의처
 ├── entry-server.tsx  # SSR 전용 렌더 엔트리(Vite --ssr 빌드 대상, 신규 dependency 없음)
-├── pages/        # 라우트 단위 페이지 컴포넌트 (현재는 전부 스켈레톤/placeholder)
+├── pages/        # 라우트 단위 페이지 컴포넌트 (Adaptive P0 app UI 구현, 공개/secondary 일부 placeholder)
 ├── prerender/    # Pre-render 매니페스트(manifest.ts) + hydrate 판별(shouldHydrate.ts), 순수 모듈
 ├── components/
 │   ├── ui/       # shadcn/ui 컴포넌트
@@ -137,16 +143,16 @@ URL은 공개 웹(`/:locale/*`)과 웹앱(`/app/*`)으로 분리된다. 루트 `
 
 **웹앱 (`/app/*`)**
 
-| Path                      | 화면               | 하단 탭 |
-| ------------------------- | ------------------ | ------- |
-| `/app`                    | Home               | 있음    |
-| `/app/ask`                | Ask 결과           | 있음    |
-| `/app/journal`            | 기록 목록          | 있음    |
-| `/app/onboarding`         | 온보딩             | 없음    |
-| `/app/journal/new`        | 일지/공부노트 저장 | 없음    |
-| `/app/journal/:id`        | 일지 상세          | 없음    |
-| `/app/journal/:id/review` | 복기               | 없음    |
-| `/app/*`                  | App NotFound       | 없음    |
+| Path                      | 화면                | Primary navigation                       |
+| ------------------------- | ------------------- | ---------------------------------------- |
+| `/app`                    | 검토 시작           | Phone 하단 / Tablet·Desktop 상단·rail    |
+| `/app/ask`                | 검토 결과           | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal`            | 저널 목록           | Phone 하단 / Tablet·Desktop 상단·rail    |
+| `/app/onboarding`         | 온보딩              | 없음                                     |
+| `/app/journal/new`        | 판단·학습 기록 작성 | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal/:id`        | 저널 상세           | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal/:id/review` | 복기                | Phone context / Tablet·Desktop 상단·rail |
+| `/app/*`                  | App NotFound        | 없음                                     |
 
 ## Pre-render + 배포 시 SPA Fallback 계약 (STEP 6)
 
