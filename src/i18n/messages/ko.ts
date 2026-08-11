@@ -10,9 +10,8 @@ export const ko: Messages = {
     appName: 'AI 투자 체크리스트',
   },
   nav: {
-    home: '홈',
-    ask: '질문',
-    journal: '기록',
+    review: '검토',
+    journal: '저널',
     ariaLabel: '주요 화면 이동',
   },
   public: {

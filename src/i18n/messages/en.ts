@@ -5,8 +5,7 @@ export const en: Messages = {
     appName: 'AI Investment Checklist',
   },
   nav: {
-    home: 'Home',
-    ask: 'Ask',
+    review: 'Review',
     journal: 'Journal',
     ariaLabel: 'Primary navigation',
   },

@@ -20,8 +20,7 @@ export interface Messages {
     appName: string;
   };
   nav: {
-    home: string;
-    ask: string;
+    review: string;
     journal: string;
     ariaLabel: string;
   };

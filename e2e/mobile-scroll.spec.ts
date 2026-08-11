@@ -156,7 +156,9 @@ test.describe('모바일 세로 스크롤 계약', () => {
     await expect(cta).toBeVisible();
   });
 
-  test('Ask Result는 main만 스크롤하고 마지막 CTA가 탭바에 가리지 않는다', async ({ page }) => {
+  test('Ask Result는 main만 스크롤하고 phone primary navigation을 노출하지 않는다', async ({
+    page,
+  }) => {
     await page.goto(buildAppAskPath('모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문'));
 
     const viewportHeight = page.viewportSize()!.height;
@@ -186,8 +188,8 @@ test.describe('모바일 세로 스크롤 계약', () => {
     const lastCta = page.getByRole('link', { name: ko.app.ask.navigation.askAgain });
     await lastCta.scrollIntoViewIfNeeded();
     const ctaBox = (await lastCta.boundingBox())!;
-    const navBox = (await page.getByRole('navigation', { name: ko.nav.ariaLabel }).boundingBox())!;
-    expect(ctaBox.y + ctaBox.height).toBeLessThanOrEqual(navBox.y + 1);
+    await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+    expect(ctaBox.y + ctaBox.height).toBeLessThanOrEqual(viewportHeight + 1);
   });
 
   for (const { label, question } of [
@@ -291,24 +293,104 @@ test.describe('Home 모바일 레이아웃', () => {
   });
 });
 
-test.describe('Home 데스크톱 앱 프레임', () => {
+test.describe('Adaptive app shell', () => {
   // eslint-disable-next-line no-empty-pattern
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', '데스크톱 프로젝트에서만 검증한다');
   });
 
-  test('1024px viewport에서 앱 프레임은 기존 480px 너비를 유지한다', async ({ page }) => {
-    await page.setViewportSize({ width: 1024, height: 900 });
-    await page.goto(APP_ROUTE_PATHS.appHome);
+  test('separates adaptive host width from readable content width', async ({ page }) => {
+    for (const contract of [
+      { width: 393, height: 852, contentWidth: 393, navPlacement: 'bottom' },
+      { width: 834, height: 1060, contentWidth: 660, navPlacement: 'top' },
+      { width: 1024, height: 1366, contentWidth: 660, navPlacement: 'top' },
+      { width: 1194, height: 834, contentWidth: 660, navPlacement: 'rail' },
+      { width: 1360, height: 880, contentWidth: 660, navPlacement: 'rail' },
+    ] as const) {
+      await page.setViewportSize({ width: contract.width, height: contract.height });
+      await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const frameWidth = await page.locator('main').evaluate((main) => {
-      let element: HTMLElement | null = main.parentElement;
-      while (element && getComputedStyle(element).maxWidth !== '480px') {
-        element = element.parentElement;
+      const host = page.getByTestId('app-shell-host');
+      const content = page.getByTestId('adaptive-content-host');
+      const navigation = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+      const hostBox = (await host.boundingBox())!;
+      const contentBox = (await content.boundingBox())!;
+      const navBox = (await navigation.boundingBox())!;
+
+      expect(hostBox.width).toBe(contract.width);
+      expect(contentBox.width).toBe(contract.contentWidth);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+      if (contract.navPlacement === 'bottom') {
+        expect(navBox.width).toBe(contract.width);
+        expect(navBox.y + navBox.height).toBe(contract.height);
+      } else if (contract.navPlacement === 'top') {
+        expect(navBox.width).toBe(contract.width);
+        expect(navBox.height).toBeLessThan(100);
+      } else {
+        expect(navBox.width).toBe(224);
+        expect(navBox.height).toBe(contract.height);
       }
-      return element?.getBoundingClientRect().width;
-    });
-    expect(frameWidth).toBe(480);
+    }
+  });
+
+  test('keeps adaptive primary navigation on internal journal routes', async ({ page }) => {
+    const journalRoutes = [
+      buildAppJournalNewPath('investment'),
+      buildAppJournalDetailPath('journal-2026-06-28-01'),
+      buildAppJournalReviewPath('journal-2026-06-28-01'),
+    ];
+    const viewports = [
+      { width: 393, height: 852, phone: true },
+      { width: 834, height: 1060, phone: false },
+      { width: 1024, height: 1366, phone: false },
+      { width: 1194, height: 834, phone: false },
+      { width: 1360, height: 880, phone: false },
+    ] as const;
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      for (const route of journalRoutes) {
+        await page.goto(route);
+
+        const navigation = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+        if (viewport.phone) {
+          await expect(navigation).toBeHidden();
+        } else {
+          await expect(navigation).toBeVisible();
+          await expect(page.getByRole('link', { name: ko.nav.journal })).toHaveAttribute(
+            'aria-current',
+            'page',
+          );
+        }
+
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+          ),
+        ).toBe(true);
+      }
+    }
+  });
+
+  test('keeps Review Result readable surface wider than general surfaces', async ({ page }) => {
+    for (const viewport of [
+      { width: 834, height: 1060 },
+      { width: 1024, height: 1366 },
+      { width: 1194, height: 834 },
+      { width: 1360, height: 880 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(buildAppAskPath('adaptive readable result width'));
+
+      const hostBox = (await page.getByTestId('app-shell-host').boundingBox())!;
+      const contentBox = (await page.getByTestId('adaptive-content-host').boundingBox())!;
+      expect(hostBox.width).toBe(viewport.width);
+      expect(contentBox.width).toBe(760);
+    }
   });
 });
 

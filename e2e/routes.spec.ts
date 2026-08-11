@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { BOTTOM_TABS } from '@/constants/navigation';
 import {
@@ -19,6 +19,20 @@ const SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
 const STUDY_ID = 'journal-2026-06-27-01';
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
+
+async function expectJournalPrimaryNavigation(page: Page) {
+  const navigation = page.getByTestId('primary-navigation');
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await expect(navigation).toBeHidden();
+    return;
+  }
+
+  await expect(navigation).toBeVisible();
+  await expect(page.getByRole('link', { name: ko.nav.journal, exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+}
 
 const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
@@ -67,6 +81,25 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       await expect(page.getByRole('heading', { name: screen.heading })).toBeVisible();
     });
   }
+
+  test('journal app routes expose exactly one main landmark', async ({ page }) => {
+    const landmarkRoutes = [
+      APP_ROUTE_PATHS.journalList,
+      buildAppJournalNewPath('investment'),
+      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath('unknown-record-id'),
+      buildAppJournalReviewPath('unknown-record-id'),
+      `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A`,
+      `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A/review`,
+    ];
+
+    for (const route of landmarkRoutes) {
+      await page.goto(route);
+      expect(await page.locator('main').count()).toBe(1);
+      await expect(page.getByRole('main')).toHaveCount(1);
+    }
+  });
 
   test('renders public NotFound for an unsupported locale (no redirect)', async ({ page }) => {
     await page.goto('/fr');
@@ -167,16 +200,14 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     ).toBeVisible();
   });
 
-  test('Home keeps only its tab active and exposes no input or excluded feature controls', async ({
+  test('Review Start keeps only its primary item active and exposes no excluded controls', async ({
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const homeTab = page.getByRole('link', { name: ko.nav.home, exact: true });
-    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
+    const reviewTab = page.getByRole('link', { name: ko.nav.review, exact: true });
     const journalTab = page.getByRole('link', { name: ko.nav.journal, exact: true });
-    await expect(homeTab).toHaveAttribute('aria-current', 'page');
-    await expect(askTab).not.toHaveAttribute('aria-current');
+    await expect(reviewTab).toHaveAttribute('aria-current', 'page');
     await expect(journalTab).not.toHaveAttribute('aria-current');
 
     await expect(
@@ -277,7 +308,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
         page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
       ).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: detail.heading })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+      await expectJournalPrimaryNavigation(page);
     });
   }
 
@@ -366,7 +397,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       ).toBeVisible();
       await expect(page.getByText(review.subject, { exact: true })).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: review.section })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
+      await expectJournalPrimaryNavigation(page);
     });
   }
 
@@ -434,7 +465,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       await expect(
         page.getByRole('link', { name: ko.app.journalReview.navigation.detail }),
       ).toHaveCount(0);
-      const links = page.getByRole('link');
+      const links = page.locator('main').getByRole('link');
       for (let index = 0; index < (await links.count()); index += 1) {
         await expect(links.nth(index)).toHaveAttribute('href', APP_ROUTE_PATHS.journalList);
       }
@@ -450,7 +481,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(page.getByRole('link', { name: /저장|제출|수정|삭제/ })).toHaveCount(0);
   });
 
-  test('journal list: the last record card is not covered by the bottom navigation', async ({
+  test('journal list: the last record card is not covered by adaptive primary navigation', async ({
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
@@ -466,7 +497,11 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     const cardBox = (await lastCard.boundingBox())!;
     const nav = page.getByRole('navigation', { name: ko.nav.ariaLabel });
     const navBox = (await nav.boundingBox())!;
-    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+    if (page.viewportSize()!.width < 768) {
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(navBox.y + 1);
+    } else {
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+    }
   });
 });
 
@@ -529,12 +564,19 @@ test.describe('Ask empty and result states', () => {
     }
   });
 
-  test('keeps the Ask bottom tab active in the result state', async ({ page }) => {
+  test('keeps Review Result in Review IA without a phone bottom navigation', async ({ page }) => {
     await page.goto(buildAppAskPath('활성 탭 확인'));
 
-    const askTab = page.getByRole('link', { name: ko.nav.ask, exact: true });
-    await expect(askTab).toHaveAttribute('aria-current', 'page');
-    await expect(askTab.getByTestId('bottom-tab-active-indicator')).toBeVisible();
+    const navigation = page.getByRole('navigation', { name: ko.nav.ariaLabel });
+    if (page.viewportSize()!.width < 768) {
+      await expect(navigation).toHaveCount(0);
+    } else {
+      await expect(navigation).toBeVisible();
+      await expect(page.getByRole('link', { name: ko.nav.review })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    }
   });
 
   test('renders HTML-like input as inert text', async ({ page }) => {

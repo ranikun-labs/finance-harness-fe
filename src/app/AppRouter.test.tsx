@@ -98,7 +98,7 @@ describe('AppRouter', () => {
   });
 
   describe('app ownership (/app/*)', () => {
-    it('renders the app home at /app', () => {
+    it('renders the Review Start owner at /app', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
       expect(
         screen.getByRole('heading', {
@@ -184,23 +184,32 @@ describe('AppRouter', () => {
     const bottomNav = () => screen.queryByRole('navigation', { name: '주요 화면 이동' });
 
     it.each([APP_ROUTE_PATHS.appHome, APP_ROUTE_PATHS.ask, APP_ROUTE_PATHS.journalList])(
-      'shows the bottom tab bar on %s',
+      'renders the adaptive primary navigation shell on %s',
       (path) => {
         renderAt(path);
         expect(bottomNav()).not.toBeNull();
       },
     );
 
+    it.each([[APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title]])(
+      'keeps the primary navigation outside the onboarding surface on %s',
+      (path, heading) => {
+        renderAt(path);
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+        expect(bottomNav()).toBeNull();
+      },
+    );
+
     it.each([
-      [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
       [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
       [`${APP_ROUTE_PATHS.journalNew}?type=unknown`, ko.app.journalNew.invalidType.heading],
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
       [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],
-    ])('hides the bottom tab bar on %s', (path, heading) => {
+    ])('keeps adaptive primary navigation on internal journal route %s', (path, heading) => {
       renderAt(path);
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
-      expect(bottomNav()).toBeNull();
+      expect(bottomNav()).not.toBeNull();
+      expect(bottomNav()).toHaveClass('hidden', 'md:flex');
     });
 
     it('does not show the app bottom tab bar on the public surface', () => {
@@ -208,16 +217,30 @@ describe('AppRouter', () => {
       expect(bottomNav()).toBeNull();
     });
 
-    it('marks only the Home tab active at /app', () => {
+    it('marks only Review active at /app', () => {
       renderAt(APP_ROUTE_PATHS.appHome);
 
-      const homeLink = screen.getByRole('link', { name: ko.nav.home });
-      const askLink = screen.getByRole('link', { name: ko.nav.ask });
+      const reviewLink = screen.getByRole('link', { name: ko.nav.review });
       const journalLink = screen.getByRole('link', { name: ko.nav.journal });
 
-      expect(homeLink).toHaveAttribute('aria-current', 'page');
-      expect(askLink).not.toHaveAttribute('aria-current');
+      expect(reviewLink).toHaveAttribute('aria-current', 'page');
       expect(journalLink).not.toHaveAttribute('aria-current');
+    });
+  });
+
+  describe('main landmark ownership', () => {
+    it.each([
+      ['Journal List', APP_ROUTE_PATHS.journalList],
+      ['Journal New', buildAppJournalNewPath('investment')],
+      ['Journal Detail', buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id)],
+      ['Journal Review', buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id)],
+      ['Journal Detail Not Found', buildAppJournalDetailPath('unknown-record-id')],
+      ['Journal Review Not Found', buildAppJournalReviewPath('unknown-record-id')],
+    ])('renders exactly one main landmark for %s', (_label, path) => {
+      renderAt(path);
+
+      expect(document.querySelectorAll('main')).toHaveLength(1);
+      expect(screen.getAllByRole('main')).toHaveLength(1);
     });
   });
 });

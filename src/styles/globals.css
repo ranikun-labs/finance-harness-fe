@@ -116,3 +116,49 @@
     font-family: var(--font-sans);
   }
 }
+
+/*
+ * The adaptive host has a width-independent portrait contract at tablet sizes:
+ * a top primary navigation and a readable single-column surface. The desktop
+ * rail utilities remain the default for landscape/tablet-wide and desktop; this
+ * narrow media query only corrects the 1024px portrait edge where `lg:` alone
+ * would otherwise classify the device as a rail layout.
+ */
+@media (min-width: 1024px) and (orientation: portrait) {
+  .adaptive-shell-layout {
+    flex-direction: column;
+  }
+
+  .adaptive-content-main {
+    order: 2;
+  }
+
+  .adaptive-primary-navigation {
+    order: 1;
+    width: 100%;
+    height: auto;
+    min-height: 4rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .adaptive-primary-navigation > :first-child {
+    width: auto;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .adaptive-primary-navigation > :last-child {
+    width: auto;
+    margin-top: 0;
+    flex-direction: row;
+  }
+
+  .adaptive-primary-navigation > :last-child > a {
+    width: auto;
+  }
+}

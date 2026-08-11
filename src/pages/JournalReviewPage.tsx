@@ -144,7 +144,7 @@ export function JournalReviewPage() {
 
   if (!entry) {
     return (
-      <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+      <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <ReviewHeader
           title={t('app.journalReview.notFound.heading')}
           backLabel={t('app.journalReview.notFound.listAction')}
@@ -163,7 +163,7 @@ export function JournalReviewPage() {
             }
           />
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -172,7 +172,7 @@ export function JournalReviewPage() {
   const uncheckedLabel = t('app.journalReview.status.unchecked');
 
   return (
-    <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <ReviewHeader
         title={t('app.journalReview.headerTitle')}
         backLabel={t('app.journalReview.backLabel')}
@@ -291,6 +291,6 @@ export function JournalReviewPage() {
           {t('app.journalReview.navigation.detail')}
         </Link>
       </nav>
-    </main>
+    </div>
   );
 }

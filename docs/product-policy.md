@@ -4,6 +4,24 @@
 > `AGENTS.md`는 이 문서를 참조만 하며 내용을 복사하지 않는다. 새 화면이나 기능을
 > 구현하기 전에 반드시 이 문서를 먼저 확인할 것.
 
+## Primary IA
+
+웹앱 P0의 Primary IA는 다음 두 개로 고정한다.
+
+- 검토 (`/app` = 검토 시작, `/app/ask` = 내부 검토 결과)
+- 저널
+
+Home dashboard와 홈/질문/기록 3-tab은 P0 Primary Surface로 복원하지 않는다. 사용자의
+핵심 흐름은 `검토 → 판단 기록 → 복기 → 다음 검토 개선`이다.
+
+## Adaptive Surface
+
+- Phone은 단일 column과 검토/저널 2-item Bottom Navigation을 사용한다.
+- Tablet Portrait는 phone frame으로 제한하지 않고 읽기 쉬운 단일 column을 사용한다.
+- Tablet Landscape와 Desktop은 맥락이 필요한 화면에서만 최대 2개 major surface를 쓴다.
+- 승인된 2-pane은 Journal List | Detail, Original Journal | Retrospective뿐이다.
+- Review Question | Result 강제 2-pane, 3-pane, trading-terminal 밀도는 만들지 않는다.
+
 ## 금지 UI
 
 다음과 같이 보이는 UI를 어떤 화면에서도 만들지 않는다:
@@ -33,7 +51,7 @@
 
 ## Ask 답변 톤
 
-Ask 결과 화면의 AI 답변은 단정형("~입니다")이 아니라 **확인형**("~확인하세요")
+검토 결과(`/app/ask`)의 AI 답변은 단정형("~입니다")이 아니라 **확인형**("~확인하세요")
 톤을 유지한다.
 
 ## Capacitor / 배포 정책

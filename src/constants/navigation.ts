@@ -6,14 +6,11 @@ import { APP_ROUTE_PATHS } from '@/constants/routes';
  * (`src/components/layout/BottomNavigation.tsx`의 `NAV_LABEL_KEY`).
  */
 export interface BottomTabConfig {
-  id: 'home' | 'ask' | 'journal';
+  id: 'review' | 'journal';
   path: string;
-  /** NavLink의 `end`. 홈 탭처럼 하위 경로에서 활성 표시되면 안 되는 탭에 true. */
-  end?: boolean;
 }
 
 export const BOTTOM_TABS: readonly BottomTabConfig[] = [
-  { id: 'home', path: APP_ROUTE_PATHS.appHome, end: true },
-  { id: 'ask', path: APP_ROUTE_PATHS.ask },
+  { id: 'review', path: APP_ROUTE_PATHS.appHome },
   { id: 'journal', path: APP_ROUTE_PATHS.journalList },
 ] as const;

@@ -1,77 +1,77 @@
-# AI 투자 체크리스트 — 네비게이션 맵 (개발 핸드오프용)
+# Finance Harness — 네비게이션 맵
 
-> 클로드 디자인에서 만든 10개 화면(와이어프레임)의 이동 관계 스펙.
-> 클로드 코드에 화면들과 함께 이 문서를 전달하면 라우팅 구현에 사용.
+> 현재 앱 화면·이동 관계의 canonical 문서다. 경로 문자열의 단일 원본은
+> [`src/constants/routes.ts`](../src/constants/routes.ts), 제품 정책은
+> [`docs/product-policy.md`](./product-policy.md)다.
 
-## 화면 목록 (10개)
+## Primary IA
 
-| # | 화면명 | 역할 |
-|---|--------|------|
-| 1 | 온보딩 | 앱 첫 실행 시 정체성 안내 |
-| 2 | Home | 메인 진입점, 질문바 |
-| 3 | Ask 결과 | 질문→체크리스트 변환 (핵심) |
-| 4 | 일지 저장 (투자 기록) | 기록 입력 폼 |
-| 5 | 공부 노트 저장 | 학습 기록 입력 폼 (4의 축소판, 같은 화면 내 토글) |
-| 6 | 일지 상세 | 저장된 기록 읽기 전용 뷰 |
-| 7 | 기록 목록 | 저장된 기록 전체 리스트 |
-| 8 | 기록 목록 - 빈 상태 | 기록 0개일 때 |
-| 9 | 복기 | 과거 판단 성찰 |
-
-## 라우트 구조
-
-> STEP 5(라우팅 경계 설계)에서 실제 경로가 `/app/*` 프리픽스로 확정되었다. 경계·소유권
-> 설계는 [`docs/route-architecture.md`](./route-architecture.md), 경로 정의 단일 소스는
-> [`src/constants/routes.ts`](../src/constants/routes.ts)다. 아래는 앱(`/app/*`) 화면
-> 이동 관계다. 공개 웹(`/:locale`)은 별도 표면이다.
+P0 Primary IA는 **검토 / 저널** 두 개다. `/app`은 Home dashboard가 아니라 검토 시작을
+소유하고, `/app/ask`는 검토 결과를 유지하는 내부 route다. 홈/질문/기록 3-tab은 사용하지
+않는다.
 
 ```text
-/                              → /ko로 redirect (공개 웹 기본 로케일)
-/app/onboarding               → 온보딩 (최초 1회만, 이후 스킵)
-/app                          → Home
-/app/ask?q={query}            → Ask 결과
-/app/journal/new?type=investment → 일지 저장 (투자 기록)
-/app/journal/new?type=study      → 공부 노트 저장 (같은 라우트, type 쿼리로 토글)
-/app/journal/:id              → 일지 상세
-/app/journal                  → 기록 목록 (기록 0개면 자동으로 빈 상태 UI 렌더)
-/app/journal/:id/review       → 복기
+검토 → 판단 기록 → 복기 → 다음 검토 개선
 ```
 
-## 네비게이션 매핑
+## 화면과 라우트
 
-| 출발 화면 | 트리거 | 도착 화면 |
-|-----------|--------|-----------|
-| 온보딩 | "동의하고 시작하기" | Home |
-| Home | 질문바 입력 / "질문하기" / "짚어보기" | Ask 결과 |
-| Home | "기록하기" | 일지 저장 |
-| Home | 최근 기록 항목 탭 | 일지 상세 |
-| Home | 하단 탭 "질문" | Ask 결과 (빈 입력 상태) |
-| Home | 하단 탭 "기록" | 기록 목록 |
-| Ask 결과 | "투자 기록으로 저장" | 일지 저장 (type=investment) |
-| Ask 결과 | "공부 노트로 저장" | 일지 저장 (type=study) |
-| Ask 결과 | "추가 질문하기" / 뒤로 | Home |
-| 일지 저장/공부노트 | 상단 토글 | 같은 화면 내 type 전환 (라우트 이동 아님) |
-| 일지 저장/공부노트 | "저장하기" | 일지 상세 (방금 저장한 항목) |
-| 일지 저장/공부노트 | 뒤로 | Ask 결과 (또는 이전 화면) |
-| 일지 상세 | "AI와 복기하기" | 복기 |
-| 일지 상세 | "수정" | 일지 저장 (기존 값 프리필) |
-| 일지 상세 | 뒤로 | 기록 목록 (또는 이전 화면) |
-| 기록 목록 | 기록 카드 탭 | 일지 상세 |
-| 기록 목록(빈 상태) | "질문하러 가기" | Ask 결과 |
-| 복기 | "복기 내용 저장" | 일지 상세 |
-| 복기 | 뒤로 | 일지 상세 |
-| Home / Ask 결과 / 기록 목록 | 하단 탭바 홈/질문/기록 | Home / Ask 결과 / 기록 목록 |
+| 화면 | 경로 | 역할 |
+| --- | --- | --- |
+| 검토 시작 | `/app` | 판단 전 질문을 시작하는 Primary Surface |
+| 검토 결과 | `/app/ask?q={query}` | 구조화된 검토 결과의 내부 route |
+| 온보딩 | `/app/onboarding` | 첫 진입 안내 |
+| 저널 목록/빈 상태 | `/app/journal` | 판단·학습 기록 목록 |
+| 판단/학습 기록 작성 | `/app/journal/new?type=investment\|study` | 동일 route의 type 전환 form |
+| 저널 상세 | `/app/journal/:id` | 저장된 원래 기록의 읽기 전용 view |
+| 복기 | `/app/journal/:id/review` | 원래 기록을 바꾸지 않고 별도 복기를 작성하는 view |
 
-**하단 탭바 노출 범위 (전 화면 공통 아님):**
+공개 웹 `/:locale/*`와 루트 `/`→`/ko` 경계는
+[`docs/route-architecture.md`](./route-architecture.md)를 따른다.
 
-- **노출:** Home, Ask 결과, 기록 목록
-- **미노출:** 온보딩, 일지 저장/공부 노트 저장, 일지 상세, 복기
+## Primary Navigation
 
-위 3개 화면에서만 탭 전환이 가능하고, 그 외 화면은 하단 탭 없이 별도 뒤로가기로
-이동한다(1절 네비게이션 매핑의 "뒤로" 행 참고).
+`src/constants/navigation.ts`의 `BOTTOM_TABS`가 검토/저널 두 destination의 구조적 단일
+원본이다. 표시 label은 ko/en dictionary에서 렌더 시점에 가져온다.
 
-## 정책 가드 (PolicyGuard) — 프론트 구현 시 유지할 것
+| Viewport | Primary navigation | Content contract |
+| --- | --- | --- |
+| Phone | 하단 검토/저널 | 단일 column. 검토 결과·작성·상세·복기는 context back navigation 사용 |
+| Tablet Portrait | 상단 검토/저널 | 480px phone cap 없는 readable single column |
+| Tablet Landscape | 좌측 rail 검토/저널 | 필요한 맥락에서만 2-pane |
+| Desktop | 좌측 rail 검토/저널, Bottom Navigation 없음 | 최대 2 major surfaces |
 
-- 매수/매도/목표가/손절가/수량비중 추천처럼 보이는 UI 절대 금지
-- Ask 결과의 AI 답변은 단정형("~입니다") 대신 확인형("~확인하세요") 톤 유지
-- 감정 태그는 FOMO/불안/확신/관망/혼란 5개로 고정
-- 행동 라벨(관심/관망/매수/매도)은 "기록용 선택"이며 실행 버튼처럼 강조 금지
+Tablet Portrait·Landscape·Desktop에서는 저널 목록뿐 아니라 저널 신규·상세·복기 화면에도
+동일한 `BOTTOM_TABS` 기반 검토/저널 primary navigation을 유지한다. Phone의 내부 결과·작성·
+상세·복기 화면은 context navigation을 사용하고 Bottom Navigation을 노출하지 않는다.
+
+승인된 2-pane은 Journal List | Detail과 Original Journal | Retrospective뿐이다. Review
+Question | Result를 강제 2-pane으로 만들거나 3-pane을 만들지 않는다.
+
+## 이동 관계
+
+| 출발 | 트리거 | 도착 |
+| --- | --- | --- |
+| 온보딩 | 시작 CTA | 검토 시작 |
+| 검토 시작 | 질문 제출 | 검토 결과 |
+| 검토 시작 | Primary navigation `저널` | 저널 목록 |
+| 검토 결과 | 다시 검토 | 검토 시작 |
+| 검토 결과 | 판단/학습 기록으로 이어가기 | 기록 작성 |
+| 기록 작성 | 저장 성공 | 생성된 저널 상세 |
+| 기록 작성 | 뒤로 | 검토 결과 또는 이전 화면 |
+| 저널 목록 | 기록 선택 | 저널 상세 |
+| 저널 상세 | 복기하기 | 복기 |
+| 복기 | 저장 성공 또는 뒤로 | 저널 상세 |
+| 저널 Primary navigation | `검토` | 검토 시작 |
+
+라우트 이동은 `src/constants/routes.ts`의 상수와 builder만 사용하며 component에 경로
+문자열을 하드코딩하지 않는다.
+
+## 정책 가드
+
+- 추천·예측·목표가·손절가·수량·비중·position sizing UI를 만들지 않는다.
+- 검토 결과는 확인형 문체를 유지한다.
+- 행동 label은 관심/관망/매수/매도 기록용 선택이며 실행 CTA처럼 강조하지 않는다.
+- 감정 tag는 FOMO/불안/확신/관망/혼란만 사용한다.
+- AI 결과 전체 자동 저장 expectation을 만들지 않는다.
+- 복기는 Original Journal을 덮어쓰지 않는다.

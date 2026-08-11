@@ -137,7 +137,7 @@ export function JournalDetailPage() {
 
   if (!entry) {
     return (
-      <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+      <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <DetailHeader
           title={t('app.journalDetail.notFound.heading')}
           backLabel={t('app.journalDetail.backLabel')}
@@ -155,12 +155,12 @@ export function JournalDetailPage() {
             }
           />
         </Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <DetailHeader
         title={t('app.journalDetail.headerTitle')}
         backLabel={t('app.journalDetail.backLabel')}
@@ -283,6 +283,6 @@ export function JournalDetailPage() {
           {t('app.journalDetail.navigation.review')}
         </Link>
       </nav>
-    </main>
+    </div>
   );
 }
