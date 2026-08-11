@@ -195,7 +195,7 @@ export const en: Messages = {
       },
     },
     journalList: {
-      title: 'Records',
+      title: 'Journal',
       filters: {
         groupLabel: 'Filter by record type',
         all: 'All',
@@ -204,6 +204,7 @@ export const en: Messages = {
       },
       emotionLabel: 'Emotion',
       noEmotion: 'No emotion tag',
+      reasoningLabel: 'Key reasoning',
       checkedProgress: 'Checked {{checked}}/{{total}}',
       countLabel: '{{count}} records',
       emptyAll: {
@@ -223,6 +224,14 @@ export const en: Messages = {
         batteryCompanyC: 'Battery Company C',
       },
     },
+    journalWorkspace: {
+      listPaneLabel: 'Journal list',
+      detailPaneLabel: 'Journal detail',
+      detailPrompt: {
+        heading: 'Select a record',
+        description: 'Choose a record from the list to review its reasoning and context here.',
+      },
+    },
     journalNew: {
       investment: 'Save Entry (Investment)',
       study: 'Save Study Note',
@@ -230,6 +239,23 @@ export const en: Messages = {
         investment: 'Investment record',
         study: 'Study record',
         dirtyConfirm: 'Your current entries will be discarded. Change record type?',
+      },
+      decisionContext: {
+        title: 'Keep the review context at the time',
+        switchLabel: 'Include Decision Context',
+        enabledDescription:
+          'The question and check status are always kept; only selected evidence is included.',
+        disabledDescription: 'This record will not include the review context from that time.',
+        minimumLabel: 'Always included · minimum record',
+        originalQuestionLabel: 'Question at the time',
+        checklistLabel: 'Checks and their status at the time',
+        capturedAtLabel: 'Saved at',
+        checked: 'Checked',
+        unchecked: 'Not checked',
+        optionalLabel: 'Optional · verified evidence',
+        optionalDescription: 'Choose which evidence to keep with this record.',
+        immutableNotice:
+          'This content is fixed when saved and is not updated if later review results change.',
       },
       form: {
         optional: 'Optional',
@@ -329,6 +355,20 @@ export const en: Messages = {
       checkedProgress: '{{checked}} / {{total}}',
       checkedStatus: 'Checked',
       uncheckedStatus: 'Not checked',
+      decisionContext: {
+        heading: 'Review context at the time',
+        snapshotLabel: 'Saved as-is · unchanged',
+        originalQuestionLabel: 'Question at the time',
+        checklistLabel: 'Checks and their status at the time',
+        versionLabel: 'Checklist version',
+        capturedAtLabel: 'Saved at',
+        checked: 'Checked',
+        unchecked: 'Not checked',
+        optionalEvidenceLabel: 'Verified evidence kept with this record',
+        noOptionalEvidence: 'No optional evidence was selected.',
+        immutableNotice:
+          'This context is a snapshot from the saved time. It does not update when later review results or checklists change.',
+      },
       navigation: {
         review: 'Review with AI',
         list: 'Back to records',

@@ -162,3 +162,61 @@
     width: auto;
   }
 }
+
+/* Journal List | Detail is a contextual wide layout only. Phone and portrait
+ * keep one route surface and the existing main scroll owner. */
+.journal-workspace {
+  display: flex;
+  min-height: 100%;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.journal-workspace-list-pane,
+.journal-workspace-detail-pane {
+  min-width: 0;
+}
+
+.journal-workspace-detail-pane {
+  display: none;
+}
+
+.journal-workspace.is-detail-route .journal-workspace-list-pane {
+  display: none;
+}
+
+.journal-workspace.is-detail-route .journal-workspace-detail-pane {
+  display: block;
+}
+
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {
+  .journal-workspace-host {
+    max-width: none;
+  }
+
+  .journal-workspace-main {
+    overflow: hidden;
+  }
+
+  .journal-workspace {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.38fr) minmax(0, 1fr);
+    min-height: 100%;
+  }
+
+  .journal-workspace-list-pane,
+  .journal-workspace-detail-pane {
+    display: block;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .journal-workspace.is-detail-route .journal-workspace-list-pane {
+    display: block;
+  }
+
+  .journal-workspace-list-pane {
+    border-right: 1px solid var(--border);
+  }
+}

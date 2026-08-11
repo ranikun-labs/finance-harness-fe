@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useNavigationType } from 'react-router';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -12,10 +12,22 @@ import type { JournalCreatePort } from '@/features/journal-new/model/journalCrea
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
+import { SAMPLE_DECISION_CONTEXT, type DecisionContextSnapshot } from '@/mocks/decisionContext';
 import { JournalNewPage } from '@/pages/JournalNewPage';
 
 function DetailDestination() {
-  return <p>detail destination:{useNavigationType()}</p>;
+  const location = useLocation();
+  const context = (location.state as { decisionContext?: DecisionContextSnapshot } | null)
+    ?.decisionContext;
+
+  return (
+    <>
+      <p data-testid="detail-destination">detail destination:{useNavigationType()}</p>
+      <output data-testid="detail-context-state">
+        {context ? JSON.stringify(context) : 'none'}
+      </output>
+    </>
+  );
 }
 
 function renderPage(
@@ -23,7 +35,9 @@ function renderPage(
   locale: 'ko' | 'en' = 'ko',
   createPort?: JournalCreatePort,
   strict = false,
+  state?: { decisionContext?: DecisionContextSnapshot },
 ) {
+  const [pathname, search = ''] = path.split('?');
   const routes = (
     <Routes>
       <Route
@@ -34,7 +48,7 @@ function renderPage(
     </Routes>
   );
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[{ pathname, search: search ? `?${search}` : '', state }]}>
       <I18nProvider locale={locale}>
         {strict ? <StrictMode>{routes}</StrictMode> : routes}
       </I18nProvider>
@@ -73,6 +87,103 @@ function deferredResult() {
 }
 
 describe('JournalNewPage', () => {
+  it('presents the immutable minimum Decision Context and keeps optional evidence separate', () => {
+    renderPage(buildAppJournalNewPath('investment'), 'ko', undefined, false, {
+      decisionContext: SAMPLE_DECISION_CONTEXT,
+    });
+
+    const panel = screen.getByTestId('decision-context-capture');
+    const contextSwitch = within(panel).getByRole('switch');
+    expect(contextSwitch).toHaveAttribute('aria-checked', 'true');
+    expect(
+      within(panel).getByText(ko.app.journalNew.decisionContext.originalQuestionLabel),
+    ).toBeInTheDocument();
+    expect(within(panel).getByText(SAMPLE_DECISION_CONTEXT.originalQuestion)).toBeInTheDocument();
+    expect(within(panel).getAllByRole('checkbox')).toHaveLength(
+      SAMPLE_DECISION_CONTEXT.optionalEvidence.length,
+    );
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(
+      SAMPLE_DECISION_CONTEXT.checklist.length,
+    );
+    expect(
+      within(panel).getByText(ko.app.journalNew.decisionContext.immutableNotice),
+    ).toBeInTheDocument();
+
+    const firstEvidence = within(panel).getAllByRole('checkbox')[0];
+    expect(firstEvidence).toBeChecked();
+    fireEvent.click(firstEvidence);
+    expect(firstEvidence).not.toBeChecked();
+
+    fireEvent.click(contextSwitch);
+    expect(contextSwitch).toHaveAttribute('aria-checked', 'false');
+    expect(
+      within(panel).queryByText(SAMPLE_DECISION_CONTEXT.originalQuestion),
+    ).not.toBeInTheDocument();
+    expect(within(panel).queryAllByRole('checkbox')).toHaveLength(0);
+
+    fireEvent.click(contextSwitch);
+    expect(contextSwitch).toHaveAttribute('aria-checked', 'true');
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(
+      SAMPLE_DECISION_CONTEXT.checklist.length,
+    );
+    expect(within(panel).getAllByRole('checkbox')[0]).not.toBeChecked();
+  });
+
+  it('keeps the create command unchanged while carrying minimum context on ON navigation', async () => {
+    const create = vi.fn().mockResolvedValue({ journalId: 'context-on' });
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create }, false, {
+      decisionContext: SAMPLE_DECISION_CONTEXT,
+    });
+
+    const panel = screen.getByTestId('decision-context-capture');
+    fireEvent.click(within(panel).getAllByRole('checkbox')[0]);
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('detail-destination')).toHaveTextContent('REPLACE'),
+    );
+    expect(create).toHaveBeenCalledWith({
+      type: 'investment',
+      assetName: '기업 A',
+      occurredAt: '2026-08-03T09:30',
+      action: 'interest',
+      reasoning: '근거를 적는다.',
+      emotion: undefined,
+    });
+
+    const savedContext = JSON.parse(screen.getByTestId('detail-context-state').textContent ?? '');
+    expect(savedContext.originalQuestion).toBe(SAMPLE_DECISION_CONTEXT.originalQuestion);
+    expect(savedContext.checklistVersion).toBe(SAMPLE_DECISION_CONTEXT.checklistVersion);
+    expect(savedContext.checklist).toEqual(SAMPLE_DECISION_CONTEXT.checklist);
+    expect(savedContext.capturedAt).toBe(SAMPLE_DECISION_CONTEXT.capturedAt);
+    expect(savedContext.optionalEvidence[0].included).toBe(false);
+  });
+
+  it('omits Decision Context on OFF navigation without changing the create command', async () => {
+    const create = vi.fn().mockResolvedValue({ journalId: 'context-off' });
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create }, false, {
+      decisionContext: SAMPLE_DECISION_CONTEXT,
+    });
+
+    fireEvent.click(screen.getByRole('switch'));
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('detail-destination')).toHaveTextContent('REPLACE'),
+    );
+    expect(create).toHaveBeenCalledWith({
+      type: 'investment',
+      assetName: '기업 A',
+      occurredAt: '2026-08-03T09:30',
+      action: 'interest',
+      reasoning: '근거를 적는다.',
+      emotion: undefined,
+    });
+    expect(screen.getByTestId('detail-context-state')).toHaveTextContent('none');
+  });
+
   it.each([
     [buildAppJournalNewPath('investment'), ko.app.journalNew.investment],
     [buildAppJournalNewPath('study'), ko.app.journalNew.study],

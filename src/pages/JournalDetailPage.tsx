@@ -1,6 +1,7 @@
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { DecisionContextSnapshotView } from '@/components/journal/DecisionContextPanel';
 import { RecordTagBadge } from '@/components/common/RecordTagBadge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { APP_ROUTE_PATHS, buildAppJournalReviewPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { formatLocalizedDate } from '@/lib/date';
 import { cn } from '@/lib/utils';
+import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
 import {
   JOURNAL_ENTRIES,
   type JournalChecklistItem,
@@ -18,6 +20,10 @@ interface StatusChecklistProps {
   items: JournalChecklistItem[];
   checkedLabel: string;
   uncheckedLabel: string;
+}
+
+interface JournalDetailLocationState {
+  decisionContext?: DecisionContextSnapshot;
 }
 
 function StatusChecklist({ items, checkedLabel, uncheckedLabel }: StatusChecklistProps) {
@@ -132,8 +138,11 @@ function EntrySummary({ entry }: { entry: JournalEntry }) {
 
 export function JournalDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { t } = useTranslation();
   const entry = JOURNAL_ENTRIES.find((item) => item.id === id);
+  const locationState = location.state as JournalDetailLocationState | null;
+  const decisionContext = locationState?.decisionContext ?? entry?.decisionContext;
 
   if (!entry) {
     return (
@@ -271,6 +280,8 @@ export function JournalDetailPage() {
           </section>
         </>
       )}
+
+      {decisionContext && <DecisionContextSnapshotView context={decisionContext} />}
 
       <nav aria-label={t('app.journalDetail.headerTitle')}>
         <Link

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -110,7 +110,7 @@ describe('AppRouter', () => {
 
     it.each([
       [APP_ROUTE_PATHS.ask, ko.app.ask.header.title],
-      [APP_ROUTE_PATHS.journalList, '기록'],
+      [APP_ROUTE_PATHS.journalList, ko.app.journalList.title],
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
     ])('renders %s', (path, heading) => {
       renderAt(path);
@@ -240,6 +240,37 @@ describe('AppRouter', () => {
       renderAt(path);
 
       expect(document.querySelectorAll('main')).toHaveLength(1);
+      expect(screen.getAllByRole('main')).toHaveLength(1);
+    });
+  });
+
+  describe('journal adaptive workspace', () => {
+    it('keeps the list route as the selection surface without inventing a detail record', () => {
+      renderAt(APP_ROUTE_PATHS.journalList);
+
+      expect(screen.getByTestId('journal-workspace')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', {
+          level: 2,
+          name: ko.app.journalWorkspace.detailPrompt.heading,
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByRole('main')).toHaveLength(1);
+    });
+
+    it('keeps the direct detail route selected and exposes its immutable context snapshot', () => {
+      renderAt(buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id));
+
+      const workspace = screen.getByTestId('journal-workspace');
+      expect(workspace).toBeInTheDocument();
+      expect(within(workspace).getByRole('link', { current: 'page' })).toHaveAttribute(
+        'href',
+        buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id),
+      );
+      expect(screen.getByTestId('decision-context-snapshot')).toBeInTheDocument();
       expect(screen.getAllByRole('main')).toHaveLength(1);
     });
   });

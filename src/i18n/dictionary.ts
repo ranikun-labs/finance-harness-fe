@@ -143,16 +143,37 @@ export interface Messages {
       filters: { groupLabel: string; all: string; investment: string; study: string };
       emotionLabel: string;
       noEmotion: string;
+      reasoningLabel: string;
       checkedProgress: string;
       countLabel: string;
       emptyAll: { title: string; description: string; cta: string; hint: string };
       emptyFilter: { title: string; description: string; resetAction: string };
       subjects: Record<SampleSubjectKey, string>;
     };
+    journalWorkspace: {
+      listPaneLabel: string;
+      detailPaneLabel: string;
+      detailPrompt: { heading: string; description: string };
+    };
     journalNew: {
       investment: string;
       study: string;
       typeSwitch: { investment: string; study: string; dirtyConfirm: string };
+      decisionContext: {
+        title: string;
+        switchLabel: string;
+        enabledDescription: string;
+        disabledDescription: string;
+        minimumLabel: string;
+        originalQuestionLabel: string;
+        checklistLabel: string;
+        capturedAtLabel: string;
+        checked: string;
+        unchecked: string;
+        optionalLabel: string;
+        optionalDescription: string;
+        immutableNotice: string;
+      };
       form: {
         optional: string;
         checkEntries: string;
@@ -216,6 +237,19 @@ export interface Messages {
       checkedProgress: string;
       checkedStatus: string;
       uncheckedStatus: string;
+      decisionContext: {
+        heading: string;
+        snapshotLabel: string;
+        originalQuestionLabel: string;
+        checklistLabel: string;
+        versionLabel: string;
+        capturedAtLabel: string;
+        checked: string;
+        unchecked: string;
+        optionalEvidenceLabel: string;
+        noOptionalEvidence: string;
+        immutableNotice: string;
+      };
       navigation: { review: string; list: string };
       notFound: { heading: string; description: string; listAction: string };
     };

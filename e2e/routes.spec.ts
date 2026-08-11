@@ -38,7 +38,7 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.onboarding, heading: ko.app.onboarding.hero.title },
   { path: APP_ROUTE_PATHS.appHome, heading: ko.app.home.hero.heading },
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
-  { path: APP_ROUTE_PATHS.journalList, heading: '기록' },
+  { path: APP_ROUTE_PATHS.journalList, heading: ko.app.journalList.title },
   { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
   {
     path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
@@ -352,6 +352,53 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
     ).toBeVisible();
+  });
+
+  test('journal detail survives reload and browser back without stale selection', async ({
+    page,
+  }) => {
+    const detailPath = buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID);
+
+    await page.goto(detailPath);
+    const detailUrl = page.url();
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
+    ).toHaveAttribute('href', detailPath);
+
+    await page.reload();
+    await expect(page).toHaveURL(detailUrl);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+    ).toBeVisible();
+    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
+    ).toHaveAttribute('href', detailPath);
+
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    await page.locator(`a[href="${detailPath}"]`).first().click();
+    await expect(page).toHaveURL(detailPath);
+    await page.goBack();
+    await expect(page).toHaveURL(APP_ROUTE_PATHS.journalList);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+    ).toBeVisible();
+    await expect(page.locator('.journal-workspace-list-pane a[aria-current="page"]')).toHaveCount(
+      0,
+    );
+    const detailPrompt = page.getByRole('heading', {
+      level: 2,
+      name: ko.app.journalWorkspace.detailPrompt.heading,
+    });
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      await expect(detailPrompt).toBeHidden();
+    } else {
+      await expect(detailPrompt).toBeVisible();
+    }
   });
 
   test('journal detail resolves an encoded existing id and builds a canonical review href', async ({
@@ -696,7 +743,12 @@ test.describe('Journal detail English locale', () => {
         name: en.app.journalDetail.investment.questionHeading,
       }),
     ).toBeVisible();
-    await expect(page.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    const questionSection = page
+      .getByRole('heading', {
+        name: en.app.journalDetail.investment.questionHeading,
+      })
+      .locator('..');
+    await expect(questionSection.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
   });
 });
 

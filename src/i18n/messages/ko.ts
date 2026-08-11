@@ -192,7 +192,7 @@ export const ko: Messages = {
       },
     },
     journalList: {
-      title: '기록',
+      title: '저널',
       filters: {
         groupLabel: '기록 유형 필터',
         all: '전체',
@@ -201,6 +201,7 @@ export const ko: Messages = {
       },
       emotionLabel: '감정',
       noEmotion: '감정 태그 없음',
+      reasoningLabel: '핵심 판단 이유',
       checkedProgress: '체크 완료 {{checked}}/{{total}}',
       countLabel: '{{count}}개의 기록',
       emptyAll: {
@@ -220,6 +221,14 @@ export const ko: Messages = {
         batteryCompanyC: '배터리 기업 C',
       },
     },
+    journalWorkspace: {
+      listPaneLabel: '저널 목록',
+      detailPaneLabel: '저널 상세',
+      detailPrompt: {
+        heading: '기록을 선택해 보세요',
+        description: '목록에서 기록을 선택하면 이곳에서 판단 이유와 당시 맥락을 확인할 수 있어요.',
+      },
+    },
     journalNew: {
       investment: '일지 저장 (투자 기록)',
       study: '공부 노트 저장',
@@ -227,6 +236,22 @@ export const ko: Messages = {
         investment: '투자 기록',
         study: '학습 기록',
         dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
+      },
+      decisionContext: {
+        title: '당시 검토 맥락도 함께 남기기',
+        switchLabel: 'Decision Context 포함',
+        enabledDescription: '질문과 확인 상태는 항상 남고, 선택한 근거만 함께 보관합니다.',
+        disabledDescription: '이 기록에는 당시 검토 맥락을 포함하지 않습니다.',
+        minimumLabel: '항상 포함 · 최소 기록',
+        originalQuestionLabel: '그때 내가 한 질문',
+        checklistLabel: '확인 항목과 그때의 확인 상태',
+        capturedAtLabel: '저장 시점',
+        checked: '확인함',
+        unchecked: '확인하지 않음',
+        optionalLabel: '선택 포함 · 확인된 사실',
+        optionalDescription: '함께 남길 사실만 선택할 수 있어요.',
+        immutableNotice:
+          '저장하는 순간 이 내용은 고정되고 이후 검토 결과가 바뀌어도 갱신되지 않습니다.',
       },
       form: {
         optional: '선택',
@@ -326,6 +351,20 @@ export const ko: Messages = {
       checkedProgress: '{{checked}} / {{total}}',
       checkedStatus: '확인함',
       uncheckedStatus: '확인하지 않음',
+      decisionContext: {
+        heading: '당시 검토 맥락',
+        snapshotLabel: '저장 당시 그대로 · 변경되지 않음',
+        originalQuestionLabel: '그때 내가 한 질문',
+        checklistLabel: '확인 항목과 그때의 확인 상태',
+        versionLabel: '체크리스트 버전',
+        capturedAtLabel: '저장 시점',
+        checked: '확인함',
+        unchecked: '확인하지 않음',
+        optionalEvidenceLabel: '함께 남긴 확인된 사실',
+        noOptionalEvidence: '선택해서 남긴 사실이 없습니다.',
+        immutableNotice:
+          '이 맥락은 저장 당시의 snapshot입니다. 이후 검토 결과나 체크리스트가 바뀌어도 갱신되지 않습니다.',
+      },
       navigation: {
         review: 'AI와 복기하기',
         list: '기록 목록으로 돌아가기',

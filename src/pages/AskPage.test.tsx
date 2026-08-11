@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { APP_ROUTE_PATHS, buildAppAskPath, buildAppJournalNewPath } from '@/constants/routes';
@@ -8,6 +8,13 @@ import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { getReviewFixture } from '@/mocks/reviewResult';
 import { AskPage } from '@/pages/AskPage';
+
+function DecisionContextStateProbe() {
+  const location = useLocation();
+  const context = (location.state as { decisionContext?: { checklist?: unknown[] } } | null)
+    ?.decisionContext;
+  return <span data-testid="decision-context-state">{context?.checklist?.length ?? ''}</span>;
+}
 
 function renderPage(path: string, locale: 'ko' | 'en' = 'ko', state?: { reviewFlow?: 'loading' }) {
   return render(
@@ -24,6 +31,7 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', state?: { reviewFl
     >
       <I18nProvider locale={locale}>
         <AskPage />
+        <DecisionContextStateProbe />
       </I18nProvider>
     </MemoryRouter>,
   );
@@ -211,6 +219,14 @@ describe('AskPage / Structured Review Result', () => {
     expect(
       screen.queryByRole('link', { name: /매수하기|매도하기|목표가|손절가/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it('hands the review snapshot to both Journal New CTA routes without changing the create contract', () => {
+    renderPage(buildAppAskPath('context handoff'));
+
+    fireEvent.click(screen.getByRole('link', { name: ko.app.ask.navigation.investmentRecord }));
+
+    expect(screen.getByTestId('decision-context-state')).toHaveTextContent('4');
   });
 
   it('renders the structured result in English', () => {

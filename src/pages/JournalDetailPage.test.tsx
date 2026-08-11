@@ -10,6 +10,7 @@ import {
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
+import { SAMPLE_DECISION_CONTEXT } from '@/mocks/decisionContext';
 import { JOURNAL_ENTRIES, type JournalEntry } from '@/mocks/journalEntries';
 import { JournalDetailPage } from '@/pages/JournalDetailPage';
 
@@ -45,6 +46,7 @@ describe('JournalDetailPage', () => {
       ko.app.journalDetail.investment.aiChecklistHeading,
       ko.app.journalDetail.investment.recordHeading,
       ko.app.journalDetail.investment.checkedItemsHeading,
+      ko.app.journalDetail.decisionContext.heading,
     ]);
   });
 
@@ -110,6 +112,33 @@ describe('JournalDetailPage', () => {
     const checklistSection = checklistHeading.closest('section')!;
     expect(within(checklistSection).getByRole('list').tagName).toBe('UL');
     expect(within(checklistSection).getAllByRole('listitem')).toHaveLength(4);
+  });
+
+  it('renders Decision Context as a read-only immutable snapshot with its minimum fields', () => {
+    renderPage(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
+    const snapshot = screen.getByTestId('decision-context-snapshot');
+
+    expect(
+      within(snapshot).getByRole('heading', {
+        level: 2,
+        name: ko.app.journalDetail.decisionContext.heading,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(snapshot).getByText(SAMPLE_DECISION_CONTEXT.originalQuestion),
+    ).toBeInTheDocument();
+    expect(
+      within(snapshot).getByText(SAMPLE_DECISION_CONTEXT.checklistVersion),
+    ).toBeInTheDocument();
+    expect(within(snapshot).getAllByRole('list')[0].querySelectorAll('li')).toHaveLength(4);
+    expect(
+      within(snapshot).getByText(ko.app.journalDetail.decisionContext.immutableNotice),
+    ).toBeInTheDocument();
+    expect(within(snapshot).getByRole('time')).toHaveAttribute(
+      'datetime',
+      '2026-08-10T14:32:00+09:00',
+    );
+    expect(snapshot.querySelector('button, input, textarea, select')).toBeNull();
   });
 
   it('links back to the journal list and to the encoded review route', () => {
@@ -181,7 +210,10 @@ describe('JournalDetailPage', () => {
         name: en.app.journalDetail.investment.questionHeading,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText('반도체 기업 A 요즘 어때?')).toBeInTheDocument();
+    expect(screen.getAllByText('반도체 기업 A 요즘 어때?')).toHaveLength(2);
+    expect(
+      screen.getByRole('heading', { name: en.app.journalDetail.decisionContext.heading }),
+    ).toBeInTheDocument();
   });
 
   it('renders HTML-like fixture content as inert text', () => {

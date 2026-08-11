@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
+import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
 import { getReviewFixture, localize } from '@/mocks/reviewResult';
 
 type ReviewPhase = 'loading' | 'result' | 'error';
@@ -160,6 +161,10 @@ function StructuredReviewResult({ question, partial }: { question: string; parti
     Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
   );
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+  const decisionContext = useMemo(
+    () => createDecisionContextSnapshot(question, fixture, checkedItems),
+    [checkedItems, fixture, question],
+  );
   const formattedGeneratedAt = formatReviewTime(fixture.generatedAt, locale);
   const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
 
@@ -386,6 +391,7 @@ function StructuredReviewResult({ question, partial }: { question: string; parti
             'h-auto min-h-12 text-center whitespace-normal',
           )}
           to={buildAppJournalNewPath('study')}
+          state={{ decisionContext }}
         >
           {t('app.ask.navigation.studyNote')}
         </Link>
@@ -395,6 +401,7 @@ function StructuredReviewResult({ question, partial }: { question: string; parti
             'h-auto min-h-12 text-center whitespace-normal',
           )}
           to={buildAppJournalNewPath('investment')}
+          state={{ decisionContext }}
         >
           {t('app.ask.navigation.investmentRecord')}
         </Link>
