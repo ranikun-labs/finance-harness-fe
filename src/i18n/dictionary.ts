@@ -198,16 +198,25 @@ export interface Messages {
         };
         investment: {
           assetName: { label: string; placeholder: string; helper: string };
-          occurredAt: { label: string; helper: string };
+          occurredAt: { label: string; helper: string; now: string; change: string };
           action: { label: string; helper: string };
           reasoning: { label: string; placeholder: string; helper: string; count: string };
           emotion: { label: string; helper: string; none: string };
         };
         study: {
           title: { label: string; placeholder: string; helper: string };
-          occurredAt: { label: string; helper: string };
+          occurredAt: { label: string; helper: string; now: string; change: string };
           keyContent: { label: string; placeholder: string; helper: string; count: string };
-          openQuestions: { label: string; placeholder: string; helper: string };
+          openQuestions: {
+            label: string;
+            placeholder: string;
+            helper: string;
+            add: string;
+            remove: string;
+            removeShort: string;
+            itemLabel: string;
+            count: string;
+          };
         };
       };
       invalidType: {

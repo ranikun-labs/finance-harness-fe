@@ -9,6 +9,7 @@ import {
 } from '@/constants/policy';
 import { JournalChoiceGroup } from '@/features/journal-new/components/JournalChoiceGroup';
 import { JournalFormField } from '@/features/journal-new/components/JournalFormField';
+import { JournalOccurredAtField } from '@/features/journal-new/components/JournalOccurredAtField';
 import { JournalValidationSummary } from '@/features/journal-new/components/JournalValidationSummary';
 import { JOURNAL_VALIDATION_MESSAGE_KEYS } from '@/features/journal-new/model/journalFormMessages';
 import type { InvestmentJournalFormState } from '@/features/journal-new/model/journalFormTypes';
@@ -18,15 +19,18 @@ import {
   type InvestmentJournalField,
 } from '@/features/journal-new/model/journalFormValidation';
 import { useTranslation } from '@/i18n/I18nContext';
+import { getCurrentLocalDateTimeInput } from '@/lib/date';
 
-const initialValues: InvestmentJournalFormState = {
-  type: 'investment',
-  assetName: '',
-  occurredAt: '',
-  action: '',
-  reasoning: '',
-  emotion: '',
-};
+function createInitialValues(): InvestmentJournalFormState {
+  return {
+    type: 'investment',
+    assetName: '',
+    occurredAt: getCurrentLocalDateTimeInput(),
+    action: '',
+    reasoning: '',
+    emotion: '',
+  };
+}
 type Props = {
   onDirtyChange: (dirty: boolean) => void;
   onValidSubmit?: (state: InvestmentJournalFormState) => void;
@@ -41,10 +45,12 @@ export function InvestmentJournalForm({
   submitState,
 }: Props) {
   const { t } = useTranslation();
+  const initialValues = useMemo(() => createInitialValues(), []);
   const [values, setValues] = useState(initialValues);
   const [touched, setTouched] = useState<Partial<Record<InvestmentJournalField, boolean>>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [occurredAtExpanded, setOccurredAtExpanded] = useState(false);
   const controls = useRef<Partial<Record<InvestmentJournalField, HTMLElement | null>>>({});
   const actionRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const emotionRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -55,7 +61,7 @@ export function InvestmentJournalForm({
       Object.entries(initialValues).some(
         ([key, value]) => values[key as keyof InvestmentJournalFormState] !== value,
       ),
-    [values],
+    [values, initialValues],
   );
   useEffect(() => {
     onDirtyChange(isDirty);
@@ -71,6 +77,11 @@ export function InvestmentJournalForm({
     onFormEdited?.();
   };
   const focus = (field: InvestmentJournalField) => {
+    if (field === 'occurredAt') {
+      setOccurredAtExpanded(true);
+      requestAnimationFrame(() => controls.current.occurredAt?.focus());
+      return;
+    }
     const node =
       field === 'action'
         ? actionRefs.current[RECORD_ACTIONS[0]]
@@ -165,31 +176,6 @@ export function InvestmentJournalForm({
           />
         )}
       </JournalFormField>
-      <JournalFormField
-        id="occurredAt"
-        label={labels.occurredAt}
-        helper={t('app.journalNew.form.investment.occurredAt.helper')}
-        error={
-          errorFor('occurredAt') &&
-          t(JOURNAL_VALIDATION_MESSAGE_KEYS[errorFor('occurredAt')!.messageKey])
-        }
-      >
-        {(aria) => (
-          <input
-            {...aria}
-            ref={(node) => {
-              controls.current.occurredAt = node;
-            }}
-            id="occurredAt"
-            type="datetime-local"
-            disabled={submitting}
-            value={values.occurredAt}
-            onBlur={() => setTouched((v) => ({ ...v, occurredAt: true }))}
-            onChange={(event) => update('occurredAt', event.target.value)}
-            className="border-input min-h-11 rounded-md border px-3 focus-visible:outline-2"
-          />
-        )}
-      </JournalFormField>
       <JournalChoiceGroup
         id="action"
         label={labels.action}
@@ -261,6 +247,27 @@ export function InvestmentJournalForm({
             {t('app.journalNew.form.investment.emotion.none')}
           </label>
         }
+      />
+      <JournalOccurredAtField
+        id="occurredAt"
+        label={labels.occurredAt}
+        helper={t('app.journalNew.form.investment.occurredAt.helper')}
+        nowLabel={t('app.journalNew.form.investment.occurredAt.now')}
+        changeLabel={t('app.journalNew.form.investment.occurredAt.change')}
+        value={values.occurredAt}
+        initialValue={initialValues.occurredAt}
+        expanded={occurredAtExpanded}
+        error={
+          errorFor('occurredAt') &&
+          t(JOURNAL_VALIDATION_MESSAGE_KEYS[errorFor('occurredAt')!.messageKey])
+        }
+        disabled={submitting}
+        inputRef={(node) => {
+          controls.current.occurredAt = node;
+        }}
+        onExpandedChange={setOccurredAtExpanded}
+        onBlur={() => setTouched((v) => ({ ...v, occurredAt: true }))}
+        onChange={(event) => update('occurredAt', event.target.value)}
       />
       {confirmed && !testFlow && (
         <p role="status" className="text-foreground text-sm">

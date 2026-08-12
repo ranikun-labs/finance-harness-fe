@@ -28,6 +28,8 @@ export type JournalValidationResult =
 const MAX_ASSET_OR_TITLE_LENGTH = 120;
 const MAX_REASONING_LENGTH = 4000;
 const MAX_KEY_CONTENT_LENGTH = 6000;
+export const MAX_OPEN_QUESTIONS = 10;
+export const MAX_OPEN_QUESTION_LENGTH = 500;
 const DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?$/;
 
 function error(
@@ -90,6 +92,18 @@ function addOccurredAtError(errors: JournalFieldError[], occurredAt: string): vo
   }
 }
 
+function addOpenQuestionsErrors(errors: JournalFieldError[], questions: readonly string[]): void {
+  if (
+    questions.length > MAX_OPEN_QUESTIONS ||
+    questions.some((question) => question.length > MAX_OPEN_QUESTION_LENGTH)
+  ) {
+    errors.push(error('openQuestions', 'max_length', 'journal.validation.max_length'));
+  }
+  if (questions.some((question) => question.trim() === '')) {
+    errors.push(error('openQuestions', 'required', 'journal.validation.required'));
+  }
+}
+
 function result(errors: JournalFieldError[]): JournalValidationResult {
   return errors.length === 0 ? { valid: true, errors: [] } : { valid: false, errors };
 }
@@ -127,6 +141,7 @@ export function validateStudyJournalForm(state: StudyJournalFormState): JournalV
   addOccurredAtError(errors, state.occurredAt);
   addRequiredError(errors, 'keyContent', state.keyContent);
   addMaximumLengthError(errors, 'keyContent', state.keyContent, MAX_KEY_CONTENT_LENGTH);
+  addOpenQuestionsErrors(errors, state.openQuestions);
 
   return result(errors);
 }
