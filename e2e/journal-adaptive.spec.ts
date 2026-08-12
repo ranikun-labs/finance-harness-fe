@@ -192,4 +192,55 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       }
     }
   });
+
+  test('exposes the UX-2 editor hierarchy, secondary time, and ordered question controls', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    for (const viewport of [
+      { width: 393, height: 852 },
+      { width: 1024, height: 1366 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(buildAppJournalNewPath('investment'));
+
+      const decisionForm = page.locator('main form');
+      await expect(decisionForm.getByLabel('대상')).toBeVisible();
+      await expect(
+        decisionForm.getByRole('group', { name: '어떤 판단을 내렸나요?' }),
+      ).toBeVisible();
+      await expect(decisionForm.getByLabel('왜 그렇게 판단했나요?')).toBeVisible();
+      await expect(
+        decisionForm.getByRole('group', { name: '판단 당시 상태는 어땠나요? (선택)' }),
+      ).toBeVisible();
+      await expect(decisionForm.getByRole('button', { name: '기록 시점 변경' })).toBeVisible();
+      await expect(decisionForm.locator('input#occurredAt')).toHaveCount(0);
+      await expect(decisionForm.getByRole('button', { name: /^판단 기록$/ })).toHaveCount(0);
+      await expect(decisionForm.getByRole('button', { name: /^학습 노트$/ })).toHaveCount(0);
+
+      await decisionForm.getByRole('button', { name: '기록 시점 변경' }).click();
+      await expect(decisionForm.locator('input#occurredAt')).toHaveAttribute(
+        'type',
+        'datetime-local',
+      );
+
+      await page.goto(buildAppJournalNewPath('study'));
+      const studyForm = page.locator('main form');
+      await expect(studyForm.getByLabel('무엇을 배웠나요?')).toBeVisible();
+      await expect(studyForm.getByLabel('핵심 정리')).toBeVisible();
+      await expect(studyForm.getByLabel(/더 확인할 것/)).toHaveCount(0);
+      await studyForm.getByRole('button', { name: '질문 추가' }).click();
+      const firstQuestion = studyForm.getByLabel(/더 확인할 것 확인할 질문 1/);
+      await firstQuestion.fill('같은 질문');
+      await studyForm.getByRole('button', { name: '질문 추가' }).click();
+      const secondQuestion = studyForm.getByLabel('확인할 질문 2');
+      await secondQuestion.fill('같은 질문');
+      await expect(firstQuestion).toHaveValue('같은 질문');
+      await expect(secondQuestion).toHaveValue('같은 질문');
+      await expect(secondQuestion).toHaveAttribute('maxlength', '500');
+      await studyForm.getByRole('button', { name: '질문 1 삭제' }).click();
+      await expect(studyForm.getByLabel('확인할 질문 1')).toHaveValue('같은 질문');
+    }
+  });
 });

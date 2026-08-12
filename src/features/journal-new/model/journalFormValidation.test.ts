@@ -109,6 +109,62 @@ describe('journal form validation contract', () => {
     expect(result.errors.map((error) => error.field)).toEqual(['title', 'keyContent']);
   });
 
+  it('accepts ten open questions and preserves their order and duplicates', () => {
+    const questions = [
+      '첫 질문',
+      '둘째 질문',
+      '첫 질문',
+      ...Array.from({ length: 7 }, (_, i) => `질문 ${i + 4}`),
+    ];
+    const result = validateStudyJournalForm({ ...validStudy, openQuestions: questions });
+
+    expect(result).toEqual({ valid: true, errors: [] });
+    expect(questions).toEqual([
+      '첫 질문',
+      '둘째 질문',
+      '첫 질문',
+      '질문 4',
+      '질문 5',
+      '질문 6',
+      '질문 7',
+      '질문 8',
+      '질문 9',
+      '질문 10',
+    ]);
+  });
+
+  it('rejects more than ten open questions', () => {
+    const result = validateStudyJournalForm({
+      ...validStudy,
+      openQuestions: Array.from({ length: 11 }, (_, index) => `질문 ${index + 1}`),
+    });
+
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ field: 'openQuestions', code: 'max_length' }),
+    );
+  });
+
+  it('rejects blank open question items without trimming the source state', () => {
+    const openQuestions = ['첫 질문', ' \t', '마지막 질문'];
+    const result = validateStudyJournalForm({ ...validStudy, openQuestions });
+
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ field: 'openQuestions', code: 'required' }),
+    );
+    expect(openQuestions).toEqual(['첫 질문', ' \t', '마지막 질문']);
+  });
+
+  it('rejects an open question item over 500 characters', () => {
+    const result = validateStudyJournalForm({
+      ...validStudy,
+      openQuestions: ['q'.repeat(501)],
+    });
+
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ field: 'openQuestions', code: 'max_length' }),
+    );
+  });
+
   it('accepts valid investment and study raw form states', () => {
     expect(validateInvestmentJournalForm(validInvestment)).toEqual({ valid: true, errors: [] });
     expect(validateStudyJournalForm(validStudy)).toEqual({ valid: true, errors: [] });
