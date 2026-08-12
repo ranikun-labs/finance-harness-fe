@@ -4,7 +4,11 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
-import { buildAppJournalDetailPath, buildAppJournalNewPath } from '@/constants/routes';
+import {
+  APP_ROUTE_PATHS,
+  buildAppJournalDetailPath,
+  buildAppJournalNewPath,
+} from '@/constants/routes';
 import {
   toInvestmentJournalCreateCommand,
   toStudyJournalCreateCommand,
@@ -66,6 +70,43 @@ export function JournalNewPage({ createPort }: Props) {
     };
   }, []);
 
+  if (!resolution.ok && resolution.reason === 'missing') {
+    return (
+      <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
+        <header className="flex flex-col gap-1.5">
+          <h1 className="text-foreground text-2xl font-bold tracking-tight">
+            {t('app.journalNew.entryChoice.heading')}
+          </h1>
+          <p className="text-muted-foreground text-sm">{t('app.journalNew.entryChoice.prompt')}</p>
+        </header>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Link
+            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            to={buildAppJournalNewPath('investment')}
+          >
+            <span className="text-base font-semibold">
+              {t('app.journalNew.entryChoice.investment.title')}
+            </span>
+            <span className="text-muted-foreground text-sm leading-relaxed">
+              {t('app.journalNew.entryChoice.investment.description')}
+            </span>
+          </Link>
+          <Link
+            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            to={buildAppJournalNewPath('study')}
+          >
+            <span className="text-base font-semibold">
+              {t('app.journalNew.entryChoice.study.title')}
+            </span>
+            <span className="text-muted-foreground text-sm leading-relaxed">
+              {t('app.journalNew.entryChoice.study.description')}
+            </span>
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   if (!resolution.ok) {
     return (
       <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
@@ -97,11 +138,10 @@ export function JournalNewPage({ createPort }: Props) {
     );
   }
 
-  const changeType = (type: 'investment' | 'study') => {
+  const goToEntryChoice = () => {
     if (submitState.status === 'submitting') return;
-    if (type === resolution.type) return;
-    if (!dirty || window.confirm(t('app.journalNew.typeSwitch.dirtyConfirm'))) {
-      navigate(buildAppJournalNewPath(type));
+    if (!dirty || window.confirm(t('app.journalNew.typeChange.dirtyConfirm'))) {
+      navigate(APP_ROUTE_PATHS.journalNew);
     }
   };
   const submit = (state: InvestmentJournalFormState | StudyJournalFormState) => {
@@ -147,30 +187,29 @@ export function JournalNewPage({ createPort }: Props) {
       });
   };
   const formEdited = () => dispatch({ type: 'formEdited' });
+  const typeCopy =
+    resolution.type === 'study'
+      ? {
+          title: t('app.journalNew.study'),
+          description: t('app.journalNew.entryChoice.study.description'),
+        }
+      : {
+          title: t('app.journalNew.investment'),
+          description: t('app.journalNew.entryChoice.investment.description'),
+        };
   return (
     <section className="flex min-h-full flex-col">
       <header className="p-4 pb-0">
-        <h1 className="text-foreground text-lg font-semibold">
-          {resolution.type === 'study' ? t('app.journalNew.study') : t('app.journalNew.investment')}
-        </h1>
-        <div className="bg-muted mt-4 flex gap-1 rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => changeType('investment')}
-            disabled={submitState.status === 'submitting'}
-            className="min-h-11 flex-1 rounded-md px-2 text-sm font-semibold focus-visible:outline-2"
-          >
-            {t('app.journalNew.typeSwitch.investment')}
-          </button>
-          <button
-            type="button"
-            onClick={() => changeType('study')}
-            disabled={submitState.status === 'submitting'}
-            className="min-h-11 flex-1 rounded-md px-2 text-sm font-semibold focus-visible:outline-2"
-          >
-            {t('app.journalNew.typeSwitch.study')}
-          </button>
-        </div>
+        <h1 className="text-foreground text-lg font-semibold">{typeCopy.title}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{typeCopy.description}</p>
+        <button
+          type="button"
+          onClick={goToEntryChoice}
+          disabled={submitState.status === 'submitting'}
+          className="text-primary focus-visible:ring-ring/50 mt-3 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+        >
+          {t('app.journalNew.typeChange.action')}
+        </button>
       </header>
       {decisionContext && (
         <DecisionContextCapturePanel

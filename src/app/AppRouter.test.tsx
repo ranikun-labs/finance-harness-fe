@@ -119,7 +119,9 @@ describe('AppRouter', () => {
 
     it('renders the journal new/detail/review screens', () => {
       renderAt(buildAppJournalNewPath('investment'));
-      expect(screen.getByRole('heading', { name: '일지 저장 (투자 기록)' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+      ).toBeInTheDocument();
     });
 
     it('renders app NotFound for an unknown /app sub-path', () => {
@@ -201,7 +203,7 @@ describe('AppRouter', () => {
     );
 
     it.each([
-      [buildAppJournalNewPath('investment'), '일지 저장 (투자 기록)'],
+      [buildAppJournalNewPath('investment'), ko.app.journalNew.investment],
       [`${APP_ROUTE_PATHS.journalNew}?type=unknown`, ko.app.journalNew.invalidType.heading],
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
       [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],

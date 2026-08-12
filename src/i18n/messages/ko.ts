@@ -26,7 +26,7 @@ export const ko: Messages = {
     localeSwitcher: { ariaLabel: '언어 선택' },
   },
   recordTags: {
-    entryType: { investment: '투자 기록', study: '공부 노트' },
+    entryType: { investment: '판단 기록', study: '학습 노트' },
     action: { interest: '관심', watching: '관망', buy: '매수', sell: '매도' },
     emotion: { FOMO: 'FOMO', 불안: '불안', 확신: '확신', 관망: '관망', 혼란: '혼란' },
   },
@@ -186,8 +186,8 @@ export const ko: Messages = {
         },
       },
       navigation: {
-        studyNote: '공부 노트',
-        investmentRecord: '투자 기록',
+        studyNote: '학습 노트',
+        investmentRecord: '판단 기록',
         askAgain: '추가 질문',
       },
     },
@@ -196,8 +196,8 @@ export const ko: Messages = {
       filters: {
         groupLabel: '기록 유형 필터',
         all: '전체',
-        investment: '투자 기록',
-        study: '공부 노트',
+        investment: '판단 기록',
+        study: '학습 노트',
       },
       emotionLabel: '감정',
       noEmotion: '감정 태그 없음',
@@ -230,11 +230,22 @@ export const ko: Messages = {
       },
     },
     journalNew: {
-      investment: '일지 저장 (투자 기록)',
-      study: '공부 노트 저장',
-      typeSwitch: {
-        investment: '투자 기록',
-        study: '학습 기록',
+      investment: '판단 기록',
+      study: '학습 노트',
+      entryChoice: {
+        heading: '새 기록',
+        prompt: '무엇을 남길까요?',
+        investment: {
+          title: '판단 기록',
+          description: '어떤 판단을 했고 왜 그렇게 생각했는지 기록합니다.',
+        },
+        study: {
+          title: '학습 노트',
+          description: '배운 내용과 더 확인할 질문을 정리합니다.',
+        },
+      },
+      typeChange: {
+        action: '기록 유형 변경',
         dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
       },
       decisionContext: {
@@ -320,9 +331,9 @@ export const ko: Messages = {
       },
       invalidType: {
         heading: '지원하지 않는 기록 유형이에요',
-        description: '투자 기록 또는 공부 노트 중에서 선택해주세요.',
-        investmentAction: '투자 기록 작성',
-        studyAction: '공부 노트 작성',
+        description: '판단 기록 또는 학습 노트 중에서 선택해주세요.',
+        investmentAction: '판단 기록 작성',
+        studyAction: '학습 노트 작성',
       },
     },
     journalDetail: {

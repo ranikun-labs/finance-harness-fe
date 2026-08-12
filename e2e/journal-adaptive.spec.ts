@@ -140,6 +140,28 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('shows the entry choice before a Journal New type is selected', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto(APP_ROUTE_PATHS.journalNew);
+
+    await expect(
+      page.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+    ).toBeVisible();
+    await expect(page.getByText(ko.app.journalNew.entryChoice.prompt)).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.investment.title) }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    await expect(
+      page.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    await expect(page.locator('input#assetName')).toHaveCount(0);
+    await expectSingleMain(page);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('keeps Journal New out of the List | Detail workspace at every approved viewport', async ({
     page,
   }, testInfo) => {

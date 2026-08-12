@@ -39,7 +39,7 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.appHome, heading: ko.app.home.hero.heading },
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: ko.app.journalList.title },
-  { path: buildAppJournalNewPath('investment'), heading: '일지 저장 (투자 기록)' },
+  { path: buildAppJournalNewPath('investment'), heading: ko.app.journalNew.investment },
   {
     path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
     heading: ko.app.journalDetail.headerTitle,
