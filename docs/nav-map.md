@@ -2,13 +2,16 @@
 
 > 현재 앱 화면·이동 관계의 canonical 문서다. 경로 문자열의 단일 원본은
 > [`src/constants/routes.ts`](../src/constants/routes.ts), 제품 정책은
-> [`docs/product-policy.md`](./product-policy.md)다.
+> [`finance-harness-docs/service-policy/finance-product-policy.md`](../../finance-harness-docs/service-policy/finance-product-policy.md),
+> Auth·Journal·Review UX Delta는
+> [`finance-ux-delta-auth-journal-handoff.md`](../../finance-harness-docs/service-policy/finance-ux-delta-auth-journal-handoff.md)가 소유한다.
+> 이 문서는 FE route/navigation implementation guidance다.
 
 ## Primary IA
 
 P0 Primary IA는 **검토 / 저널** 두 개다. `/app`은 Home dashboard가 아니라 검토 시작을
-소유하고, `/app/ask`는 검토 결과를 유지하는 내부 route다. 홈/질문/기록 3-tab은 사용하지
-않는다.
+소유하고, `/app/ask`는 검토 결과를 유지하는 내부 route다. legacy three-destination
+navigation은 current contract가 아니다.
 
 ```text
 검토 → 판단 기록 → 복기 → 다음 검토 개선
@@ -22,7 +25,7 @@ P0 Primary IA는 **검토 / 저널** 두 개다. `/app`은 Home dashboard가 아
 | 검토 결과 | `/app/ask?q={query}` | 구조화된 검토 결과의 내부 route |
 | 온보딩 | `/app/onboarding` | 첫 진입 안내 |
 | 저널 목록/빈 상태 | `/app/journal` | 판단·학습 기록 목록 |
-| 판단/학습 기록 작성 | `/app/journal/new?type=investment\|study` | 동일 route의 type 전환 form |
+| 판단 기록/학습 노트 작성 | `/app/journal/new?type=investment\|study` | Direct Entry에서 한 번 선택한 focused editor |
 | 저널 상세 | `/app/journal/:id` | 저장된 원래 기록의 읽기 전용 view |
 | 복기 | `/app/journal/:id/review` | 원래 기록을 바꾸지 않고 별도 복기를 작성하는 view |
 

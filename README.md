@@ -119,8 +119,13 @@ e2e/support/fixtureServer.ts  # provider-neutral SPA fallback 계약을 구현�
 
 ## 정책
 
-제품 정책 원본은 [`docs/product-policy.md`](./docs/product-policy.md) 하나다.
-`CLAUDE.md`/`AGENTS.md`는 이 문서를 참조만 한다.
+Finance Product/UX canonical source는 sibling repository의
+[`finance-product-policy.md`](../finance-harness-docs/service-policy/finance-product-policy.md)와
+[`finance-ux-delta-auth-journal-handoff.md`](../finance-harness-docs/service-policy/finance-ux-delta-auth-journal-handoff.md)다.
+이 FE repository의 [`docs/product-policy.md`](./docs/product-policy.md)는
+route/navigation/accessibility/protected-contract 구현 guard만 소유한다.
+현재 Primary IA는 **검토 / 저널**이며, `BOTTOM_TABS`가 그 두 destination의 navigation
+single source다. `CLAUDE.md`/`AGENTS.md`는 이 ownership과 FE-local guard를 따른다.
 
 ## 라우트
 
@@ -143,16 +148,16 @@ URL은 공개 웹(`/:locale/*`)과 웹앱(`/app/*`)으로 분리된다. 루트 `
 
 **웹앱 (`/app/*`)**
 
-| Path                      | 화면                | Primary navigation                       |
-| ------------------------- | ------------------- | ---------------------------------------- |
-| `/app`                    | 검토 시작           | Phone 하단 / Tablet·Desktop 상단·rail    |
-| `/app/ask`                | 검토 결과           | Phone context / Tablet·Desktop 상단·rail |
-| `/app/journal`            | 저널 목록           | Phone 하단 / Tablet·Desktop 상단·rail    |
-| `/app/onboarding`         | 온보딩              | 없음                                     |
-| `/app/journal/new`        | 판단·학습 기록 작성 | Phone context / Tablet·Desktop 상단·rail |
-| `/app/journal/:id`        | 저널 상세           | Phone context / Tablet·Desktop 상단·rail |
-| `/app/journal/:id/review` | 복기                | Phone context / Tablet·Desktop 상단·rail |
-| `/app/*`                  | App NotFound        | 없음                                     |
+| Path                      | 화면         | Primary navigation                       |
+| ------------------------- | ------------ | ---------------------------------------- |
+| `/app`                    | 검토 시작    | Phone 하단 / Tablet·Desktop 상단·rail    |
+| `/app/ask`                | 검토 결과    | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal`            | 저널 목록    | Phone 하단 / Tablet·Desktop 상단·rail    |
+| `/app/onboarding`         | 온보딩       | 없음                                     |
+| `/app/journal/new`        | 기록 작성    | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal/:id`        | 저널 상세    | Phone context / Tablet·Desktop 상단·rail |
+| `/app/journal/:id/review` | 복기         | Phone context / Tablet·Desktop 상단·rail |
+| `/app/*`                  | App NotFound | 없음                                     |
 
 ## Pre-render + 배포 시 SPA Fallback 계약 (STEP 6)
 

@@ -1,8 +1,11 @@
-# 제품 정책 (Product Policy)
+# Finance FE Implementation Policy Guard
 
-> 이 문서는 이 레포의 제품 정책 **원본(canonical source)**이다. `CLAUDE.md`와
-> `AGENTS.md`는 이 문서를 참조만 하며 내용을 복사하지 않는다. 새 화면이나 기능을
-> 구현하기 전에 반드시 이 문서를 먼저 확인할 것.
+> Product/UX의 canonical source는 sibling repository인
+> [`finance-harness-docs/service-policy/finance-product-policy.md`](../../finance-harness-docs/service-policy/finance-product-policy.md)와
+> [`finance-ux-delta-auth-journal-handoff.md`](../../finance-harness-docs/service-policy/finance-ux-delta-auth-journal-handoff.md)다.
+> 이 문서는 Finance FE의 route/navigation/accessibility/protected-contract 구현 guard만
+> 소유하며 Product/UX 결정을 새로 만들거나 canonical contract를 복제하지 않는다.
+> 새 화면이나 기능을 구현하기 전에 canonical source와 이 guard를 함께 확인한다.
 
 ## Primary IA
 
@@ -11,8 +14,8 @@
 - 검토 (`/app` = 검토 시작, `/app/ask` = 내부 검토 결과)
 - 저널
 
-Home dashboard와 홈/질문/기록 3-tab은 P0 Primary Surface로 복원하지 않는다. 사용자의
-핵심 흐름은 `검토 → 판단 기록 → 복기 → 다음 검토 개선`이다.
+Home dashboard와 legacy three-destination navigation은 P0 Primary Surface로 복원하지
+않는다. 사용자의 핵심 흐름은 `검토 → 판단 기록 → 복기 → 다음 검토 개선`이다.
 
 ## Adaptive Surface
 

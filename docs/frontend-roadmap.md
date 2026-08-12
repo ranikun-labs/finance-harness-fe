@@ -5,23 +5,24 @@
 > 해당 단계에서 무엇을 해도 되고 무엇을 아직 하면 안 되는지 · 완료 판정 기준은
 > 무엇인지 · 무엇이 선행되어야 하는지를 판단하기 위한 문서다.
 >
-> 제품 정책 단일 원본은 [`docs/product-policy.md`](./product-policy.md), 화면·라우트
-> 기준 문서는 [`docs/nav-map.md`](./nav-map.md), 라우트 정의 단일 소스는
-> [`src/constants/routes.ts`](../src/constants/routes.ts)다. 이 문서는 그 원본들을
-> **복제하지 않고 참조**한다.
+> Product/UX canonical source는 sibling repository의
+> [`finance-product-policy.md`](../../finance-harness-docs/service-policy/finance-product-policy.md)와
+> [`finance-ux-delta-auth-journal-handoff.md`](../../finance-harness-docs/service-policy/finance-ux-delta-auth-journal-handoff.md)다.
+> FE-local route/implementation guidance는 [`docs/nav-map.md`](./nav-map.md)가 소유하고,
+> 라우트 정의 단일 소스는 [`src/constants/routes.ts`](../src/constants/routes.ts)다.
+> 이 문서는 canonical contract를 **복제하지 않고 참조**한다.
 
 ---
 
 ## 결론 먼저 — 현재 위치
 
-- **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)와 RPL-68 Slice 1–4 Adaptive P0 frontend contract
-- **현재:** **RPL-68 Adaptive P0 Slice 5 Final Regression Hardening** — 승인된
-  검토/저널 Primary IA와 adaptive contract를 Slice 1–4에서 구현했고, 현재는
-  Slice 1–4 통합 회귀와 최종 검증 증거를 확인한다.
+- **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)와 RPL-68 Slice 1–5 Adaptive P0 frontend contract, Final Review, master merge
+- **현재:** **Auth / Journal Creation / Review → Journal UX Delta** — 승인된 Product UX 방향의
+  canonicalization 및 re-review 단계다. 아직 FE code implementation 단계가 아니다.
 - **아직 안 함:** Finance Backend/API integration, production persistence와 Production Create activation, Decision Context/Retrospective backend persistence, 실제 AI/RAG runtime, Auth, 결제·개인화·실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** RPL-68 Slice 5 최종 검증·Independent Review를 완료한 뒤, 승인된
-  backend/API/Persistence/Auth 계약이 마련될 때까지 STEP 11 범위를 시작하지 않는다.
-  RPL-48 HTTP adapter와 Create contract는 보호하며 Production Create는 계속 OFF다.
+- **다음 행동:** UX Delta canonicalization/re-review를 완료한 뒤, 필요한
+  backend/API/Persistence/Auth owner contract가 마련될 때에만 FE implementation slice를
+  시작한다. RPL-48 HTTP adapter와 Create contract는 보호하며 Production Create는 계속 OFF다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -83,7 +84,7 @@ React 기반 하나의 프론트엔드 코드베이스
 > Create activation, Decision Context/Retrospective backend persistence, 실제 AI/RAG
 > runtime, Journal 저장·수정·삭제의 production data flow, 공개/secondary 실제 UI(현재
 > 일부 placeholder), 네이티브 프로젝트 생성, 출시 설정, hosting provider 확정.
-> Adaptive P0 app UI와 ko/en app i18n은 위 표와 RPL-68 Slice 1–4에서 완료됐다.
+> Adaptive P0 app UI와 ko/en app i18n은 위 표와 RPL-68 Slice 1–5에서 완료됐다.
 
 ---
 
@@ -135,7 +136,7 @@ React 기반 하나의 프론트엔드 코드베이스
 
 | STEP | 단계명                  | 목적                                        | 주요 산출물                      | 선행 조건                | 완료 조건                       | 상태                                                                                                                    | 예상 PR 경계            | 이번 단계에서 하지 않는 것 |
 | ---- | ----------------------- | ------------------------------------------- | -------------------------------- | ------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | `docs/product-policy.md`         | —                        | 정책 단일 원본 존재             | ✅                                                                                                                      | 정책 PR                 | 화면 구현                  |
+| 0    | 제품·정책 정리          | 제품 정의·금지 UI·톤 확정                   | 중앙 policy/FE guard             | —                        | source pointer 존재             | ✅                                                                                                                      | 정책 PR                 | 화면 구현                  |
 | 1    | 네비게이션 설계         | 화면 이동 관계 확정                         | `docs/nav-map.md`, `BOTTOM_TABS` | STEP 0                   | 화면·라우트 기준 문서 존재      | ✅                                                                                                                      | 문서 PR                 | 실제 라우팅 코드           |
 | 2    | 와이어프레임 확보       | 화면 시안 확보                              | Claude Design 와이어프레임(외부) | STEP 1                   | 시안 확보                       | ✅                                                                                                                      | (외부 산출물)           | 저장소 반입                |
 | 3    | React 스캐폴딩          | 빌드·라우팅·레이아웃 골격                   | 현재 저장소(PR #1)               | STEP 1                   | `verify` green, 스켈레톤 라우팅 | ✅                                                                                                                      | PR #1                   | 실 UI·API                  |
@@ -235,11 +236,11 @@ React 기반 하나의 프론트엔드 코드베이스
 
 각 주요 단계는 아래 Gate를 만족해야 다음으로 넘어간다.
 
-- [ ] **Source of truth** — 라우트=`src/constants/routes.ts`, 하단 탭=`src/constants/navigation.ts`, 정책=`docs/product-policy.md`, 화면·라우트=`docs/nav-map.md`. 경로 문자열을 컴포넌트에 하드코딩하지 않는다.
+- [ ] **Source of truth** — 라우트=`src/constants/routes.ts`, 하단 탭=`src/constants/navigation.ts`, Product/UX 정책=`finance-harness-docs/service-policy`, FE guard=`docs/product-policy.md`, 화면·라우트=`docs/nav-map.md`. 경로 문자열을 컴포넌트에 하드코딩하지 않는다.
 - [ ] **테스트** — 관련 Vitest/Playwright 추가·통과(`pnpm test` / `pnpm test:e2e`).
 - [ ] **접근성** — 모바일 스크롤·포커스·라벨 회귀 유지.
 - [ ] **모바일·데스크톱** — 두 폭 모두에서 깨지지 않음.
-- [ ] **정책 준수** — 금지 UI 없음, 감정 태그 5개 고정, Ask 답변 확인형 톤([`docs/product-policy.md`](./product-policy.md)).
+- [ ] **정책 준수** — 금지 UI 없음, 감정 태그 5개 고정, Ask 답변 확인형 톤(central Product/UX policy와 [`docs/product-policy.md`](./product-policy.md) FE guard).
 - [ ] **빌드** — `pnpm build` 성공(타입체크 포함).
 - [ ] **PR 독립 리뷰** — 한 PR이 단일 책임으로 독립 리뷰 가능.
 - [ ] **working tree clean** — 커밋 후 잔여 변경 없음.
@@ -255,7 +256,8 @@ React 기반 하나의 프론트엔드 코드베이스
 - 다음 단계의 필요성을 **현재 PR에 선행 구현하지 않는다.**
 - 신규 요구가 생기면 기존 단계에 억지로 끼우지 않고, **로드맵과 PR 경계를 먼저 갱신**한다.
 - 실제 **사용자·운영 데이터가 없는 최적화는 후순위**다.
-- 제품 정책은 **`docs/product-policy.md`가 단일 원본**이다(여기에 복제하지 않는다).
+- Product/UX 정책은 central `finance-harness-docs/service-policy`가 소유하고, FE 문서는
+  구현 guard와 pointer만 유지한다(여기에 canonical contract를 복제하지 않는다).
 - 화면과 라우트 계약이 바뀌면 **관련 문서(`nav-map.md`, `routes.ts` 등)를 함께 갱신**한다.
 
 ---
@@ -286,12 +288,20 @@ React 기반 하나의 프론트엔드 코드베이스
 - Slice 2: Review Surface + Structured Review Result — 완료
 - Slice 3: Journal Adaptive Presentation + Decision Context Presentation — 완료
 - Slice 4: Retrospective Presentation + Validation/Error/Retry State — 완료
-- Slice 5: Final Regression Hardening — 현재
+- Slice 5: Final Regression Hardening — 완료
+- Final Independent Review 및 master merge — 완료 (`095938478ae356096695fc3e4bffda8ba250f449`)
 
 RPL-68에서는 RPL-48의 `JournalCreateCommand`, `JournalCreateRequest`,
 `HttpJournalCreatePort`, `POST /finance/journals` mapping과 Production Create OFF 상태를
 변경하지 않는다. Decision Context와 Retrospective는 해당 Slice에서 presentation,
 fixture, view-model까지만 다루며 persistence contract를 만들지 않는다.
+
+## Auth / Journal / Review UX Delta (approved direction; pre-implementation canonicalization)
+
+- Canonical Product/UX source: [`finance-ux-delta-auth-journal-handoff`](../../finance-harness-docs/service-policy/finance-ux-delta-auth-journal-handoff.md)
+- Review verdict: `UX_DELTA_APPROVED_FOR_FE_CANONICALIZATION`
+- FE status: approved Product UX direction, canonicalization/re-review 단계; no code implementation is authorized by this documentation delta.
+- Proposed FE slices and deferred Auth/Backend/DTO boundaries are owned by the canonical UX document; this roadmap tracks only implementation sequencing after the required owner contracts are available.
 
 ## 이후 STEP 11
 
@@ -389,6 +399,7 @@ fixture, view-model까지만 다루며 persistence contract를 만들지 않는�
 
 **다음 실행 항목:**
 
-1. [x] RPL-68 Slice 1–4 구현·review 완료
-2. [ ] RPL-68 Slice 5 final regression hardening·Independent Review
-3. [ ] RPL-48 transport와 Production Create OFF 상태를 각 Slice에서 회귀 검증
+1. [x] RPL-68 Slice 1–5 구현·review·master merge 완료 (historical)
+2. [ ] Auth / Journal Creation / Review → Journal UX Delta canonicalization·re-review
+3. [ ] 필요한 owner contract 확보 후 UX-1–UX-5 FE implementation proposal 검토
+4. [ ] RPL-48 transport와 Production Create OFF 상태를 후속 Slice에서 회귀 검증

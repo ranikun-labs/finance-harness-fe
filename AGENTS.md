@@ -4,9 +4,12 @@
 
 ## 제품 정책
 
-이 프로젝트의 제품 정책 원본은 **`docs/product-policy.md`** 하나뿐이다. 작업을
-시작하기 전에 반드시 그 문서를 읽고 준수한다. 여기에 정책 전문을 복사하지 않는다 —
-항상 원본 문서를 읽을 것.
+Finance Product/UX의 canonical source는 sibling repository인
+`finance-harness-docs`의 `service-policy/finance-product-policy.md`와 관련
+canonical UX contract다. 이 FE repository의 `docs/product-policy.md`는
+route/navigation/accessibility/protected-contract 구현 guard만 소유하며 Product/UX
+계약을 재정의하지 않는다. 작업 시작 전에 해당 canonical 문서와 이 FE-local guard를
+함께 읽고 준수한다. 정책 전문을 복사하지 않는다.
 
 ## 라우팅 / 네비게이션
 
