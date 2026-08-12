@@ -32,6 +32,67 @@ async function expectBottomNavigation(page: Page, visible: boolean) {
 }
 
 test.describe('Journal adaptive List | Detail presentation', () => {
+  test('Review handoff keeps Decision fields user-owned and makes Learning draft editable', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'handoff flow runs on Chromium');
+    await page.setViewportSize({ width: 393, height: 852 });
+    const question = '검토에서 기록으로 이어가기';
+
+    await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}`);
+    await expect(page.getByRole('heading', { name: ko.app.ask.handoff.heading })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }),
+    ).toBeVisible();
+
+    await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }).click();
+    await expect(page).toHaveURL(buildAppJournalNewPath('investment'));
+    await expect(page.getByLabel('대상')).toHaveValue('');
+    await expect(page.getByLabel('왜 그렇게 판단했나요?')).toHaveValue('');
+    await expect(page.getByLabel('관심')).not.toBeChecked();
+
+    await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}`);
+    await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }).click();
+    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
+    await expect(page.getByLabel('무엇을 배웠나요?')).toHaveValue(question);
+    await expect(page.getByLabel('핵심 정리')).not.toHaveValue('');
+    const firstQuestion = page.getByLabel(/더 확인할 것 확인할 질문 1/);
+    await expect(firstQuestion).toHaveValue(/.+/);
+    await firstQuestion.fill('내가 고친 질문');
+    await expect(firstQuestion).toHaveValue('내가 고친 질문');
+    await page.getByRole('button', { name: '질문 1 삭제' }).click();
+    await expect(page.getByLabel(/더 확인할 것 확인할 질문 1/)).toHaveCount(1);
+  });
+
+  test('Review handoff returns to the exact partial variant without a Journal history loop', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'handoff flow runs on Chromium');
+    await page.setViewportSize({ width: 393, height: 852 });
+    const question = '부분 검토를 다시 확인하기';
+    const reviewUrl = `${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}&fixture=partial`;
+
+    await page.goto(reviewUrl);
+    await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }).click();
+    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
+    await page.getByLabel('무엇을 배웠나요?').fill('부분 초안을 수정함');
+    page.once('dialog', (dialog) => dialog.dismiss());
+    await page.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }).click();
+    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }).click();
+
+    await expect(page).toHaveURL(reviewUrl);
+    await expect(
+      page.getByRole('heading', { name: ko.app.ask.structured.partialTitle }),
+    ).toBeVisible();
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/app\/journal\/new/);
+  });
+
   test('keeps Journal List and Detail single-column on Phone', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
     await page.setViewportSize({ width: 393, height: 852 });
@@ -132,7 +193,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
     await page.setViewportSize({ width: 393, height: 852 });
     await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent('context handoff')}`);
-    await page.getByRole('link', { name: ko.app.ask.navigation.investmentRecord }).click();
+    await page.getByRole('link', { name: ko.app.ask.handoff.investment.title }).click();
     await expect(page).toHaveURL(buildAppJournalNewPath('investment'));
     await expect(page.getByTestId('decision-context-capture')).toBeVisible();
     await expect(page.getByTestId('primary-navigation')).toBeHidden();

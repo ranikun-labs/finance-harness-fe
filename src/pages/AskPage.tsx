@@ -10,7 +10,7 @@ import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
 import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
-import { getReviewFixture, localize } from '@/mocks/reviewResult';
+import { createReviewJournalHandoff, getReviewFixture, localize } from '@/mocks/reviewResult';
 
 type ReviewPhase = 'loading' | 'result' | 'error';
 
@@ -154,7 +154,15 @@ function ReviewError({
   );
 }
 
-function StructuredReviewResult({ question, partial }: { question: string; partial: boolean }) {
+function StructuredReviewResult({
+  question,
+  partial,
+  returnTarget,
+}: {
+  question: string;
+  partial: boolean;
+  returnTarget: string;
+}) {
   const { locale, t } = useTranslation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
@@ -381,31 +389,64 @@ function StructuredReviewResult({ question, partial }: { question: string; parti
         </PolicyNotice>
       </section>
 
-      <nav
-        className="grid min-w-0 gap-2 sm:grid-cols-2"
-        aria-label={t('app.ask.structured.resultTitle')}
+      <section
+        aria-labelledby="review-handoff-heading"
+        className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-xl border p-5"
       >
-        <Link
-          className={cn(
-            buttonVariants({ variant: 'outline' }),
-            'h-auto min-h-12 text-center whitespace-normal',
-          )}
-          to={buildAppJournalNewPath('study')}
-          state={{ decisionContext }}
-        >
-          {t('app.ask.navigation.studyNote')}
-        </Link>
-        <Link
-          className={cn(
-            buttonVariants({ variant: 'default' }),
-            'h-auto min-h-12 text-center whitespace-normal',
-          )}
-          to={buildAppJournalNewPath('investment')}
-          state={{ decisionContext }}
-        >
-          {t('app.ask.navigation.investmentRecord')}
-        </Link>
-      </nav>
+        <header className="flex min-w-0 flex-col gap-1">
+          <h2 id="review-handoff-heading" className="text-base font-bold">
+            {t('app.ask.handoff.heading')}
+          </h2>
+          <p className="text-muted-foreground text-sm leading-6">
+            {t('app.ask.handoff.description')}
+          </p>
+        </header>
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <Link
+            className={cn(
+              buttonVariants({ variant: 'outline' }),
+              'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
+            )}
+            to={buildAppJournalNewPath('investment')}
+            state={{
+              reviewHandoff: createReviewJournalHandoff(
+                'investment',
+                question,
+                fixture,
+                locale,
+                returnTarget,
+              ),
+              decisionContext,
+            }}
+          >
+            <span className="text-base font-semibold">{t('app.ask.handoff.investment.title')}</span>
+            <span className="text-muted-foreground text-sm leading-5">
+              {t('app.ask.handoff.investment.description')}
+            </span>
+          </Link>
+          <Link
+            className={cn(
+              buttonVariants({ variant: 'default' }),
+              'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
+            )}
+            to={buildAppJournalNewPath('study')}
+            state={{
+              reviewHandoff: createReviewJournalHandoff(
+                'study',
+                question,
+                fixture,
+                locale,
+                returnTarget,
+              ),
+            }}
+          >
+            <span className="text-base font-semibold">{t('app.ask.handoff.study.title')}</span>
+            <span className="text-primary-foreground/80 text-sm leading-5">
+              {t('app.ask.handoff.study.description')}
+            </span>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
@@ -417,6 +458,7 @@ export function AskPage() {
   const { t } = useTranslation();
   const question = (searchParams.get('q') ?? '').trim();
   const requestedFixture = searchParams.get('fixture');
+  const returnTarget = `${location.pathname}${location.search}${location.hash}`;
   const locationState = location.state as ReviewLocationState | null;
   const [phase, setPhase] = useState<ReviewPhase>(() => {
     if (requestedFixture === 'error') return 'error';
@@ -480,7 +522,7 @@ export function AskPage() {
       ) : phase === 'error' ? (
         <ReviewError question={question} onRetry={retryReview} onEdit={editQuestion} />
       ) : (
-        <StructuredReviewResult question={question} partial={partial} />
+        <StructuredReviewResult question={question} partial={partial} returnTarget={returnTarget} />
       )}
     </div>
   );

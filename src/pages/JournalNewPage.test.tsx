@@ -13,6 +13,7 @@ import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT, type DecisionContextSnapshot } from '@/mocks/decisionContext';
+import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
 import { JournalNewPage } from '@/pages/JournalNewPage';
 
 function DetailDestination() {
@@ -30,12 +31,17 @@ function DetailDestination() {
   );
 }
 
+function ReviewDestination() {
+  const location = useLocation();
+  return <output data-testid="review-destination">review:{location.search}</output>;
+}
+
 function renderPage(
   path: string,
   locale: 'ko' | 'en' = 'ko',
   createPort?: JournalCreatePort,
   strict = false,
-  state?: { decisionContext?: DecisionContextSnapshot },
+  state?: { decisionContext?: DecisionContextSnapshot; reviewHandoff?: ReviewJournalHandoff },
 ) {
   const [pathname, search = ''] = path.split('?');
   const routes = (
@@ -45,6 +51,7 @@ function renderPage(
         element={<JournalNewPage createPort={createPort} />}
       />
       <Route path={APP_ROUTE_PATHS.journalDetail} element={<DetailDestination />} />
+      <Route path={APP_ROUTE_PATHS.ask} element={<ReviewDestination />} />
     </Routes>
   );
   return render(
@@ -101,6 +108,146 @@ function deferredResult() {
 }
 
 describe('JournalNewPage', () => {
+  it('keeps decision handoff fields user-owned and does not prefill action, reasoning, or emotion', () => {
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'investment',
+      originalQuestion: '이 대상의 판단을 어떻게 기록할까?',
+      returnTarget: '/app/ask?q=이+대상의+판단을+어떻게+기록할까?',
+    };
+    renderPage(buildAppJournalNewPath('investment'), 'ko', undefined, false, { reviewHandoff });
+
+    expect(
+      screen.getByRole('heading', { name: ko.app.journalNew.handoff.originHeading }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(reviewHandoff.originalQuestion)).toBeInTheDocument();
+    expect(screen.getByLabelText('대상')).toHaveValue('');
+    expect(screen.getByLabelText('왜 그렇게 판단했나요?')).toHaveValue('');
+    expect(screen.getByLabelText('관심')).not.toBeChecked();
+    expect(screen.getByLabelText('FOMO')).not.toBeChecked();
+  });
+
+  it('hydrates an editable learning draft from visible review content only', () => {
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '실적을 어떻게 복기할까?',
+      returnTarget: '/app/ask?q=실적을+어떻게+복기할까?',
+      learningDraft: {
+        title: '실적을 어떻게 복기할까?',
+        keyContent: '화면에 표시된 검토 안내',
+        openQuestions: ['확인할 질문 하나', '확인할 질문 하나'],
+      },
+    };
+    renderPage(buildAppJournalNewPath('study'), 'ko', undefined, false, { reviewHandoff });
+
+    expect(screen.getByText(ko.app.journalNew.handoff.learningDraftNotice)).toBeInTheDocument();
+    const draft = reviewHandoff.learningDraft;
+    expect(draft).toBeDefined();
+    const title = screen.getByLabelText('무엇을 배웠나요?');
+    const keyContent = screen.getByLabelText('핵심 정리');
+    expect(title).toHaveValue(draft!.title);
+    expect(keyContent).toHaveValue(draft!.keyContent);
+
+    const firstQuestion = screen.getByLabelText(/더 확인할 것 확인할 질문 1/);
+    expect(firstQuestion).toHaveValue('확인할 질문 하나');
+    fireEvent.change(title, { target: { value: '내가 고친 학습 제목' } });
+    fireEvent.click(screen.getByRole('button', { name: '질문 1 삭제' }));
+    expect(title).toHaveValue('내가 고친 학습 제목');
+    expect(screen.getByLabelText(/더 확인할 것 확인할 질문 1/)).toHaveValue('확인할 질문 하나');
+  });
+
+  it('returns a partial Review handoff target and keeps dirty warning behavior', () => {
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '다시 검토할 질문',
+      returnTarget: '/app/ask?q=다시+검토할+질문&fixture=partial',
+      learningDraft: { title: '초안', keyContent: '내용', openQuestions: [] },
+    };
+    const confirmSpy = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    renderPage(buildAppJournalNewPath('study'), 'ko', undefined, false, { reviewHandoff });
+
+    fireEvent.change(screen.getByLabelText('무엇을 배웠나요?'), {
+      target: { value: '수정한 제목' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
+    expect(confirmSpy).toHaveBeenCalledTimes(2);
+    const reviewDestination = screen.getByTestId('review-destination').textContent ?? '';
+    const search = new URLSearchParams(reviewDestination.replace(/^review:/, ''));
+    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('fixture')).toBe('partial');
+    confirmSpy.mockRestore();
+  });
+
+  it('returns a pristine full Review handoff to its exact originating URL', () => {
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '전체 결과를 다시 볼 질문',
+      returnTarget: '/app/ask?q=전체+결과를+다시+볼+질문',
+      learningDraft: { title: '초안', keyContent: '내용', openQuestions: [] },
+    };
+    renderPage(buildAppJournalNewPath('study'), 'ko', undefined, false, { reviewHandoff });
+
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
+
+    const search = new URLSearchParams(
+      (screen.getByTestId('review-destination').textContent ?? '').replace(/^review:/, ''),
+    );
+    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('fixture')).toBeNull();
+  });
+
+  it('returns a pristine partial Review to its exact originating variant', () => {
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '부분 결과를 다시 볼 질문',
+      returnTarget: '/app/ask?q=부분+결과를+다시+볼+질문&fixture=partial',
+      learningDraft: { title: '초안', keyContent: '내용', openQuestions: ['확인할 것'] },
+    };
+    renderPage(buildAppJournalNewPath('study'), 'ko', undefined, false, { reviewHandoff });
+
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
+
+    const search = new URLSearchParams(
+      (screen.getByTestId('review-destination').textContent ?? '').replace(/^review:/, ''),
+    );
+    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('fixture')).toBe('partial');
+  });
+
+  it('allows a Review-derived Learning Draft to be fully discarded without saving', () => {
+    const create: JournalCreatePort['create'] = vi.fn().mockResolvedValue({
+      journalId: 'must-not-save',
+    });
+    const reviewHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '완전히 버릴 초안',
+      returnTarget: '/app/ask?q=완전히+버릴+초안',
+      learningDraft: {
+        title: '자동으로 채워진 제목',
+        keyContent: '화면에 표시된 학습 핵심',
+        openQuestions: ['첫 질문', '두 번째 질문'],
+      },
+    };
+    renderPage(buildAppJournalNewPath('study'), 'ko', { create }, false, { reviewHandoff });
+
+    fireEvent.change(screen.getByLabelText('무엇을 배웠나요?'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('핵심 정리'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: '질문 1 삭제' }));
+    fireEvent.click(screen.getByRole('button', { name: '질문 1 삭제' }));
+
+    expect(screen.getByLabelText('무엇을 배웠나요?')).toHaveValue('');
+    expect(screen.getByLabelText('핵심 정리')).toHaveValue('');
+    expect(screen.getByText('0 / 10')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /질문 \d+ 삭제/ })).not.toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('presents the immutable minimum Decision Context and keeps optional evidence separate', () => {
     renderPage(buildAppJournalNewPath('investment'), 'ko', undefined, false, {
       decisionContext: SAMPLE_DECISION_CONTEXT,

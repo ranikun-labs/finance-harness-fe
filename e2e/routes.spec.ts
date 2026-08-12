@@ -627,11 +627,11 @@ test.describe('Ask empty and result states', () => {
     const question = 'CTA 경로 확인';
     const cases = [
       {
-        label: ko.app.ask.navigation.studyNote,
+        label: ko.app.ask.handoff.study.title,
         target: buildAppJournalNewPath('study'),
       },
       {
-        label: ko.app.ask.navigation.investmentRecord,
+        label: ko.app.ask.handoff.investment.title,
         target: buildAppJournalNewPath('investment'),
       },
     ];

@@ -185,6 +185,18 @@ export const ko: Messages = {
           counterEvidence: '내 판단을 바꿀 수 있는 반대 근거는 무엇인가?',
         },
       },
+      handoff: {
+        heading: '기록으로 이어가기',
+        description: '검토한 내용을 바탕으로 내 기록을 직접 작성해보세요.',
+        investment: {
+          title: '판단 기록 남기기',
+          description: '검토한 내용을 바탕으로 내 판단과 이유를 기록합니다.',
+        },
+        study: {
+          title: '학습 노트로 남기기',
+          description: '검토에서 배운 내용과 더 확인할 질문을 정리합니다.',
+        },
+      },
       navigation: {
         studyNote: '학습 노트',
         investmentRecord: '판단 기록',
@@ -247,6 +259,16 @@ export const ko: Messages = {
       typeChange: {
         action: '기록 유형 변경',
         dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
+      },
+      handoff: {
+        originHeading: '검토에서 이어진 기록',
+        originDescription:
+          '검토 결과를 참고해 내 기록을 작성합니다. 저장 전 자유롭게 수정하거나 지울 수 있어요.',
+        questionLabel: '검토한 질문',
+        learningDraftNotice:
+          '검토 결과에서 가져온 초안입니다. 저장하기 전에 자유롭게 수정하거나 지울 수 있습니다.',
+        returnToReview: '검토 결과로 돌아가기',
+        returnToReviewDirtyConfirm: '작성 중인 내용이 사라집니다. 검토 결과로 돌아갈까요?',
       },
       decisionContext: {
         title: '당시 검토 맥락도 함께 남기기',

@@ -185,7 +185,7 @@ test.describe('모바일 세로 스크롤 계약', () => {
     expect(scrollContract.mainScrollable).toBe(true);
     expect(scrollContract.overflowingAncestorCount).toBe(0);
 
-    const lastCta = page.getByRole('link', { name: ko.app.ask.navigation.investmentRecord });
+    const lastCta = page.getByRole('link', { name: ko.app.ask.handoff.investment.title });
     await lastCta.scrollIntoViewIfNeeded();
     const ctaBox = (await lastCta.boundingBox())!;
     await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
@@ -405,7 +405,7 @@ test.describe('Ask 영어 모바일 레이아웃', () => {
 
     await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
     await expect(
-      page.getByRole('link', { name: en.app.ask.navigation.investmentRecord }),
+      page.getByRole('link', { name: en.app.ask.handoff.investment.title }),
     ).toBeVisible();
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
