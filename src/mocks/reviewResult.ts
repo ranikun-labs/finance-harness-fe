@@ -44,6 +44,23 @@ export interface ReviewResultFixture {
   reviewedAt: string;
 }
 
+/**
+ * Review → Journal handoff에서만 사용하는 표시용 navigation/view-model입니다.
+ * Review API DTO나 persistence payload가 아니며, 사용자가 Editor에서 수정·삭제할
+ * 수 있는 초안의 초기값만 담습니다.
+ */
+export interface ReviewJournalHandoff {
+  kind: 'investment' | 'study';
+  originalQuestion: string;
+  /** Current FE-local originating Review pathname + search/hash. */
+  returnTarget: string;
+  learningDraft?: {
+    title: string;
+    keyContent: string;
+    openQuestions: string[];
+  };
+}
+
 const checklist: ReviewChecklistFixture[] = [
   {
     id: 'business-context',
@@ -154,6 +171,35 @@ export function getReviewFixture(partial = false): ReviewResultFixture {
     inferences: partial ? [] : REVIEW_RESULT_FIXTURE.inferences,
     unknowns: partial ? partialUnknowns : REVIEW_RESULT_FIXTURE.unknowns,
     checklist: REVIEW_RESULT_FIXTURE.checklist.map((item) => ({ ...item })),
+  };
+}
+
+/**
+ * 현재 화면에 실제로 표시된 Review fixture만 Journal Editor 초안으로 연결합니다.
+ * 해석은 사실로 승격하지 않고 사용자가 편집할 keyContent 초안으로만 전달하며,
+ * unknown은 질문 초안으로 유지합니다. 자동 저장이나 전체 결과 복제는 하지 않습니다.
+ */
+export function createReviewJournalHandoff(
+  kind: ReviewJournalHandoff['kind'],
+  question: string,
+  fixture: ReviewResultFixture,
+  locale: Locale,
+  returnTarget: string,
+): ReviewJournalHandoff {
+  const originalQuestion = question.trim();
+  if (kind === 'investment') {
+    return { kind, originalQuestion, returnTarget };
+  }
+
+  return {
+    kind,
+    originalQuestion,
+    returnTarget,
+    learningDraft: {
+      title: originalQuestion,
+      keyContent: fixture.inferences.map((item) => localize(item.text, locale)).join('\n\n'),
+      openQuestions: fixture.unknowns.map((item) => localize(item.text, locale)),
+    },
   };
 }
 

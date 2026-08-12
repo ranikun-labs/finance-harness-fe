@@ -188,6 +188,18 @@ export const en: Messages = {
           counterEvidence: 'What counter-evidence could change my view?',
         },
       },
+      handoff: {
+        heading: 'Continue to a record',
+        description: 'Use what you reviewed to write your own record.',
+        investment: {
+          title: 'Leave a decision record',
+          description: 'Record your own judgment and reasoning from the review.',
+        },
+        study: {
+          title: 'Leave a learning note',
+          description: 'Organize what you learned and what you want to check next.',
+        },
+      },
       navigation: {
         studyNote: 'Learning note',
         investmentRecord: 'Decision record',
@@ -250,6 +262,16 @@ export const en: Messages = {
       typeChange: {
         action: 'Change record type',
         dirtyConfirm: 'Your current entries will be discarded. Change record type?',
+      },
+      handoff: {
+        originHeading: 'Record continued from review',
+        originDescription:
+          'Use the review as reference while writing your own record. You can edit or remove anything before saving.',
+        questionLabel: 'Reviewed question',
+        learningDraftNotice:
+          'This draft came from the review result. Edit or remove anything before saving.',
+        returnToReview: 'Back to review result',
+        returnToReviewDirtyConfirm: 'Your draft will be discarded. Return to the review result?',
       },
       decisionContext: {
         title: 'Keep the review context at the time',

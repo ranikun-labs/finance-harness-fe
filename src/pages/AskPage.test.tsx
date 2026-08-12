@@ -209,12 +209,11 @@ describe('AskPage / Structured Review Result', () => {
   it('keeps the approved presentation CTA seam on existing Journal New routes', () => {
     renderPage(buildAppAskPath('CTA 확인'));
 
-    expect(screen.getByRole('link', { name: ko.app.ask.navigation.studyNote })).toHaveAttribute(
-      'href',
-      buildAppJournalNewPath('study'),
-    );
     expect(
-      screen.getByRole('link', { name: ko.app.ask.navigation.investmentRecord }),
+      screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    expect(
+      screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
     ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
     expect(
       screen.queryByRole('link', { name: /매수하기|매도하기|목표가|손절가/ }),
@@ -224,7 +223,9 @@ describe('AskPage / Structured Review Result', () => {
   it('hands the review snapshot to both Journal New CTA routes without changing the create contract', () => {
     renderPage(buildAppAskPath('context handoff'));
 
-    fireEvent.click(screen.getByRole('link', { name: ko.app.ask.navigation.investmentRecord }));
+    fireEvent.click(
+      screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
+    );
 
     expect(screen.getByTestId('decision-context-state')).toHaveTextContent('4');
   });

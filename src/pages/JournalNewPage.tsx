@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
@@ -25,6 +25,7 @@ import {
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
 import { useTranslation } from '@/i18n/I18nContext';
 import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
+import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
 
 /**
  * `type` 쿼리 값('investment'/'study')은 도메인 식별자이며 번역 대상이 아니다 —
@@ -34,16 +35,19 @@ type Props = { createPort?: JournalCreatePort };
 
 interface JournalNewLocationState {
   decisionContext?: DecisionContextSnapshot;
+  reviewHandoff?: ReviewJournalHandoff;
 }
 
 export function JournalNewPage({ createPort }: Props) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const { t } = useTranslation();
   const resolution = resolveJournalType(searchParams);
   const locationState = location.state as JournalNewLocationState | null;
   const incomingDecisionContext = locationState?.decisionContext;
+  const reviewHandoff = locationState?.reviewHandoff;
   const [decisionContext, setDecisionContext] = useState<DecisionContextSnapshot | undefined>(() =>
     incomingDecisionContext
       ? {
@@ -144,6 +148,16 @@ export function JournalNewPage({ createPort }: Props) {
       navigate(APP_ROUTE_PATHS.journalNew);
     }
   };
+  const returnToReview = () => {
+    if (!reviewHandoff || submitState.status === 'submitting') return;
+    if (!dirty || window.confirm(t('app.journalNew.handoff.returnToReviewDirtyConfirm'))) {
+      if (navigationType === 'PUSH') {
+        navigate(-1);
+      } else {
+        navigate(reviewHandoff.returnTarget, { replace: true });
+      }
+    }
+  };
   const submit = (state: InvestmentJournalFormState | StudyJournalFormState) => {
     if (!createPort || inFlightRef.current) return;
 
@@ -202,6 +216,38 @@ export function JournalNewPage({ createPort }: Props) {
       <header className="p-4 pb-0">
         <h1 className="text-foreground text-lg font-semibold">{typeCopy.title}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{typeCopy.description}</p>
+        {reviewHandoff && (
+          <section
+            aria-labelledby="review-handoff-origin-heading"
+            className="border-border bg-muted/30 mt-4 flex flex-col gap-2 rounded-xl border p-4"
+          >
+            <h2 id="review-handoff-origin-heading" className="text-sm font-semibold">
+              {t('app.journalNew.handoff.originHeading')}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-5">
+              {t('app.journalNew.handoff.originDescription')}
+            </p>
+            <p className="text-muted-foreground text-xs font-semibold">
+              {t('app.journalNew.handoff.questionLabel')}
+            </p>
+            <p className="text-sm leading-6 [overflow-wrap:anywhere]">
+              {reviewHandoff.originalQuestion}
+            </p>
+            {reviewHandoff.kind === 'study' && (
+              <p role="status" className="text-muted-foreground text-sm leading-5">
+                {t('app.journalNew.handoff.learningDraftNotice')}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={returnToReview}
+              disabled={submitState.status === 'submitting'}
+              className="text-primary focus-visible:ring-ring/50 min-h-11 self-start rounded-md text-left text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+            >
+              {t('app.journalNew.handoff.returnToReview')}
+            </button>
+          </section>
+        )}
         <button
           type="button"
           onClick={goToEntryChoice}
@@ -241,6 +287,7 @@ export function JournalNewPage({ createPort }: Props) {
         />
       ) : (
         <StudyJournalForm
+          initialValues={reviewHandoff?.learningDraft}
           onDirtyChange={setDirty}
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}

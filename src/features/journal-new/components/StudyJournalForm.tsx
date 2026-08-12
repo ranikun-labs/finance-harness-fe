@@ -14,33 +14,41 @@ import {
 } from '@/features/journal-new/model/journalFormValidation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { getCurrentLocalDateTimeInput } from '@/lib/date';
-function createInitialValues(): StudyJournalFormState {
-  return {
-    type: 'study',
-    title: '',
-    occurredAt: getCurrentLocalDateTimeInput(),
-    keyContent: '',
-    openQuestions: [],
-  };
-}
-function areStringArraysEqual(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-type Props = {
+
+type StudyJournalFormProps = {
+  initialValues?: Partial<Pick<StudyJournalFormState, 'title' | 'keyContent' | 'openQuestions'>>;
   onDirtyChange: (dirty: boolean) => void;
   onValidSubmit?: (state: StudyJournalFormState) => void;
   onFormEdited?: () => void;
   submitState?: JournalSubmitState;
 };
 
+function createInitialValues(
+  prefill?: StudyJournalFormProps['initialValues'],
+): StudyJournalFormState {
+  return {
+    type: 'study',
+    title: prefill?.title ?? '',
+    occurredAt: getCurrentLocalDateTimeInput(),
+    keyContent: prefill?.keyContent ?? '',
+    openQuestions: prefill?.openQuestions ? [...prefill.openQuestions] : [],
+  };
+}
+function areStringArraysEqual(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
 export function StudyJournalForm({
+  initialValues: initialValuePrefill,
   onDirtyChange,
   onValidSubmit,
   onFormEdited,
   submitState,
-}: Props) {
+}: StudyJournalFormProps) {
   const { t } = useTranslation();
-  const initialValues = useMemo(() => createInitialValues(), []);
+  const initialValues = useMemo(
+    () => createInitialValues(initialValuePrefill),
+    [initialValuePrefill],
+  );
   const [values, setValues] = useState(initialValues);
   const [touched, setTouched] = useState<Partial<Record<StudyJournalField, boolean>>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);

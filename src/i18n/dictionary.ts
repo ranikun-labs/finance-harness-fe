@@ -136,6 +136,12 @@ export interface Messages {
           counterEvidence: string;
         };
       };
+      handoff: {
+        heading: string;
+        description: string;
+        investment: { title: string; description: string };
+        study: { title: string; description: string };
+      };
       navigation: { studyNote: string; investmentRecord: string; askAgain: string };
     };
     journalList: {
@@ -165,6 +171,14 @@ export interface Messages {
         study: { title: string; description: string };
       };
       typeChange: { action: string; dirtyConfirm: string };
+      handoff: {
+        originHeading: string;
+        originDescription: string;
+        questionLabel: string;
+        learningDraftNotice: string;
+        returnToReview: string;
+        returnToReviewDirtyConfirm: string;
+      };
       decisionContext: {
         title: string;
         switchLabel: string;
