@@ -80,7 +80,7 @@ describe('JournalList', () => {
     it('marks the "all" filter button as pressed initially', () => {
       renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
       expect(screen.getByRole('button', { name: '전체' })).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByRole('button', { name: '투자 기록' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: '판단 기록' })).toHaveAttribute(
         'aria-pressed',
         'false',
       );
@@ -88,11 +88,11 @@ describe('JournalList', () => {
 
     it('filters to investment entries only', () => {
       renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
 
       expect(screen.getByText('반도체 기업 A')).toBeInTheDocument();
       expect(screen.queryByText('월말 리밸런싱')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '투자 기록' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: '판단 기록' })).toHaveAttribute(
         'aria-pressed',
         'true',
       );
@@ -101,7 +101,7 @@ describe('JournalList', () => {
 
     it('filters to study entries only', () => {
       renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '공부 노트' }));
+      fireEvent.click(screen.getByRole('button', { name: '학습 노트' }));
 
       expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
       expect(screen.queryByText('반도체 기업 A')).not.toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('JournalList', () => {
   describe('필터 결과 없음', () => {
     it('shows the filter-empty message (not the empty-all message) and a reset button', () => {
       renderList([STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
 
       expect(screen.getByText('해당 유형의 기록이 아직 없어요')).toBeInTheDocument();
       expect(screen.queryByText('아직 저장된 기록이 없어요')).not.toBeInTheDocument();
@@ -120,7 +120,7 @@ describe('JournalList', () => {
 
     it('resets the filter back to "all" via the reset action', () => {
       renderList([STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
       expect(screen.getByText('해당 유형의 기록이 아직 없어요')).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: '전체 보기' }));

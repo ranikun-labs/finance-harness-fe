@@ -187,14 +187,62 @@ describe('JournalNewPage', () => {
   it.each([
     [buildAppJournalNewPath('investment'), ko.app.journalNew.investment],
     [buildAppJournalNewPath('study'), ko.app.journalNew.study],
-  ])('keeps the valid %s placeholder title', (path, title) => {
+  ])('renders the focused %s editor title', (path, title) => {
     renderPage(path);
 
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /^판단 기록$/,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /^학습 노트$/,
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('presents a focused entry choice when no journal type is selected', () => {
+    renderPage(APP_ROUTE_PATHS.journalNew);
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.entryChoice.heading }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(ko.app.journalNew.entryChoice.prompt)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: new RegExp(ko.app.journalNew.entryChoice.investment.title),
+      }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    expect(
+      screen.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    expect(screen.queryByLabelText('종목')).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('link', {
+        name: new RegExp(ko.app.journalNew.entryChoice.investment.title),
+      }),
+    );
+    expect(screen.getByRole('heading', { name: ko.app.journalNew.investment })).toBeInTheDocument();
+  });
+
+  it('opens only the learning-note editor when that entry choice is selected', () => {
+    renderPage(APP_ROUTE_PATHS.journalNew);
+    fireEvent.click(
+      screen.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
+    );
+
+    expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+    expect(screen.getByLabelText('배운 주제')).toBeInTheDocument();
+    expect(screen.queryByLabelText('종목')).not.toBeInTheDocument();
   });
 
   it.each([
-    `${APP_ROUTE_PATHS.journalNew}`,
     `${APP_ROUTE_PATHS.journalNew}?type=unknown`,
     `${APP_ROUTE_PATHS.journalNew}?type=investment&type=study`,
   ])('renders local invalid-type guidance for %s', (path) => {
@@ -219,6 +267,23 @@ describe('JournalNewPage', () => {
       screen.getByRole('heading', { level: 1, name: en.app.journalNew.invalidType.heading }),
     ).toBeInTheDocument();
     expect(screen.getByText(en.app.journalNew.invalidType.description)).toBeInTheDocument();
+  });
+
+  it('uses English entry-choice naming when the app locale is English', () => {
+    renderPage(APP_ROUTE_PATHS.journalNew, 'en');
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: en.app.journalNew.entryChoice.heading }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(en.app.journalNew.entryChoice.prompt)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: new RegExp(en.app.journalNew.entryChoice.investment.title),
+      }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    expect(
+      screen.getByRole('link', { name: new RegExp(en.app.journalNew.entryChoice.study.title) }),
+    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
   });
 
   it('validates investment entries in place without saving or navigation', async () => {
@@ -255,21 +320,21 @@ describe('JournalNewPage', () => {
     expect(textarea).toHaveValue('질문 하나\n질문 둘');
   });
 
-  it('returns to pristine and switches type without confirm after open questions are fully cleared', () => {
+  it('returns to pristine and opens entry choice without confirm after open questions are cleared', () => {
     const confirmSpy = vi.spyOn(window, 'confirm');
     renderPage(buildAppJournalNewPath('study'));
     const textarea = screen.getByLabelText(/다음에 확인할 것/);
     fireEvent.change(textarea, { target: { value: '질문 하나' } });
     fireEvent.change(textarea, { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.investment }),
+      screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
     confirmSpy.mockRestore();
   });
 
-  it('keeps the current form on cancel and switches type on confirm', () => {
+  it('keeps the current form on cancel and opens entry choice on confirm', () => {
     const confirmSpy = vi
       .spyOn(window, 'confirm')
       .mockReturnValueOnce(false)
@@ -277,17 +342,17 @@ describe('JournalNewPage', () => {
     renderPage(buildAppJournalNewPath('study'));
     fireEvent.change(screen.getByLabelText(/다음에 확인할 것/), { target: { value: '질문 하나' } });
 
-    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
     expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(
       screen.getByRole('heading', { level: 1, name: ko.app.journalNew.study }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/다음에 확인할 것/)).toHaveValue('질문 하나');
 
-    fireEvent.click(screen.getByRole('button', { name: '투자 기록' }));
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
     expect(confirmSpy).toHaveBeenCalledTimes(2);
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.journalNew.investment }),
+      screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
 
     confirmSpy.mockRestore();
@@ -366,8 +431,7 @@ describe('JournalNewPage', () => {
     expect(create).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText('종목')).toHaveValue(' 기업 A ');
     expect(screen.getByLabelText('종목')).toBeEnabled();
-    expect(screen.getByRole('button', { name: '투자 기록' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '학습 기록' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action })).toBeEnabled();
     expect(screen.getByRole('button', { name: '다시 시도' })).toBeEnabled();
 
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
@@ -406,7 +470,7 @@ describe('JournalNewPage', () => {
     );
   });
 
-  it('disables every submit control and type switch while an injected create is pending', () => {
+  it('disables every submit control and type-change action while an injected create is pending', () => {
     const pending = deferredResult();
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create: () => pending.promise });
     fillInvestmentForm();
@@ -416,8 +480,9 @@ describe('JournalNewPage', () => {
     expect(screen.getByLabelText('종목')).toBeDisabled();
     expect(screen.getByLabelText('관심')).toBeDisabled();
     expect(screen.getByLabelText('판단 이유')).toBeDisabled();
-    expect(screen.getByRole('button', { name: '투자 기록' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '학습 기록' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }),
+    ).toBeDisabled();
     expect(screen.getByRole('button', { name: '테스트 제출 중' })).toBeDisabled();
   });
 
@@ -453,13 +518,13 @@ describe('JournalNewPage', () => {
     await waitFor(() => expect(screen.getByLabelText('종목')).toHaveFocus());
   });
 
-  it('blocks type switching without calling the dirty confirmation while submitting', () => {
+  it('blocks type-change navigation without calling the dirty confirmation while submitting', () => {
     const pending = deferredResult();
     const confirmSpy = vi.spyOn(window, 'confirm');
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create: () => pending.promise });
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
-    fireEvent.click(screen.getByRole('button', { name: '학습 기록' }));
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: ko.app.journalNew.investment })).toBeInTheDocument();

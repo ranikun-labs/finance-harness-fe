@@ -73,7 +73,7 @@ describe('JournalRecordCard', () => {
 
   it('renders entryType and action badges for investment entries', () => {
     renderCard(INVESTMENT_ENTRY);
-    expect(screen.getByText('투자 기록')).toBeInTheDocument();
+    expect(screen.getByText('판단 기록')).toBeInTheDocument();
     expect(screen.getByText('관심')).toBeInTheDocument();
   });
 

@@ -21,7 +21,7 @@ export const en: Messages = {
     localeSwitcher: { ariaLabel: 'Language' },
   },
   recordTags: {
-    entryType: { investment: 'Investment', study: 'Study' },
+    entryType: { investment: 'Decision record', study: 'Learning note' },
     action: { interest: 'Interested', watching: 'Watching', buy: 'Bought', sell: 'Sold' },
     emotion: {
       FOMO: 'FOMO',
@@ -189,8 +189,8 @@ export const en: Messages = {
         },
       },
       navigation: {
-        studyNote: 'Study note',
-        investmentRecord: 'Investment record',
+        studyNote: 'Learning note',
+        investmentRecord: 'Decision record',
         askAgain: 'Ask another question',
       },
     },
@@ -199,8 +199,8 @@ export const en: Messages = {
       filters: {
         groupLabel: 'Filter by record type',
         all: 'All',
-        investment: 'Investment',
-        study: 'Study',
+        investment: 'Decision record',
+        study: 'Learning note',
       },
       emotionLabel: 'Emotion',
       noEmotion: 'No emotion tag',
@@ -233,11 +233,22 @@ export const en: Messages = {
       },
     },
     journalNew: {
-      investment: 'Save Entry (Investment)',
-      study: 'Save Study Note',
-      typeSwitch: {
-        investment: 'Investment record',
-        study: 'Study record',
+      investment: 'Decision record',
+      study: 'Learning note',
+      entryChoice: {
+        heading: 'New record',
+        prompt: 'What would you like to leave behind?',
+        investment: {
+          title: 'Decision record',
+          description: 'Record what you decided and why.',
+        },
+        study: {
+          title: 'Learning note',
+          description: 'Organize what you learned and what to check next.',
+        },
+      },
+      typeChange: {
+        action: 'Change record type',
         dirtyConfirm: 'Your current entries will be discarded. Change record type?',
       },
       decisionContext: {
@@ -324,9 +335,9 @@ export const en: Messages = {
       },
       invalidType: {
         heading: 'Unsupported record type',
-        description: 'Choose either an investment record or a study note.',
-        investmentAction: 'Create investment record',
-        studyAction: 'Create study note',
+        description: 'Choose either a decision record or a learning note.',
+        investmentAction: 'Create decision record',
+        studyAction: 'Create learning note',
       },
     },
     journalDetail: {

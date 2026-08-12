@@ -158,7 +158,13 @@ export interface Messages {
     journalNew: {
       investment: string;
       study: string;
-      typeSwitch: { investment: string; study: string; dirtyConfirm: string };
+      entryChoice: {
+        heading: string;
+        prompt: string;
+        investment: { title: string; description: string };
+        study: { title: string; description: string };
+      };
+      typeChange: { action: string; dirtyConfirm: string };
       decisionContext: {
         title: string;
         switchLabel: string;
