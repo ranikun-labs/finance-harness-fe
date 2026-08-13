@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { JournalWorkspace } from '@/components/journal/JournalWorkspace';
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
+import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
 import { cn } from '@/lib/utils';
 
 /** 본문(스크롤 가능)과 하단 탭바(고정)의 스크롤 책임을 분리하는 레이아웃. */
@@ -35,7 +36,16 @@ export function TabLayout() {
           )}
           data-testid="adaptive-content-host"
         >
-          {isJournalWorkspace ? <JournalWorkspace /> : <Outlet />}
+          {isJournalWorkspace ? (
+            <AuthRequiredSurface
+              fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
+              fallbackCancelLabel="auth.entry.cancelReviewStart"
+            >
+              <JournalWorkspace />
+            </AuthRequiredSurface>
+          ) : (
+            <Outlet />
+          )}
         </div>
       </main>
       <BottomNavigation />

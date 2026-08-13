@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { BOTTOM_TABS } from '@/constants/navigation';
 import {
   APP_ROUTE_PATHS,
+  AUTH_ROUTE_PATHS,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
   buildAppJournalReviewPath,
@@ -62,6 +63,15 @@ const PUBLIC_SCREENS: Array<{ path: string; heading: RegExp }> = [
 ];
 
 test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
+  test('renders provider-neutral Auth Entry without the app navigation shell', async ({ page }) => {
+    await page.goto(AUTH_ROUTE_PATHS.entry);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+    ).toBeVisible();
+    await expect(page.getByTestId('auth-entry')).toBeVisible();
+    await expect(page.getByRole('navigation')).toHaveCount(0);
+  });
+
   test('/ redirects to the default locale public home', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(new RegExp(`${buildLocaleHomePath('ko')}$`));
@@ -621,9 +631,7 @@ test.describe('Ask empty and result states', () => {
     ).toBeVisible();
   });
 
-  test('navigates through the two result CTAs without transferring the question', async ({
-    page,
-  }) => {
+  test('keeps the two result CTAs behind the inert production Auth Entry', async ({ page }) => {
     const question = 'CTA 경로 확인';
     const cases = [
       {
@@ -639,9 +647,12 @@ test.describe('Ask empty and result states', () => {
     for (const item of cases) {
       await page.goto(buildAppAskPath(question));
       await page.getByRole('link', { name: item.label }).click();
-      const url = new URL(page.url());
-      expect(`${url.pathname}${url.search}`).toBe(item.target);
-      expect(url.searchParams.has('q')).toBe(false);
+      await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+      await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
+      await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+      await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+      await page.goto(item.target);
+      await expect(page.getByRole('heading', { name: /판단 기록|학습 노트/ })).toBeVisible();
     }
   });
 

@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'rea
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  AUTH_ROUTE_PATHS,
   APP_ROUTE_PATHS,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
@@ -14,6 +15,7 @@ import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT, type DecisionContextSnapshot } from '@/mocks/decisionContext';
 import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
+import { AuthEntryPage } from '@/pages/AuthEntryPage';
 import { JournalNewPage } from '@/pages/JournalNewPage';
 
 function DetailDestination() {
@@ -52,6 +54,10 @@ function renderPage(
       />
       <Route path={APP_ROUTE_PATHS.journalDetail} element={<DetailDestination />} />
       <Route path={APP_ROUTE_PATHS.ask} element={<ReviewDestination />} />
+      <Route
+        path={AUTH_ROUTE_PATHS.entry}
+        element={<AuthEntryPage driver={{ resolve: async () => 'authenticated' }} />}
+      />
     </Routes>
   );
   return render(
@@ -92,6 +98,12 @@ function fillStudyForm() {
     target: { value: '2026-08-03T09:30' },
   });
 }
+
+const REVIEW_DECISION_HANDOFF: ReviewJournalHandoff = {
+  kind: 'investment',
+  originalQuestion: SAMPLE_DECISION_CONTEXT.originalQuestion,
+  returnTarget: '/app/ask?q=context',
+};
 
 function deferredResult() {
   let resolve: (result: { journalId: string }) => void;
@@ -251,6 +263,7 @@ describe('JournalNewPage', () => {
   it('presents the immutable minimum Decision Context and keeps optional evidence separate', () => {
     renderPage(buildAppJournalNewPath('investment'), 'ko', undefined, false, {
       decisionContext: SAMPLE_DECISION_CONTEXT,
+      reviewHandoff: REVIEW_DECISION_HANDOFF,
     });
 
     const panel = screen.getByTestId('decision-context-capture');
@@ -290,10 +303,17 @@ describe('JournalNewPage', () => {
     expect(within(panel).getAllByRole('checkbox')[0]).not.toBeChecked();
   });
 
+  it('does not expose Decision Context on a direct Decision Entry route', () => {
+    renderPage(buildAppJournalNewPath('investment'), 'ko');
+
+    expect(screen.queryByTestId('decision-context-capture')).not.toBeInTheDocument();
+  });
+
   it('keeps the create command unchanged while carrying minimum context on ON navigation', async () => {
     const create = vi.fn().mockResolvedValue({ journalId: 'context-on' });
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create }, false, {
       decisionContext: SAMPLE_DECISION_CONTEXT,
+      reviewHandoff: REVIEW_DECISION_HANDOFF,
     });
 
     const panel = screen.getByTestId('decision-context-capture');
@@ -325,6 +345,7 @@ describe('JournalNewPage', () => {
     const create = vi.fn().mockResolvedValue({ journalId: 'context-off' });
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create }, false, {
       decisionContext: SAMPLE_DECISION_CONTEXT,
+      reviewHandoff: REVIEW_DECISION_HANDOFF,
     });
 
     fireEvent.click(screen.getByRole('switch'));
@@ -382,7 +403,7 @@ describe('JournalNewPage', () => {
     expect(occurredAt).toHaveValue('2025-01-02T03:04');
   });
 
-  it('presents a focused entry choice when no journal type is selected', () => {
+  it('presents a focused entry choice when no journal type is selected', async () => {
     renderPage(APP_ROUTE_PATHS.journalNew);
 
     expect(
@@ -393,10 +414,10 @@ describe('JournalNewPage', () => {
       screen.getByRole('link', {
         name: new RegExp(ko.app.journalNew.entryChoice.investment.title),
       }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(
       screen.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(screen.queryByLabelText('대상')).not.toBeInTheDocument();
 
     fireEvent.click(
@@ -404,16 +425,24 @@ describe('JournalNewPage', () => {
         name: new RegExp(ko.app.journalNew.entryChoice.investment.title),
       }),
     );
-    expect(screen.getByRole('heading', { name: ko.app.journalNew.investment })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('auth-provider-cta'));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+      ).toBeInTheDocument(),
+    );
   });
 
-  it('opens only the learning-note editor when that entry choice is selected', () => {
+  it('opens only the learning-note editor when that entry choice is selected', async () => {
     renderPage(APP_ROUTE_PATHS.journalNew);
     fireEvent.click(
       screen.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
     );
+    fireEvent.click(screen.getByTestId('auth-provider-cta'));
 
-    expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument(),
+    );
     expect(screen.getByLabelText('무엇을 배웠나요?')).toBeInTheDocument();
     expect(screen.queryByLabelText('대상')).not.toBeInTheDocument();
   });
@@ -430,10 +459,26 @@ describe('JournalNewPage', () => {
     expect(screen.getByText(ko.app.journalNew.invalidType.description)).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: ko.app.journalNew.invalidType.investmentAction }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(
       screen.getByRole('link', { name: ko.app.journalNew.invalidType.studyAction }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
+  });
+
+  it('normalizes invalid-type auth cancellation to the Journal Entry Choice', async () => {
+    renderPage(`${APP_ROUTE_PATHS.journalNew}?type=unknown`);
+
+    fireEvent.click(
+      screen.getByRole('link', { name: ko.app.journalNew.invalidType.investmentAction }),
+    );
+    expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.cancelEntry }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+      ).toBeInTheDocument(),
+    );
   });
 
   it('uses English invalid-type copy when the app locale is English', () => {
@@ -456,10 +501,10 @@ describe('JournalNewPage', () => {
       screen.getByRole('link', {
         name: new RegExp(en.app.journalNew.entryChoice.investment.title),
       }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(
       screen.getByRole('link', { name: new RegExp(en.app.journalNew.entryChoice.study.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
   });
 
   it('validates investment entries in place without saving or navigation', async () => {

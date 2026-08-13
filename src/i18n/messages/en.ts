@@ -9,6 +9,29 @@ export const en: Messages = {
     journal: 'Journal',
     ariaLabel: 'Primary navigation',
   },
+  auth: {
+    entry: {
+      eyebrow: 'Authentication',
+      heading: 'Sign in to continue',
+      description:
+        'If this is your first time, an account can be created as part of the same flow.',
+      resumeDescription: 'You will continue to the record screen you selected.',
+      providerAction: 'Continue with OAuth',
+      providerNeutralNotice: 'The authentication provider has not been selected yet.',
+      cancel: 'Back to the review result',
+      cancelEntry: 'Back to record type selection',
+      cancelReviewStart: 'Back to starting a review',
+      loading: 'Checking your sign-in request',
+      failure: 'We could not sign you in',
+      failureDescription: 'Try again, or return to the review result without losing its context.',
+      retry: 'Try again',
+      noIntent: 'Choose where to continue so the original task can be resumed.',
+      resumeNotice: 'You can continue writing from the review result.',
+      redirecting: 'Taking you to the sign-in screen.',
+      unavailable: 'The authentication connection is not ready.',
+      unavailableDescription: 'The next screen will not open until an auth result is provided.',
+    },
+  },
   public: {
     home: { title: 'Public Home' },
     features: { title: 'Features' },
@@ -274,11 +297,10 @@ export const en: Messages = {
         returnToReviewDirtyConfirm: 'Your draft will be discarded. Return to the review result?',
       },
       decisionContext: {
-        title: 'Keep the review context at the time',
-        switchLabel: 'Include Decision Context',
-        enabledDescription:
-          'The question and check status are always kept; only selected evidence is included.',
-        disabledDescription: 'This record will not include the review context from that time.',
+        title: 'Keep the review context with this record',
+        switchLabel: 'Include review context',
+        enabledDescription: 'Keep the review context you used when making this judgment.',
+        disabledDescription: 'This judgment will not include the review context.',
         minimumLabel: 'Always included · minimum record',
         originalQuestionLabel: 'Question at the time',
         checklistLabel: 'Checks and their status at the time',
@@ -288,7 +310,7 @@ export const en: Messages = {
         optionalLabel: 'Optional · verified evidence',
         optionalDescription: 'Choose which evidence to keep with this record.',
         immutableNotice:
-          'This content is fixed when saved and is not updated if later review results change.',
+          'The question, checklist version, check status, and captured time stay as they were. The full AI review result is not saved.',
       },
       form: {
         optional: 'Optional',

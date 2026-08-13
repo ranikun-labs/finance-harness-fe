@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   APP_BASE,
   APP_ROUTE_PATHS,
+  AUTH_ROUTE_PATHS,
   DEFAULT_LOCALE,
   PUBLIC_ROUTE_PATHS,
   SUPPORTED_LOCALES,
@@ -117,6 +118,13 @@ describe('app route paths', () => {
     for (const path of Object.values(PUBLIC_ROUTE_PATHS)) {
       expect(path.startsWith('/:locale')).toBe(true);
     }
+  });
+});
+
+describe('Auth Entry route', () => {
+  it('owns a provider-neutral public path outside the app shell', () => {
+    expect(AUTH_ROUTE_PATHS.entry).toBe('/auth');
+    expect(AUTH_ROUTE_PATHS.entry.startsWith(`${APP_BASE}/`)).toBe(false);
   });
 });
 
