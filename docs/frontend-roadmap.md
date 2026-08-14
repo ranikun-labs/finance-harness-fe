@@ -17,10 +17,9 @@
 ## 결론 먼저 — 현재 위치
 
 - **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)와 RPL-68 Slice 1–5 Adaptive P0 frontend contract, Final Review, master merge
-- **현재:** Finance FE Auth / Journal / Review UX Revision은 UX-1~4 **CANONICAL COMPLETE**,
-  UX-5 Final Responsive/A11Y/i18n/Regression Hardening은 implementation 및 Final
-  Independent Review까지 완료했다. 현재 상태는 **FINAL REVIEW COMPLETE /
-  READY_FOR_COMMIT / MERGE PENDING**이다.
+- **현재:** Finance FE Auth / Journal / Review UX Revision은 UX-1~5를 포함해
+  **CANONICAL COMPLETE**다. UX-5는 Final Hardening, Independent Review, feature
+  commit/push, PR #25, Pre-merge Review, normal merge, master reconciliation까지 완료했다.
 - **해결:** UX-5가 Preview Isolation, 정확히 500자 `openQuestion` 경계,
   `openQuestions = []` 검증의 기존 technical carryover 3건을 모두 해결했으며,
   technical carryover remaining은 0이다.
@@ -28,9 +27,9 @@
   token/cookie/session transport, final Shared Gateway publication, Decision Context
   persistence, Backend production integration, Production Create activation, 결제·개인화·
   실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** UX-5 reviewed delta를 exact commit/push한 뒤 PR, Pre-merge Independent
-  Review, normal merge를 진행한다. Merge 후 전체 FE UX Revision을 Canonical Completion으로
-  닫으며, Backend/Auth/Shared Identity integration은 별도 owner contract phase에서 진행한다.
+- **다음 행동:** UX Revision은 완료됐다. 이후 production integration은 owner contract가
+  준비된 별도 phase에서만 진행하며, Shared Identity/Gateway와 Backend/Review 계약을
+  추측해 FE에 추가하지 않는다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -315,14 +314,25 @@ fixture, view-model까지만 다루며 persistence contract를 만들지 않는�
 
 ## Current FE implementation status
 
-- UX-1 Journal Entry Choice / naming / focused editor: **COMPLETE**
-- UX-2 Editor hierarchy / validation: **COMPLETE**
-- UX-3 Review → Journal handoff / editable draft: **COMPLETE**
-- UX-4 Auth and Decision Context presentation seam: **COMPLETE**
+- UX-1 Journal Entry Choice / naming / focused editor: **CANONICAL COMPLETE**
+- UX-2 Editor hierarchy / validation: **CANONICAL COMPLETE**
+- UX-3 Review → Journal handoff / editable draft: **CANONICAL COMPLETE**
+- UX-4 Auth and Decision Context presentation seam: **CANONICAL COMPLETE**
 - UX-5 Final responsive, accessibility, i18n, and regression hardening:
-  **FINAL REVIEW COMPLETE / MERGE PENDING** (`READY_FOR_COMMIT`); no new Product behavior.
+  **CANONICAL COMPLETE**; no new Product behavior was introduced.
+- Finance FE Auth / Journal / Review UX Revision: **CANONICAL COMPLETE**
 - Real Shared Identity/Gateway integration, durable Decision Context persistence, and
   Production Create activation remain deferred to their owning contracts.
+
+### UX-5 canonical merge
+
+- PR: **#25**
+- Feature SHA: `8c05d22369c6c3ed2ba10ca6dd2b80949a63cb9a`
+- Merge SHA: `6cf1810205b8dced173aa44582762a57f42249cd`
+- Parents: `7979a88ebf0b24e6e6d9961fce94fc2b70ab4842` →
+  `8c05d22369c6c3ed2ba10ca6dd2b80949a63cb9a`
+- Merged at: `2026-08-14T13:50:13Z`
+- Method: normal merge commit; merge tree equals the reviewed feature tree.
 
 ### UX-5 carryover closure
 
@@ -332,6 +342,21 @@ fixture, view-model까지만 다루며 persistence contract를 만들지 않는�
 - Explicit `openQuestions = []`: **RESOLVED_BY_UX5** — empty collection valid; empty/whitespace
   items invalid.
 - Technical carryover remaining: **0**.
+
+### Protected FE product state
+
+- Primary IA: **검토 / 저널**
+- Production Create: **OFF**
+- `/auth`: Finance FE Product Route, not a Shared Identity endpoint.
+- `POST /finance/journals`: Finance Backend service-local contract, not the final Gateway route.
+- `No Driver != Success` remains the Auth presentation boundary.
+
+### Future integration boundary
+
+Finance FE Product UX Revision is complete. The following remain **DEFERRED / SEPARATE OWNER
+PHASE**: real Shared Identity, OAuth execution/callback, token/cookie/session transport, final
+Shared Gateway publication, Decision Context persistence, Finance Backend production integration,
+Production Journal Create activation, Review Backend/API integration, and AI/RAG runtime.
 
 ## 이후 STEP 11
 
@@ -429,7 +454,8 @@ fixture, view-model까지만 다루며 persistence contract를 만들지 않는�
 
 **다음 실행 항목:**
 
-1. [ ] UX-5 reviewed delta exact commit/push
-2. [ ] UX-5 PR 생성 및 pre-merge independent review
-3. [ ] UX-5 normal merge 및 FE UX Revision Canonical Completion
-4. [ ] Backend/Auth/Shared Identity integration은 별도 owner contract phase에서 진행
+1. [x] UX-5 implementation/final hardening 및 Independent Review 완료
+2. [x] UX-5 exact feature commit/push 완료
+3. [x] PR #25 생성 및 Final Pre-merge Independent Review 완료
+4. [x] UX-5 normal merge 및 master reconciliation 완료
+5. [ ] Future production integration은 owner contract가 준비된 별도 phase에서 진행
