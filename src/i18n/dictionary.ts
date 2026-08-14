@@ -168,6 +168,10 @@ export interface Messages {
     };
     journalList: {
       title: string;
+      loading: { title: string; description: string };
+      error: { title: string; description: string; retry: string };
+      invalidRequest: { title: string; description: string; retry: string };
+      invalidResult: { title: string; description: string; retry: string };
       filters: { groupLabel: string; all: string; investment: string; study: string };
       emotionLabel: string;
       noEmotion: string;
@@ -176,6 +180,10 @@ export interface Messages {
       countLabel: string;
       emptyAll: { title: string; description: string; cta: string; hint: string };
       emptyFilter: { title: string; description: string; resetAction: string };
+      loadMore: string;
+      loadingMore: string;
+      endOfList: string;
+      loadMoreError: { title: string; description: string; retry: string };
       subjects: Record<SampleSubjectKey, string>;
     };
     journalWorkspace: {
@@ -269,17 +277,24 @@ export interface Messages {
       metadata: {
         recordType: string;
         recordedAt: string;
+        timeZone: string;
+        createdAt: string;
+        updatedAt: string;
         subject: string;
         pastAction: string;
         pastEmotion: string;
       };
       investment: {
+        reasoningHeading: string;
         questionHeading: string;
         aiChecklistHeading: string;
         recordHeading: string;
         checkedItemsHeading: string;
       };
       study: {
+        keyContentHeading: string;
+        openQuestionsHeading: string;
+        noOpenQuestions: string;
         questionHeading: string;
         summaryHeading: string;
         nextChecksHeading: string;
@@ -302,6 +317,10 @@ export interface Messages {
         immutableNotice: string;
       };
       navigation: { review: string; list: string };
+      loading: { title: string; description: string };
+      error: { title: string; description: string; retry: string };
+      invalidRequest: { title: string; description: string; retry: string };
+      invalidResult: { title: string; description: string; retry: string };
       notFound: { heading: string; description: string; listAction: string };
     };
     journalReview: {

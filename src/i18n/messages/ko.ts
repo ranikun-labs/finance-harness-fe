@@ -227,6 +227,25 @@ export const ko: Messages = {
     },
     journalList: {
       title: '저널',
+      loading: {
+        title: '저널을 불러오는 중이에요',
+        description: '서버에서 기록 목록을 확인하고 있어요.',
+      },
+      error: {
+        title: '저널을 불러오지 못했어요',
+        description: '잠시 후 다시 시도해주세요.',
+        retry: '다시 시도',
+      },
+      invalidRequest: {
+        title: '저널 요청을 확인해주세요',
+        description: '요청 형식이 올바르지 않아 목록을 불러올 수 없어요.',
+        retry: '다시 시도',
+      },
+      invalidResult: {
+        title: '저널 응답을 확인할 수 없어요',
+        description: '서버 응답 형식이 올바르지 않아 목록을 표시할 수 없어요.',
+        retry: '다시 시도',
+      },
       filters: {
         groupLabel: '기록 유형 필터',
         all: '전체',
@@ -248,6 +267,14 @@ export const ko: Messages = {
         title: '해당 유형의 기록이 아직 없어요',
         description: '다른 유형을 선택하거나 전체 기록을 확인해보세요.',
         resetAction: '전체 보기',
+      },
+      loadMore: '더 불러오기',
+      loadingMore: '더 불러오는 중…',
+      endOfList: '모든 기록을 확인했어요.',
+      loadMoreError: {
+        title: '다음 기록을 불러오지 못했어요',
+        description: '현재까지 불러온 기록은 그대로 유지됩니다.',
+        retry: '다시 시도',
       },
       subjects: {
         semiconductorCompanyA: '반도체 기업 A',
@@ -398,17 +425,24 @@ export const ko: Messages = {
       metadata: {
         recordType: '기록 유형',
         recordedAt: '작성일',
+        timeZone: '기록 시간대',
+        createdAt: '생성 시점',
+        updatedAt: '수정 시점',
         subject: '기록 대상',
         pastAction: '당시 행동',
         pastEmotion: '당시 감정',
       },
       investment: {
+        reasoningHeading: '판단 이유',
         questionHeading: '당시 질문',
         aiChecklistHeading: '과거 AI 체크리스트',
         recordHeading: '내가 남긴 기록',
         checkedItemsHeading: '체크한 항목',
       },
       study: {
+        keyContentHeading: '핵심 정리',
+        openQuestionsHeading: '더 확인할 것',
+        noOpenQuestions: '추가로 확인할 내용이 없습니다.',
         questionHeading: '원래 질문',
         summaryHeading: '정리한 내용',
         nextChecksHeading: '다음에 확인할 항목',
@@ -434,6 +468,25 @@ export const ko: Messages = {
       navigation: {
         review: 'AI와 복기하기',
         list: '기록 목록으로 돌아가기',
+      },
+      loading: {
+        title: '기록 상세를 불러오는 중이에요',
+        description: '서버에서 선택한 기록을 확인하고 있어요.',
+      },
+      error: {
+        title: '기록 상세를 불러오지 못했어요',
+        description: '잠시 후 다시 시도해주세요.',
+        retry: '다시 시도',
+      },
+      invalidRequest: {
+        title: '기록 요청을 확인해주세요',
+        description: '기록 식별자가 올바르지 않아 상세를 불러올 수 없어요.',
+        retry: '다시 시도',
+      },
+      invalidResult: {
+        title: '기록 응답을 확인할 수 없어요',
+        description: '서버 응답 형식이 올바르지 않아 상세를 표시할 수 없어요.',
+        retry: '다시 시도',
       },
       notFound: {
         heading: '기록을 찾을 수 없어요',
