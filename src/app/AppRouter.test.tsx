@@ -15,11 +15,49 @@ import {
   buildLocaleHomePath,
 } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
+import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
 import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
+
+const TEST_JOURNAL_READ_PORT: JournalReadPort = {
+  list: async () => ({
+    ok: true,
+    data: {
+      items: [
+        {
+          journalId: JOURNAL_ENTRIES[0].id,
+          type: 'investment',
+          occurredAt: '2026-08-12T14:30:15.123',
+          timeZone: 'Asia/Seoul',
+          assetName: 'ETF',
+          action: 'buy',
+        },
+      ],
+      nextCursor: null,
+    },
+  }),
+  detail: async (journalId) =>
+    journalId === JOURNAL_ENTRIES[0].id
+      ? {
+          ok: true,
+          data: {
+            journalId,
+            type: 'investment',
+            occurredAt: '2026-08-12T14:30:15.123',
+            timeZone: 'Asia/Seoul',
+            createdAt: '2026-08-12T05:31:02.123Z',
+            updatedAt: '2026-08-12T05:31:02.123Z',
+            assetName: 'ETF',
+            action: 'buy',
+            reasoning: 'thesis',
+            emotion: null,
+          },
+        }
+      : { ok: false, error: { code: 'journal_not_found', status: 404 } },
+};
 
 function RouterProbe() {
   const location = useLocation();
@@ -39,11 +77,15 @@ function RouterProbe() {
   );
 }
 
-function renderAt(path: string, authPresentation?: AuthPresentationConsumer) {
+function renderAt(
+  path: string,
+  authPresentation?: AuthPresentationConsumer,
+  journalReadPort: JournalReadPort = TEST_JOURNAL_READ_PORT,
+) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <RouterProbe />
-      <AppRouter authPresentation={authPresentation} />
+      <AppRouter authPresentation={authPresentation} journalReadPort={journalReadPort} />
     </MemoryRouter>,
   );
 }
@@ -469,16 +511,19 @@ describe('AppRouter', () => {
       expect(screen.getAllByRole('main')).toHaveLength(1);
     });
 
-    it('keeps the direct detail route selected and exposes its immutable context snapshot', () => {
+    it('keeps the direct detail route selected and renders server-owned detail data', async () => {
       renderAt(buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id));
 
       const workspace = screen.getByTestId('journal-workspace');
       expect(workspace).toBeInTheDocument();
-      expect(within(workspace).getByRole('link', { current: 'page' })).toHaveAttribute(
-        'href',
-        buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id),
+      await waitFor(() =>
+        expect(within(workspace).getByRole('link', { current: 'page' })).toHaveAttribute(
+          'href',
+          buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id),
+        ),
       );
-      expect(screen.getByTestId('decision-context-snapshot')).toBeInTheDocument();
+      expect(screen.getByText('thesis')).toBeInTheDocument();
+      expect(screen.queryByTestId('decision-context-snapshot')).not.toBeInTheDocument();
       expect(screen.getAllByRole('main')).toHaveLength(1);
     });
   });
