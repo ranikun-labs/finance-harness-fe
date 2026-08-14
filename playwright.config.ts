@@ -22,7 +22,10 @@ export default defineConfig({
     // 동작하도록 node로 로컬 vite 바이너리를 직접 실행한다.
     command: `node node_modules/vite/bin/vite.js preview --port ${PORT}`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // Finance E2E must own and start its preview. Reusing an unrelated process on the
+    // shared port can make a passing test exercise another product; a port conflict
+    // should fail closed instead of being masked by an existing server.
+    reuseExistingServer: false,
   },
   projects: [
     {

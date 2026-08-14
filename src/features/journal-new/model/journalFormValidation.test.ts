@@ -165,6 +165,28 @@ describe('journal form validation contract', () => {
     );
   });
 
+  it('accepts an open question item of exactly 500 characters', () => {
+    const openQuestion = 'q'.repeat(500);
+    const result = validateStudyJournalForm({ ...validStudy, openQuestions: [openQuestion] });
+
+    expect(openQuestion).toHaveLength(500);
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('accepts an explicit empty openQuestions array', () => {
+    const result = validateStudyJournalForm({ ...validStudy, openQuestions: [] });
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('rejects an empty-string item instead of treating it as an empty collection', () => {
+    const result = validateStudyJournalForm({ ...validStudy, openQuestions: [''] });
+
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ field: 'openQuestions', code: 'required' }),
+    );
+  });
+
   it('accepts valid investment and study raw form states', () => {
     expect(validateInvestmentJournalForm(validInvestment)).toEqual({ valid: true, errors: [] });
     expect(validateStudyJournalForm(validStudy)).toEqual({ valid: true, errors: [] });
