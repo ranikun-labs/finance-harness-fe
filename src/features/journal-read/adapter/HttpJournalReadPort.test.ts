@@ -5,6 +5,8 @@ import {
   type JournalReadFetch,
 } from '@/features/journal-read/adapter/HttpJournalReadPort';
 
+const VALID_JOURNAL_ID = '550e8400-e29b-41d4-a716-446655440000';
+
 function responseWithJson(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -13,7 +15,7 @@ function responseWithJson(status: number, body: unknown): Response {
 }
 
 const investmentDetail = {
-  journalId: 'journal-1',
+  journalId: VALID_JOURNAL_ID,
   type: 'investment' as const,
   occurredAt: '2026-08-12T14:30:15.123',
   timeZone: 'Asia/Seoul',
@@ -28,7 +30,7 @@ const investmentDetail = {
 const listResponse = {
   items: [
     {
-      journalId: 'journal-1',
+      journalId: VALID_JOURNAL_ID,
       type: 'investment' as const,
       occurredAt: '2026-08-12T14:30:15.123',
       timeZone: 'Asia/Seoul',
@@ -101,7 +103,7 @@ describe('HttpJournalReadPort', () => {
   ] as const)('maps detail HTTP %s to %s', async (status, code) => {
     const fetchMock = vi.fn<JournalReadFetch>();
     fetchMock.mockResolvedValue(responseWithJson(status, { error: code }));
-    await expect(createPort(fetchMock).detail('journal-1')).resolves.toEqual({
+    await expect(createPort(fetchMock).detail(VALID_JOURNAL_ID)).resolves.toEqual({
       ok: false,
       error: { code, status },
     });
@@ -110,7 +112,7 @@ describe('HttpJournalReadPort', () => {
   it.each([401, 403, 409, 500])('maps unexpected HTTP %s to read_failed', async (status) => {
     const fetchMock = vi.fn<JournalReadFetch>();
     fetchMock.mockResolvedValue(responseWithJson(status, { error: 'backend detail' }));
-    await expect(createPort(fetchMock).detail('journal-1')).resolves.toEqual({
+    await expect(createPort(fetchMock).detail(VALID_JOURNAL_ID)).resolves.toEqual({
       ok: false,
       error: { code: 'read_failed', status },
     });
@@ -142,7 +144,7 @@ describe('HttpJournalReadPort', () => {
   it('maps network failures to read_failed without leaking the raw error', async () => {
     const fetchMock = vi.fn<JournalReadFetch>();
     fetchMock.mockRejectedValue(new Error('socket detail'));
-    await expect(createPort(fetchMock).detail('journal-1')).resolves.toEqual({
+    await expect(createPort(fetchMock).detail(VALID_JOURNAL_ID)).resolves.toEqual({
       ok: false,
       error: { code: 'read_failed' },
     });

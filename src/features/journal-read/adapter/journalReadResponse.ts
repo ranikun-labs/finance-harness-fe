@@ -66,7 +66,8 @@ export class JournalResponseValidationError extends Error {
 }
 
 const LOCAL_DATE_TIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/;
-const UTC_INSTANT_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
+const UTC_INSTANT_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?Z$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const JOURNAL_TYPES: readonly JournalEntryType[] = ['investment', 'study'];
 
@@ -82,8 +83,13 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+/** Canonical UUID syntax only; version and ordering semantics remain opaque to the FE. */
+export function isJournalId(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
+function isNonBlankStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => isNonEmptyString(item));
 }
 
 function isEnumValue<T extends string>(values: readonly T[], value: unknown): value is T {
@@ -108,6 +114,7 @@ export function isJournalOccurredAt(value: unknown): value is string {
   if (!match) return false;
   const [, year, month, day, hour, minute, second] = match;
   return (
+    match[0] === value &&
     isValidCivilDate(Number(year), Number(month), Number(day)) &&
     isValidTime(Number(hour), Number(minute), Number(second))
   );
@@ -120,6 +127,7 @@ export function isJournalUtcInstant(value: unknown): value is string {
   if (!match) return false;
   const [, year, month, day, hour, minute, second] = match;
   return (
+    match[0] === value &&
     isValidCivilDate(Number(year), Number(month), Number(day)) &&
     isValidTime(Number(hour), Number(minute), Number(second))
   );
@@ -143,7 +151,7 @@ function parseCommonDetail(value: Record<string, unknown>): {
   updatedAt: string;
 } {
   if (
-    !isNonEmptyString(value.journalId) ||
+    !isJournalId(value.journalId) ||
     !isJournalOccurredAt(value.occurredAt) ||
     !isIanaTimeZone(value.timeZone) ||
     !isJournalUtcInstant(value.createdAt) ||
@@ -167,7 +175,7 @@ function parseCommonSummary(value: Record<string, unknown>): {
   timeZone: string;
 } {
   if (
-    !isNonEmptyString(value.journalId) ||
+    !isJournalId(value.journalId) ||
     !isJournalOccurredAt(value.occurredAt) ||
     !isIanaTimeZone(value.timeZone)
   ) {
@@ -191,7 +199,7 @@ export function parseJournalDetailResponse(value: unknown): JournalDetailRespons
     if (
       !isNonEmptyString(value.assetName) ||
       !isEnumValue(RECORD_ACTIONS, value.action) ||
-      typeof value.reasoning !== 'string' ||
+      !isNonEmptyString(value.reasoning) ||
       !hasOwn(value, 'emotion') ||
       (value.emotion !== null && !isEnumValue(EMOTION_TAGS, value.emotion))
     ) {
@@ -210,8 +218,8 @@ export function parseJournalDetailResponse(value: unknown): JournalDetailRespons
 
   if (
     !isNonEmptyString(value.title) ||
-    typeof value.keyContent !== 'string' ||
-    !isStringArray(value.openQuestions)
+    !isNonEmptyString(value.keyContent) ||
+    !isNonBlankStringArray(value.openQuestions)
   ) {
     throw new JournalResponseValidationError();
   }

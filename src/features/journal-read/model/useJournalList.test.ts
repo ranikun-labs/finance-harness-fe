@@ -8,10 +8,15 @@ import type {
 } from '@/features/journal-read/model/journalReadPort';
 import { useJournalList } from '@/features/journal-read/model/useJournalList';
 
+const JOURNAL_ONE = '550e8400-e29b-41d4-a716-446655440000';
+const JOURNAL_TWO = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+const JOURNAL_NEW = '7d444840-9dc0-11d1-b245-5ffdce74fad2';
+const JOURNAL_STALE = '8f7c2e1a-2c1a-4f53-9f5f-7d7e4f1a2b3c';
+
 const firstPage: JournalListResponse = {
   items: [
     {
-      journalId: 'journal-1',
+      journalId: JOURNAL_ONE,
       type: 'investment',
       occurredAt: '2026-08-12T14:30:15.123',
       timeZone: 'Asia/Seoul',
@@ -25,7 +30,7 @@ const firstPage: JournalListResponse = {
 const secondPage: JournalListResponse = {
   items: [
     {
-      journalId: 'journal-1',
+      journalId: JOURNAL_ONE,
       type: 'investment',
       occurredAt: '2026-08-12T14:30:15.123',
       timeZone: 'Asia/Seoul',
@@ -33,7 +38,7 @@ const secondPage: JournalListResponse = {
       action: 'buy',
     },
     {
-      journalId: 'journal-2',
+      journalId: JOURNAL_TWO,
       type: 'study',
       occurredAt: '2026-08-12T14:30:00.000',
       timeZone: 'Asia/Seoul',
@@ -88,7 +93,7 @@ describe('useJournalList', () => {
       data: {
         items: [
           {
-            journalId: 'new-journal',
+            journalId: JOURNAL_NEW,
             type: 'study',
             occurredAt: '2026-08-12T14:30:00.000',
             timeZone: 'Asia/Seoul',
@@ -106,7 +111,7 @@ describe('useJournalList', () => {
 
     await waitFor(() => expect(oldList).toHaveBeenCalled());
     hook.rerender({ port: newPort });
-    await waitFor(() => expect(hook.result.current.state.items[0]?.journalId).toBe('new-journal'));
+    await waitFor(() => expect(hook.result.current.state.items[0]?.journalId).toBe(JOURNAL_NEW));
     expect(oldList.mock.calls[0]?.[0]?.signal?.aborted).toBe(true);
 
     await act(async () => {
@@ -115,7 +120,7 @@ describe('useJournalList', () => {
         data: {
           items: [
             {
-              journalId: 'stale-journal',
+              journalId: JOURNAL_STALE,
               type: 'study',
               occurredAt: '2026-08-12T14:30:00.000',
               timeZone: 'Asia/Seoul',
@@ -126,6 +131,6 @@ describe('useJournalList', () => {
         },
       });
     });
-    expect(hook.result.current.state.items[0]?.journalId).toBe('new-journal');
+    expect(hook.result.current.state.items[0]?.journalId).toBe(JOURNAL_NEW);
   });
 });

@@ -13,8 +13,8 @@ import { ko } from '@/i18n/messages/ko';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import { JournalDetailPage } from '@/pages/JournalDetailPage';
 
-const PRIMARY_INVESTMENT_ID = 'journal-investment-1';
-const STUDY_ID = 'journal-study-1';
+const PRIMARY_INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const STUDY_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 
 const INVESTMENT_DETAIL = {
   journalId: PRIMARY_INVESTMENT_ID,

@@ -8,10 +8,13 @@ import { ko } from '@/i18n/messages/ko';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import { JournalListPage } from '@/pages/JournalListPage';
 
+const PRIMARY_INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const STUDY_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
 const LIST_DATA = {
   items: [
     {
-      journalId: 'journal-investment-1',
+      journalId: PRIMARY_INVESTMENT_ID,
       type: 'investment' as const,
       occurredAt: '2026-08-12T14:30:15.123',
       timeZone: 'Asia/Seoul',
@@ -19,7 +22,7 @@ const LIST_DATA = {
       action: 'buy' as const,
     },
     {
-      journalId: 'journal-study-1',
+      journalId: STUDY_ID,
       type: 'study' as const,
       occurredAt: '2026-08-12T14:30:00.000',
       timeZone: 'Asia/Seoul',

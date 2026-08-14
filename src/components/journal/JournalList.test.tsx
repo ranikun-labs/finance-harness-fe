@@ -7,8 +7,11 @@ import type { JournalListStatus } from '@/features/journal-read/model/journalLis
 import type { JournalListItemViewModel } from '@/features/journal-read/model/journalReadViewModel';
 import { I18nProvider } from '@/i18n/I18nContext';
 
+const INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const STUDY_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
 const INVESTMENT_ENTRY: JournalListItemViewModel = {
-  journalId: 'investment-1',
+  journalId: INVESTMENT_ID,
   type: 'investment',
   occurredAt: '2026-08-12T14:30:15.123' as JournalListItemViewModel['occurredAt'],
   timeZone: 'Asia/Seoul',
@@ -17,7 +20,7 @@ const INVESTMENT_ENTRY: JournalListItemViewModel = {
 };
 
 const STUDY_ENTRY: JournalListItemViewModel = {
-  journalId: 'study-1',
+  journalId: STUDY_ID,
   type: 'study',
   occurredAt: '2026-08-12T14:30:00.000' as JournalListItemViewModel['occurredAt'],
   timeZone: 'Asia/Seoul',

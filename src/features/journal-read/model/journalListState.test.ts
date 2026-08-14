@@ -6,8 +6,11 @@ import {
 } from '@/features/journal-read/model/journalListState';
 import type { JournalListItemViewModel } from '@/features/journal-read/model/journalReadViewModel';
 
+const JOURNAL_ONE = '550e8400-e29b-41d4-a716-446655440000';
+const JOURNAL_TWO = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
 const investment: JournalListItemViewModel = {
-  journalId: 'journal-1',
+  journalId: JOURNAL_ONE,
   type: 'investment',
   occurredAt: '2026-08-12T14:30:15.123' as JournalListItemViewModel['occurredAt'],
   timeZone: 'Asia/Seoul',
@@ -16,7 +19,7 @@ const investment: JournalListItemViewModel = {
 };
 
 const study: JournalListItemViewModel = {
-  journalId: 'journal-2',
+  journalId: JOURNAL_TWO,
   type: 'study',
   occurredAt: '2026-08-12T14:30:00.000' as JournalListItemViewModel['occurredAt'],
   timeZone: 'Asia/Seoul',
@@ -48,7 +51,7 @@ describe('journalListReducer', () => {
     });
 
     expect(final.status).toBe('loaded');
-    expect(final.items.map((item) => item.journalId)).toEqual(['journal-1', 'journal-2']);
+    expect(final.items.map((item) => item.journalId)).toEqual([JOURNAL_ONE, JOURNAL_TWO]);
     expect(final.items[1]).toEqual(study);
     expect(final.nextCursor).toBeNull();
   });

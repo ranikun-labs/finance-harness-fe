@@ -21,6 +21,7 @@ import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
+const TEST_JOURNAL_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 const TEST_JOURNAL_READ_PORT: JournalReadPort = {
   list: async () => ({
@@ -28,7 +29,7 @@ const TEST_JOURNAL_READ_PORT: JournalReadPort = {
     data: {
       items: [
         {
-          journalId: JOURNAL_ENTRIES[0].id,
+          journalId: TEST_JOURNAL_ID,
           type: 'investment',
           occurredAt: '2026-08-12T14:30:15.123',
           timeZone: 'Asia/Seoul',
@@ -40,7 +41,7 @@ const TEST_JOURNAL_READ_PORT: JournalReadPort = {
     },
   }),
   detail: async (journalId) =>
-    journalId === JOURNAL_ENTRIES[0].id
+    journalId === TEST_JOURNAL_ID
       ? {
           ok: true,
           data: {
@@ -512,14 +513,14 @@ describe('AppRouter', () => {
     });
 
     it('keeps the direct detail route selected and renders server-owned detail data', async () => {
-      renderAt(buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id));
+      renderAt(buildAppJournalDetailPath(TEST_JOURNAL_ID));
 
       const workspace = screen.getByTestId('journal-workspace');
       expect(workspace).toBeInTheDocument();
       await waitFor(() =>
         expect(within(workspace).getByRole('link', { current: 'page' })).toHaveAttribute(
           'href',
-          buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id),
+          buildAppJournalDetailPath(TEST_JOURNAL_ID),
         ),
       );
       expect(screen.getByText('thesis')).toBeInTheDocument();

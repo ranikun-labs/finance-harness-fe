@@ -27,7 +27,7 @@ test.describe('480×812 통합 뷰포트', () => {
       APP_ROUTE_PATHS.onboarding,
       buildAppAskPath('480px 통합 확인 질문'),
       APP_ROUTE_PATHS.journalList,
-      buildAppJournalDetailPath('journal-2026-06-28-01'),
+      buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000'),
       buildAppJournalReviewPath('journal-2026-06-28-01'),
       buildAppJournalNewPath('investment'),
       buildAppJournalNewPath('study'),
@@ -341,7 +341,7 @@ test.describe('Adaptive app shell', () => {
   test('keeps adaptive primary navigation on internal journal routes', async ({ page }) => {
     const journalRoutes = [
       buildAppJournalNewPath('investment'),
-      buildAppJournalDetailPath('journal-2026-06-28-01'),
+      buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000'),
       buildAppJournalReviewPath('journal-2026-06-28-01'),
     ];
     const viewports = [
@@ -418,7 +418,7 @@ test.describe('Ask 영어 모바일 레이아웃', () => {
 });
 
 test.describe('기록 상세 모바일 레이아웃', () => {
-  const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
+  const PRIMARY_INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
 
   // eslint-disable-next-line no-empty-pattern
   test.beforeEach(({}, testInfo) => {

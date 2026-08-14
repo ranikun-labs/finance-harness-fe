@@ -3,9 +3,13 @@ import { spawn } from 'node:child_process';
 
 const PORT = 4173;
 
+const PRIMARY_JOURNAL_ID = '550e8400-e29b-41d4-a716-446655440000';
+const SECOND_JOURNAL_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+const STUDY_JOURNAL_ID = '7d444840-9dc0-11d1-b245-5ffdce74fad2';
+
 const DETAILS = {
-  'journal-2026-06-28-01': {
-    journalId: 'journal-2026-06-28-01',
+  [PRIMARY_JOURNAL_ID]: {
+    journalId: PRIMARY_JOURNAL_ID,
     type: 'investment',
     occurredAt: '2026-08-12T14:30:15.123',
     timeZone: 'Asia/Seoul',
@@ -16,8 +20,8 @@ const DETAILS = {
     reasoning: 'HBM 수요와 외국인 수급 흐름을 확인한 뒤 지켜보기로 했다.',
     emotion: '확신',
   },
-  'journal-2026-06-24-01': {
-    journalId: 'journal-2026-06-24-01',
+  [SECOND_JOURNAL_ID]: {
+    journalId: SECOND_JOURNAL_ID,
     type: 'investment',
     occurredAt: '2026-08-11T10:15:00.000',
     timeZone: 'Asia/Seoul',
@@ -28,8 +32,8 @@ const DETAILS = {
     reasoning: '정책 불확실성이 남아 있어 추가 확인 전에는 지켜보기로 했다.',
     emotion: '불안',
   },
-  'journal-2026-06-27-01': {
-    journalId: 'journal-2026-06-27-01',
+  [STUDY_JOURNAL_ID]: {
+    journalId: STUDY_JOURNAL_ID,
     type: 'study',
     occurredAt: '2026-08-10T09:00:00.000',
     timeZone: 'Asia/Seoul',
@@ -43,7 +47,7 @@ const DETAILS = {
 
 const LIST_ITEMS = [
   {
-    journalId: 'journal-2026-06-28-01',
+    journalId: PRIMARY_JOURNAL_ID,
     type: 'investment',
     occurredAt: '2026-08-12T14:30:15.123',
     timeZone: 'Asia/Seoul',
@@ -51,7 +55,7 @@ const LIST_ITEMS = [
     action: 'interest',
   },
   {
-    journalId: 'journal-2026-06-24-01',
+    journalId: SECOND_JOURNAL_ID,
     type: 'investment',
     occurredAt: '2026-08-11T10:15:00.000',
     timeZone: 'Asia/Seoul',
@@ -59,7 +63,7 @@ const LIST_ITEMS = [
     action: 'watching',
   },
   {
-    journalId: 'journal-2026-06-27-01',
+    journalId: STUDY_JOURNAL_ID,
     type: 'study',
     occurredAt: '2026-08-10T09:00:00.000',
     timeZone: 'Asia/Seoul',

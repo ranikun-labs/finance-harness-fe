@@ -8,7 +8,7 @@ import {
 } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
 
-const PRIMARY_ID = 'journal-2026-06-28-01';
+const PRIMARY_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 async function expectNoHorizontalOverflow(page: Page) {
   expect(
