@@ -24,6 +24,28 @@ export interface Messages {
     journal: string;
     ariaLabel: string;
   };
+  auth: {
+    entry: {
+      eyebrow: string;
+      heading: string;
+      description: string;
+      resumeDescription: string;
+      providerAction: string;
+      providerNeutralNotice: string;
+      cancel: string;
+      cancelEntry: string;
+      cancelReviewStart: string;
+      loading: string;
+      failure: string;
+      failureDescription: string;
+      retry: string;
+      noIntent: string;
+      resumeNotice: string;
+      redirecting: string;
+      unavailable: string;
+      unavailableDescription: string;
+    };
+  };
   public: {
     home: { title: string };
     features: { title: string };

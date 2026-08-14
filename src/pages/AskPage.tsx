@@ -6,7 +6,9 @@ import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
+import { AUTH_ROUTE_PATHS, APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
+import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
+import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
 import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
@@ -164,6 +166,7 @@ function StructuredReviewResult({
   returnTarget: string;
 }) {
   const { locale, t } = useTranslation();
+  const { state: authPresentationState } = useAuthPresentation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
@@ -173,6 +176,48 @@ function StructuredReviewResult({
     () => createDecisionContextSnapshot(question, fixture, checkedItems),
     [checkedItems, fixture, question],
   );
+  const investmentHandoff = useMemo(
+    () => createReviewJournalHandoff('investment', question, fixture, locale, returnTarget),
+    [fixture, locale, question, returnTarget],
+  );
+  const studyHandoff = useMemo(
+    () => createReviewJournalHandoff('study', question, fixture, locale, returnTarget),
+    [fixture, locale, question, returnTarget],
+  );
+  const investmentAuthIntent = {
+    targetRoute: buildAppJournalNewPath('investment'),
+    recordType: 'investment',
+    returnTarget,
+    reviewHandoff: investmentHandoff,
+    decisionContext,
+    decisionContextEnabled: true,
+  } satisfies AuthResumeIntent;
+  const studyAuthIntent = {
+    targetRoute: buildAppJournalNewPath('study'),
+    recordType: 'study',
+    returnTarget,
+    reviewHandoff: studyHandoff,
+  } satisfies AuthResumeIntent;
+  const investmentDestination =
+    authPresentationState === 'authenticated'
+      ? investmentAuthIntent.targetRoute
+      : AUTH_ROUTE_PATHS.entry;
+  const studyDestination =
+    authPresentationState === 'authenticated'
+      ? studyAuthIntent.targetRoute
+      : AUTH_ROUTE_PATHS.entry;
+  const investmentDestinationState =
+    authPresentationState === 'authenticated'
+      ? {
+          reviewHandoff: investmentHandoff,
+          decisionContext,
+          decisionContextEnabled: true,
+        }
+      : { authResumeIntent: investmentAuthIntent };
+  const studyDestinationState =
+    authPresentationState === 'authenticated'
+      ? { reviewHandoff: studyHandoff }
+      : { authResumeIntent: studyAuthIntent };
   const formattedGeneratedAt = formatReviewTime(fixture.generatedAt, locale);
   const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
 
@@ -407,17 +452,8 @@ function StructuredReviewResult({
               buttonVariants({ variant: 'outline' }),
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
             )}
-            to={buildAppJournalNewPath('investment')}
-            state={{
-              reviewHandoff: createReviewJournalHandoff(
-                'investment',
-                question,
-                fixture,
-                locale,
-                returnTarget,
-              ),
-              decisionContext,
-            }}
+            to={investmentDestination}
+            state={investmentDestinationState}
           >
             <span className="text-base font-semibold">{t('app.ask.handoff.investment.title')}</span>
             <span className="text-muted-foreground text-sm leading-5">
@@ -429,16 +465,8 @@ function StructuredReviewResult({
               buttonVariants({ variant: 'default' }),
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
             )}
-            to={buildAppJournalNewPath('study')}
-            state={{
-              reviewHandoff: createReviewJournalHandoff(
-                'study',
-                question,
-                fixture,
-                locale,
-                returnTarget,
-              ),
-            }}
+            to={studyDestination}
+            state={studyDestinationState}
           >
             <span className="text-base font-semibold">{t('app.ask.handoff.study.title')}</span>
             <span className="text-primary-foreground/80 text-sm leading-5">

@@ -13,13 +13,14 @@
 
 ## 1. URL 소유권 경계
 
-URL은 세 갈래로 소유된다.
+URL은 네 갈래로 소유된다.
 
-| 소유 도메인    | 경로                      | 렌더링                           | 레이아웃                                                 | NotFound             |
-| -------------- | ------------------------- | -------------------------------- | -------------------------------------------------------- | -------------------- |
-| 루트 redirect  | `/`                       | 콘텐츠 없음(redirect)            | —                                                        | —                    |
-| 공개 웹        | `/:locale/*` (`ko`\|`en`) | 정적 Pre-render **목표**(STEP 6) | `PublicLayout`                                           | `PublicNotFoundPage` |
-| 웹앱·Capacitor | `/app/*`                  | SPA                              | adaptive `AppShell` (+ primary navigation은 `TabLayout`) | `NotFoundPage`       |
+| 소유 도메인     | 경로                      | 렌더링                           | 레이아웃                                                          | NotFound             |
+| --------------- | ------------------------- | -------------------------------- | ----------------------------------------------------------------- | -------------------- |
+| 루트 redirect   | `/`                       | 콘텐츠 없음(redirect)            | —                                                                 | —                    |
+| 공개 웹         | `/:locale/*` (`ko`\|`en`) | 정적 Pre-render **목표**(STEP 6) | `PublicLayout`                                                    | `PublicNotFoundPage` |
+| 공개 Auth Entry | `/auth`                   | SPA                              | provider-neutral public surface (AppShell/Bottom Navigation 없음) | —                    |
+| 웹앱·Capacitor  | `/app/*`                  | SPA                              | adaptive `AppShell` (+ primary navigation은 `TabLayout`)          | `NotFoundPage`       |
 
 STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브러리·호스팅 rewrite·정적
 산출물 검증은 STEP 6에서 다룬다.
@@ -28,6 +29,8 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 
 ```text
 /                         → RootRedirect → /ko (replace)
+
+/auth                     → AuthEntryPage (provider-neutral public Auth Entry; AppShell/Bottom Navigation 없음)
 
 /:locale                  → PublicHomePage        (PublicLayout이 locale 검증)
 /:locale/features         → FeaturesPage
@@ -44,6 +47,11 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
 /app/journal/:id/review   → JournalReviewPage     (Phone 하단 탭 X; Tablet 이상 primary nav)
 /app/*                    → NotFoundPage(app)     (하단 탭 X)
 ```
+
+`/auth`는 OAuth-first Product UX의 FE presentation surface이며 특정 provider를 고르거나
+Shared Identity protocol, callback/session/token, Gateway contract를 소유하지 않는다. 실제
+인증 결과는 외부 consumer가 제공할 때만 표현할 수 있고, 이 route 자체는 인증 보안 경계가
+아니다.
 
 정적 세그먼트 `/app`은 동적 `/:locale`보다 우선 매칭된다(단위 테스트로 고정).
 

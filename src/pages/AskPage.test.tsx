@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { APP_ROUTE_PATHS, buildAppAskPath, buildAppJournalNewPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS, buildAppAskPath } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -11,8 +11,11 @@ import { AskPage } from '@/pages/AskPage';
 
 function DecisionContextStateProbe() {
   const location = useLocation();
-  const context = (location.state as { decisionContext?: { checklist?: unknown[] } } | null)
-    ?.decisionContext;
+  const context = (
+    location.state as {
+      authResumeIntent?: { decisionContext?: { checklist?: unknown[] } };
+    } | null
+  )?.authResumeIntent?.decisionContext;
   return <span data-testid="decision-context-state">{context?.checklist?.length ?? ''}</span>;
 }
 
@@ -211,10 +214,10 @@ describe('AskPage / Structured Review Result', () => {
 
     expect(
       screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(
       screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     expect(
       screen.queryByRole('link', { name: /매수하기|매도하기|목표가|손절가/ }),
     ).not.toBeInTheDocument();

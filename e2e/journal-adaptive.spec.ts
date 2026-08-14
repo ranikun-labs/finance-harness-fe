@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import {
   APP_ROUTE_PATHS,
+  AUTH_ROUTE_PATHS,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
 } from '@/constants/routes';
@@ -32,7 +33,7 @@ async function expectBottomNavigation(page: Page, visible: boolean) {
 }
 
 test.describe('Journal adaptive List | Detail presentation', () => {
-  test('Review handoff keeps Decision fields user-owned and makes Learning draft editable', async ({
+  test('Review handoff keeps the production Auth Entry inert without an external result', async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'handoff flow runs on Chromium');
@@ -49,22 +50,11 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     ).toBeVisible();
 
     await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }).click();
-    await expect(page).toHaveURL(buildAppJournalNewPath('investment'));
-    await expect(page.getByLabel('대상')).toHaveValue('');
-    await expect(page.getByLabel('왜 그렇게 판단했나요?')).toHaveValue('');
-    await expect(page.getByLabel('관심')).not.toBeChecked();
-
-    await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}`);
-    await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }).click();
-    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
-    await expect(page.getByLabel('무엇을 배웠나요?')).toHaveValue(question);
-    await expect(page.getByLabel('핵심 정리')).not.toHaveValue('');
-    const firstQuestion = page.getByLabel(/더 확인할 것 확인할 질문 1/);
-    await expect(firstQuestion).toHaveValue(/.+/);
-    await firstQuestion.fill('내가 고친 질문');
-    await expect(firstQuestion).toHaveValue('내가 고친 질문');
-    await page.getByRole('button', { name: '질문 1 삭제' }).click();
-    await expect(page.getByLabel(/더 확인할 것 확인할 질문 1/)).toHaveCount(1);
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+    await expect(page.getByRole('heading', { name: ko.auth.entry.heading })).toBeVisible();
   });
 
   test('Review handoff returns to the exact partial variant without a Journal history loop', async ({
@@ -77,14 +67,11 @@ test.describe('Journal adaptive List | Detail presentation', () => {
 
     await page.goto(reviewUrl);
     await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }).click();
-    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
-    await page.getByLabel('무엇을 배웠나요?').fill('부분 초안을 수정함');
-    page.once('dialog', (dialog) => dialog.dismiss());
-    await page.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }).click();
-    await expect(page).toHaveURL(buildAppJournalNewPath('study'));
-    page.once('dialog', (dialog) => dialog.accept());
-    await page.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }).click();
-
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+    await page.getByRole('button', { name: ko.auth.entry.cancel }).click();
     await expect(page).toHaveURL(reviewUrl);
     await expect(
       page.getByRole('heading', { name: ko.app.ask.structured.partialTitle }),
@@ -194,11 +181,10 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await page.setViewportSize({ width: 393, height: 852 });
     await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent('context handoff')}`);
     await page.getByRole('link', { name: ko.app.ask.handoff.investment.title }).click();
-    await expect(page).toHaveURL(buildAppJournalNewPath('investment'));
-    await expect(page.getByTestId('decision-context-capture')).toBeVisible();
-    await expect(page.getByTestId('primary-navigation')).toBeHidden();
-    await expectSingleMain(page);
-    await expectNoHorizontalOverflow(page);
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
+    await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+    await expect(page.getByTestId('auth-entry')).toBeVisible();
   });
 
   test('shows the entry choice before a Journal New type is selected', async ({
@@ -214,10 +200,10 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expect(page.getByText(ko.app.journalNew.entryChoice.prompt)).toBeVisible();
     await expect(
       page.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.investment.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('investment'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     await expect(
       page.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
-    ).toHaveAttribute('href', buildAppJournalNewPath('study'));
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     await expect(page.locator('input#assetName')).toHaveCount(0);
     await expectSingleMain(page);
     await expectNoHorizontalOverflow(page);
@@ -251,6 +237,31 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       } else {
         await expect(navigation).toBeVisible();
       }
+    }
+  });
+
+  test('keeps Auth Entry as one focused public surface across approved viewports', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    for (const viewport of [
+      { width: 393, height: 852 },
+      { width: 834, height: 1060 },
+      { width: 1024, height: 1366 },
+      { width: 1194, height: 834 },
+      { width: 1360, height: 880 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(AUTH_ROUTE_PATHS.entry);
+
+      await expect(page.getByTestId('auth-entry')).toBeVisible();
+      await expect(
+        page.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+      ).toBeVisible();
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expectSingleMain(page);
+      await expectNoHorizontalOverflow(page);
     }
   });
 

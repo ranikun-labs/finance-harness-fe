@@ -1,10 +1,12 @@
-import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { AppRouter } from '@/app/AppRouter';
 import {
   APP_ROUTE_PATHS,
+  AUTH_ROUTE_PATHS,
+  buildAppAskPath,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
   buildAppJournalReviewPath,
@@ -13,15 +15,35 @@ import {
   buildLocaleHomePath,
 } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
+import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
 import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
-function renderAt(path: string) {
+function RouterProbe() {
+  const location = useLocation();
+  const locationState = location.state as {
+    authResumeIntent?: { recordType?: string };
+  } | null;
+
+  return (
+    <>
+      <span data-testid="router-location" hidden>
+        {`${location.pathname}${location.search}${location.hash}`}
+      </span>
+      <span data-testid="router-auth-record-type" hidden>
+        {locationState?.authResumeIntent?.recordType ?? ''}
+      </span>
+    </>
+  );
+}
+
+function renderAt(path: string, authPresentation?: AuthPresentationConsumer) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <AppRouter />
+      <RouterProbe />
+      <AppRouter authPresentation={authPresentation} />
     </MemoryRouter>,
   );
 }
@@ -77,6 +99,27 @@ describe('AppRouter', () => {
     });
   });
 
+  describe('provider-neutral Auth Entry ownership', () => {
+    it('renders Auth Entry outside the app shell and primary navigation', () => {
+      renderAt(AUTH_ROUTE_PATHS.entry);
+
+      expect(
+        screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
+      expect(screen.queryByRole('navigation')).toBeNull();
+    });
+
+    it('does not auto-authenticate the production composition', () => {
+      renderAt(AUTH_ROUTE_PATHS.entry);
+
+      fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+
+      expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
+      expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
+    });
+  });
+
   describe('PublicNotFound provider boundary', () => {
     it('renders /fr (unsupported locale) without throwing, using the DEFAULT_LOCALE (ko) copy', () => {
       expect(() => renderAt('/fr')).not.toThrow();
@@ -128,6 +171,169 @@ describe('AppRouter', () => {
       renderAt(`${APP_ROUTE_PATHS.appHome}/nope`);
       expect(screen.getByRole('heading', { name: APP_NOT_FOUND })).toBeInTheDocument();
     });
+  });
+
+  describe('auth-required Journal presentation consumer', () => {
+    it('routes a guest Journal List to the Auth Entry without treating it as a grant', async () => {
+      renderAt(APP_ROUTE_PATHS.journalList, { state: 'guest' });
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+        ).toBeInTheDocument(),
+      );
+      expect(
+        screen.getByRole('button', { name: ko.auth.entry.cancelReviewStart }),
+      ).toBeInTheDocument();
+    });
+
+    it('keeps a guest typed Editor intent at Auth Entry with the matching cancel target', async () => {
+      renderAt(buildAppJournalNewPath('investment'), { state: 'guest' });
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+        ).toBeInTheDocument(),
+      );
+      expect(screen.getByRole('button', { name: ko.auth.entry.cancelEntry })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+      expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
+    });
+
+    it('renders an authenticated fixture directly at a typed Journal Editor', () => {
+      renderAt(buildAppJournalNewPath('study'), { state: 'authenticated' });
+
+      expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+      expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
+    });
+
+    it('keeps unknown state non-authoritative while preserving the existing Journal surface', () => {
+      renderAt(buildAppJournalNewPath('investment'));
+
+      expect(
+        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
+    });
+
+    it.each([
+      [APP_ROUTE_PATHS.appHome, ko.app.home.hero.heading],
+      [buildAppAskPath('게스트 검토 결과'), ko.app.ask.structured.resultTitle],
+    ])('keeps the guest Review surface public at %s', (path, heading) => {
+      renderAt(path, { state: 'guest' });
+
+      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+      expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
+    });
+
+    const untypedEntryStates: Array<[string, AuthPresentationConsumer]> = [
+      ['guest', { state: 'guest' }],
+      ['unknown', { state: 'unknown' }],
+      ['authenticated', { state: 'authenticated' }],
+    ];
+
+    it.each(untypedEntryStates)(
+      'keeps the untyped Journal Entry Choice for the %s presentation state',
+      (_label, authPresentation) => {
+        renderAt(APP_ROUTE_PATHS.journalNew, authPresentation);
+
+        expect(
+          screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+        ).toBeInTheDocument();
+        expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('heading', { name: ko.app.journalNew.investment }),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('heading', { name: ko.app.journalNew.study }),
+        ).not.toBeInTheDocument();
+      },
+    );
+
+    const guestProtectedRoutes: Array<[string, string, string | undefined]> = [
+      ['Journal List', APP_ROUTE_PATHS.journalList, undefined],
+      ['Journal Detail', buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), undefined],
+      ['Retrospective', buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), undefined],
+      ['Investment Editor', buildAppJournalNewPath('investment'), 'investment'],
+      ['Learning Editor', buildAppJournalNewPath('study'), 'study'],
+    ];
+
+    it.each(guestProtectedRoutes)(
+      'routes guest %s through the shared Auth Entry consumer',
+      async (_label, path, recordType) => {
+        renderAt(path, { state: 'guest' });
+
+        await waitFor(() =>
+          expect(
+            screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+          ).toBeInTheDocument(),
+        );
+        if (recordType) {
+          expect(screen.getByTestId('router-auth-record-type')).toHaveTextContent(recordType);
+        }
+      },
+    );
+
+    const authenticatedRoutes: Array<[string, string, string]> = [
+      ['Journal List', APP_ROUTE_PATHS.journalList, ko.app.journalList.title],
+      [
+        'Journal Detail',
+        buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id),
+        ko.app.journalDetail.headerTitle,
+      ],
+      [
+        'Retrospective',
+        buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id),
+        ko.app.journalReview.headerTitle,
+      ],
+      ['Investment Editor', buildAppJournalNewPath('investment'), ko.app.journalNew.investment],
+      ['Learning Editor', buildAppJournalNewPath('study'), ko.app.journalNew.study],
+    ];
+
+    it.each(authenticatedRoutes)(
+      'renders authenticated fixture %s at its intended surface',
+      (_label, path, heading) => {
+        renderAt(path, { state: 'authenticated' });
+
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+        expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
+      },
+    );
+
+    const reviewStartFallbackRoutes: Array<[string, string]> = [
+      ['Journal List', APP_ROUTE_PATHS.journalList],
+      ['Journal Detail', buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id)],
+      ['Retrospective', buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id)],
+    ];
+
+    it.each(reviewStartFallbackRoutes)(
+      'uses the canonical Review Start target and matching label when cancelling guest %s',
+      async (_label, path) => {
+        renderAt(path, { state: 'guest' });
+
+        await waitFor(() =>
+          expect(
+            screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+          ).toBeInTheDocument(),
+        );
+
+        const cancel = screen.getByRole('button', {
+          name: ko.auth.entry.cancelReviewStart,
+        });
+        expect(cancel).toHaveAccessibleName(ko.auth.entry.cancelReviewStart);
+        fireEvent.click(cancel);
+
+        await waitFor(() =>
+          expect(screen.getByTestId('router-location')).toHaveTextContent(APP_ROUTE_PATHS.appHome),
+        );
+        expect(
+          screen.getByRole('heading', {
+            level: 1,
+            name: new RegExp(ko.app.home.hero.heading),
+          }),
+        ).toBeInTheDocument();
+      },
+    );
   });
 
   describe('route priority: /app wins over /:locale', () => {

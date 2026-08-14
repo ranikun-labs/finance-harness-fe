@@ -5,10 +5,12 @@ import { DecisionContextCapturePanel } from '@/components/journal/DecisionContex
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
 import {
+  AUTH_ROUTE_PATHS,
   APP_ROUTE_PATHS,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
 } from '@/constants/routes';
+import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import {
   toInvestmentJournalCreateCommand,
   toStudyJournalCreateCommand,
@@ -23,6 +25,7 @@ import {
   journalSubmitReducer,
 } from '@/features/journal-new/model/journalSubmitState';
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
+import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
 import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
@@ -35,7 +38,9 @@ type Props = { createPort?: JournalCreatePort };
 
 interface JournalNewLocationState {
   decisionContext?: DecisionContextSnapshot;
+  decisionContextEnabled?: boolean;
   reviewHandoff?: ReviewJournalHandoff;
+  authResumeNotice?: boolean;
 }
 
 export function JournalNewPage({ createPort }: Props) {
@@ -44,10 +49,13 @@ export function JournalNewPage({ createPort }: Props) {
   const navigate = useNavigate();
   const navigationType = useNavigationType();
   const { t } = useTranslation();
+  const { state: authPresentationState } = useAuthPresentation();
   const resolution = resolveJournalType(searchParams);
   const locationState = location.state as JournalNewLocationState | null;
-  const incomingDecisionContext = locationState?.decisionContext;
   const reviewHandoff = locationState?.reviewHandoff;
+  const incomingDecisionContext =
+    reviewHandoff?.kind === 'investment' ? locationState?.decisionContext : undefined;
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const [decisionContext, setDecisionContext] = useState<DecisionContextSnapshot | undefined>(() =>
     incomingDecisionContext
       ? {
@@ -58,7 +66,7 @@ export function JournalNewPage({ createPort }: Props) {
       : undefined,
   );
   const [decisionContextEnabled, setDecisionContextEnabled] = useState(
-    Boolean(incomingDecisionContext),
+    Boolean(incomingDecisionContext) && locationState?.decisionContextEnabled !== false,
   );
   const [dirty, setDirty] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
@@ -74,6 +82,26 @@ export function JournalNewPage({ createPort }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    if (locationState?.authResumeNotice) {
+      headingRef.current?.focus();
+    }
+  }, [locationState?.authResumeNotice]);
+
+  const directEntryAuthState = (type: AuthResumeIntent['recordType']) => ({
+    authResumeIntent: {
+      targetRoute: buildAppJournalNewPath(type),
+      recordType: type,
+      returnTarget: APP_ROUTE_PATHS.journalNew,
+    } satisfies AuthResumeIntent,
+  });
+  const directEntryTarget = (type: AuthResumeIntent['recordType']) =>
+    authPresentationState === 'authenticated'
+      ? buildAppJournalNewPath(type)
+      : AUTH_ROUTE_PATHS.entry;
+  const directEntryState = (type: AuthResumeIntent['recordType']) =>
+    authPresentationState === 'authenticated' ? undefined : directEntryAuthState(type);
+
   if (!resolution.ok && resolution.reason === 'missing') {
     return (
       <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
@@ -86,7 +114,8 @@ export function JournalNewPage({ createPort }: Props) {
         <div className="grid gap-3 md:grid-cols-2">
           <Link
             className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
-            to={buildAppJournalNewPath('investment')}
+            to={directEntryTarget('investment')}
+            state={directEntryState('investment')}
           >
             <span className="text-base font-semibold">
               {t('app.journalNew.entryChoice.investment.title')}
@@ -97,7 +126,8 @@ export function JournalNewPage({ createPort }: Props) {
           </Link>
           <Link
             className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
-            to={buildAppJournalNewPath('study')}
+            to={directEntryTarget('study')}
+            state={directEntryState('study')}
           >
             <span className="text-base font-semibold">
               {t('app.journalNew.entryChoice.study.title')}
@@ -126,13 +156,15 @@ export function JournalNewPage({ createPort }: Props) {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
               className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-center text-sm font-medium"
-              to={buildAppJournalNewPath('investment')}
+              to={directEntryTarget('investment')}
+              state={directEntryState('investment')}
             >
               {t('app.journalNew.invalidType.investmentAction')}
             </Link>
             <Link
               className="border-border text-foreground rounded-md border px-4 py-2 text-center text-sm font-medium"
-              to={buildAppJournalNewPath('study')}
+              to={directEntryTarget('study')}
+              state={directEntryState('study')}
             >
               {t('app.journalNew.invalidType.studyAction')}
             </Link>
@@ -214,8 +246,19 @@ export function JournalNewPage({ createPort }: Props) {
   return (
     <section className="flex min-h-full flex-col">
       <header className="p-4 pb-0">
-        <h1 className="text-foreground text-lg font-semibold">{typeCopy.title}</h1>
+        <h1
+          ref={headingRef}
+          tabIndex={locationState?.authResumeNotice ? -1 : undefined}
+          className="text-foreground text-lg font-semibold outline-none"
+        >
+          {typeCopy.title}
+        </h1>
         <p className="text-muted-foreground mt-1 text-sm">{typeCopy.description}</p>
+        {locationState?.authResumeNotice && (
+          <p role="status" aria-live="polite" className="text-primary mt-2 text-sm font-semibold">
+            {t('auth.entry.resumeNotice')}
+          </p>
+        )}
         {reviewHandoff && (
           <section
             aria-labelledby="review-handoff-origin-heading"

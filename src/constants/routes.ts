@@ -28,6 +28,14 @@ export const PUBLIC_ROUTE_PATHS = {
   learn: '/:locale/learn/*',
 } as const;
 
+// Provider-neutral public Auth Entry. The route is intentionally outside the
+// `/app/*` shell so it has no App Bottom Navigation. Product UX is OAuth-first,
+// while Shared Identity protocol/callback/session and Gateway integration stay
+// outside this FE route definition.
+export const AUTH_ROUTE_PATHS = {
+  entry: '/auth',
+} as const;
+
 // ── 웹앱 라우트 (APP_BASE 프리픽스, 단일 정의) ──────────────────────
 export const APP_ROUTE_PATHS = {
   appHome: APP_BASE,
