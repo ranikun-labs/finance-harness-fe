@@ -96,7 +96,8 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expect(page.locator('.journal-workspace-list-pane')).toBeHidden();
     await expect(page.locator('.journal-workspace-detail-pane')).toBeVisible();
     await expectBottomNavigation(page, false);
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
+    await expect(page.getByText(/HBM 수요와 외국인 수급/)).toBeVisible();
     await expectSingleMain(page);
     await expectNoHorizontalOverflow(page);
   });
@@ -168,7 +169,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       await expect(
         workspace.locator('.journal-workspace-list-pane a[aria-current="page"]'),
       ).toHaveAttribute('href', buildAppJournalDetailPath(PRIMARY_ID));
-      await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
       await expectSingleMain(page);
       await expectNoHorizontalOverflow(page);
     }

@@ -257,7 +257,10 @@ test.describe('Home 모바일 레이아웃', () => {
 
     expect(contract.documentHeight).toBeLessThanOrEqual(viewportHeight + 1);
     expect(contract.mainScrollable).toBe(true);
-    expect(contract.overflowingScrollSurfaces).toBe(1);
+    // Canonical Raw Detail is intentionally smaller than the old fixture-heavy surface for
+    // some records; when it fits, zero overflowing surfaces is correct. It must never create
+    // more than the single approved AppShell scroll owner.
+    expect(contract.overflowingScrollSurfaces).toBeLessThanOrEqual(1);
     expect(contract.horizontalOverflow).toBe(false);
 
     const viewAll = page.getByRole('link', { name: ko.app.home.recentRecords.viewAll });
@@ -447,7 +450,9 @@ test.describe('기록 상세 모바일 레이아웃', () => {
     });
 
     expect(contract.documentHeight).toBeLessThanOrEqual(viewportHeight + 1);
-    expect(contract.overflowingScrollSurfaces).toBe(1);
+    // A canonical summary/detail payload may fit within the viewport; zero
+    // overflowing surfaces is valid when the AppShell has nothing to scroll.
+    expect(contract.overflowingScrollSurfaces).toBeLessThanOrEqual(1);
     expect(contract.horizontalOverflow).toBe(false);
     await expect(page.getByRole('navigation', { name: ko.nav.ariaLabel })).toHaveCount(0);
 
@@ -464,7 +469,7 @@ test.describe('기록 상세 모바일 레이아웃', () => {
     await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
 
     const recordHeading = page.getByRole('heading', {
-      name: ko.app.journalDetail.investment.recordHeading,
+      name: ko.app.journalDetail.investment.reasoningHeading,
     });
     const recordText = recordHeading.locator('xpath=..').locator('p');
     await recordText.evaluate((element) => {

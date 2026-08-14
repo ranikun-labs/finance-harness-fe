@@ -228,7 +228,7 @@ test.describe('Retrospective adaptive presentation', () => {
     await expect(
       page.getByRole('heading', { name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
     await expectSingleMain(page);
   });
 

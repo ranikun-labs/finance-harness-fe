@@ -311,7 +311,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
-    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const cards = page.locator('.journal-workspace-list-pane a[href^="/app/journal/"]');
     await expect(cards.first()).toBeVisible();
 
     await cards.first().click();
@@ -374,7 +374,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
     await expect(
       page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
     ).toHaveAttribute('href', detailPath);
@@ -384,7 +389,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
     await expect(
       page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
     ).toHaveAttribute('href', detailPath);
@@ -586,7 +596,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       const main = document.querySelector('main')!;
       main.scrollTop = main.scrollHeight;
     });
-    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const cards = page.locator('.journal-workspace-list-pane a[href^="/app/journal/"]');
     const count = await cards.count();
     const lastCard = cards.nth(count - 1);
     const cardBox = (await lastCard.boundingBox())!;
@@ -756,20 +766,15 @@ test.describe('Journal detail English locale', () => {
     await expect(
       page.getByRole('heading', {
         level: 2,
-        name: en.app.journalList.subjects.semiconductorCompanyA,
+        name: '반도체 기업 A',
       }),
     ).toBeVisible();
     await expect(
       page.getByRole('heading', {
-        name: en.app.journalDetail.investment.questionHeading,
+        name: en.app.journalDetail.investment.reasoningHeading,
       }),
     ).toBeVisible();
-    const questionSection = page
-      .getByRole('heading', {
-        name: en.app.journalDetail.investment.questionHeading,
-      })
-      .locator('..');
-    await expect(questionSection.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    await expect(page.getByText(/HBM 수요와 외국인 수급/)).toBeVisible();
   });
 });
 
