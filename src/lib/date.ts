@@ -1,6 +1,7 @@
 import type { Locale } from '@/constants/routes';
 
 const ISO_DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+const JOURNAL_LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/;
 
 /**
  * Returns the current local wall-clock value accepted by a `datetime-local`
@@ -44,4 +45,41 @@ export function formatLocalizedDate(dateOnly: string, locale: Locale): string {
     month: '2-digit',
     day: '2-digit',
   }).format(localDate);
+}
+
+/**
+ * Formats the journal's original local wall-clock value without interpreting it as an
+ * instant. A UTC surrogate is used only so Intl can localize the already-separated calendar
+ * fields; the original `timeZone` remains a separate product value in the ViewModel.
+ */
+export function formatJournalOccurredAt(
+  occurredAt: string,
+  timeZone: string,
+  locale: Locale,
+): string {
+  const match = JOURNAL_LOCAL_DATE_TIME.exec(occurredAt);
+  if (!match) {
+    throw new Error(`formatJournalOccurredAt: "${occurredAt}"는 LocalDateTime 형식이 아닙니다.`);
+  }
+  const [, year, month, day, hour, minute, second, millisecond] = match;
+  const surrogate = new Date(0);
+  surrogate.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
+  surrogate.setUTCHours(Number(hour), Number(minute), Number(second), Number(millisecond));
+
+  try {
+    // Validate the preserved original zone at the presentation boundary too. The formatter
+    // intentionally does not convert the wall-clock fields into this zone.
+    new Intl.DateTimeFormat('en-US', { timeZone }).format();
+  } catch {
+    throw new Error(`formatJournalOccurredAt: invalid IANA timeZone "${timeZone}".`);
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(surrogate);
 }

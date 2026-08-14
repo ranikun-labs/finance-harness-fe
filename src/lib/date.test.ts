@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { formatLocalizedDate } from '@/lib/date';
+import { formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
 
 /** 포맷 결과에서 숫자 토큰(연/월/일)만 뽑아낸다 — ICU 버전에 따라 달라지는 구분자·
  * 순서에 의존하지 않고 "며칠"이 실제로 맞는지만 검증하기 위함이다. */
@@ -73,4 +73,17 @@ describe('formatLocalizedDate', () => {
       expect(() => formatLocalizedDate(dateOnly, 'ko')).toThrow();
     },
   );
+});
+
+describe('formatJournalOccurredAt', () => {
+  it('preserves the original wall-clock value instead of converting it through UTC', () => {
+    const formatted = formatJournalOccurredAt('2026-08-12T14:30:15.123', 'Asia/Seoul', 'en');
+    expect(formatted).not.toContain('2026-08-12T14:30:15.123');
+    expect(formatted).toContain('08/12/2026');
+    expect(formatted).toContain('02:30 PM');
+  });
+
+  it('rejects a timestamp carrying an offset or Z', () => {
+    expect(() => formatJournalOccurredAt('2026-08-12T14:30:15.123Z', 'Asia/Seoul', 'ko')).toThrow();
+  });
 });
