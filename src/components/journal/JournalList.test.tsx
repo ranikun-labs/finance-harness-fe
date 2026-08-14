@@ -1,43 +1,48 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { JournalList } from '@/components/journal/JournalList';
+import type { JournalListStatus } from '@/features/journal-read/model/journalListState';
+import type { JournalListItemViewModel } from '@/features/journal-read/model/journalReadViewModel';
 import { I18nProvider } from '@/i18n/I18nContext';
-import type { JournalEntry } from '@/mocks/journalEntries';
 
-const INVESTMENT_ENTRY: JournalEntry = {
-  id: 'investment-1',
+const INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const STUDY_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
+const INVESTMENT_ENTRY: JournalListItemViewModel = {
+  journalId: INVESTMENT_ID,
   type: 'investment',
-  subjectKey: 'semiconductorCompanyA',
+  occurredAt: '2026-08-12T14:30:15.123' as JournalListItemViewModel['occurredAt'],
+  timeZone: 'Asia/Seoul',
+  assetName: 'ETF',
   action: 'interest',
-  recordedAt: '2026-06-28',
-  question: '반도체 기업 A 요즘 어때?',
-  memo: 'HBM 수요 기대가 꺾이지 않았다.',
-  emotion: '확신',
-  checkedCount: 2,
-  totalCount: 3,
-  aiChecklist: ['반도체 업황을 확인한다.'],
-  decisionChecks: [{ text: '반도체 업황을 확인했다.', checked: true }],
 };
 
-const STUDY_ENTRY: JournalEntry = {
-  id: 'study-1',
+const STUDY_ENTRY: JournalListItemViewModel = {
+  journalId: STUDY_ID,
   type: 'study',
+  occurredAt: '2026-08-12T14:30:00.000' as JournalListItemViewModel['occurredAt'],
+  timeZone: 'Asia/Seoul',
   title: '월말 리밸런싱',
-  recordedAt: '2026-06-27',
-  question: '월말·분기말에 기관은 왜 리밸런싱하나?',
-  memo: '펀드 벤치마크 대비 비중 조정이 필요하다.',
-  checkedCount: 3,
-  totalCount: 3,
-  nextChecks: [{ text: '기관 수급을 확인한다.', checked: true }],
 };
 
-function renderList(entries: JournalEntry[], selectedId?: string) {
+function renderList(
+  entries: JournalListItemViewModel[],
+  options: {
+    selectedId?: string;
+    status?: JournalListStatus;
+    nextCursor?: string | null;
+    error?: { code: 'read_failed' | 'invalid_result' | 'invalid_request'; status?: number } | null;
+    errorPhase?: 'initial' | 'load-more' | null;
+    onRetry?: () => void;
+    onLoadMore?: () => void;
+  } = {},
+) {
   return render(
     <MemoryRouter>
       <I18nProvider locale="ko">
-        <JournalList entries={entries} selectedId={selectedId} />
+        <JournalList entries={entries} {...options} />
       </I18nProvider>
     </MemoryRouter>,
   );
@@ -50,83 +55,68 @@ describe('JournalList', () => {
   });
 
   it('uses a pane heading for the selected list in the detail workspace', () => {
-    renderList([INVESTMENT_ENTRY], INVESTMENT_ENTRY.id);
+    renderList([INVESTMENT_ENTRY], { selectedId: INVESTMENT_ENTRY.journalId });
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: '저널' })).toBeInTheDocument();
   });
 
-  describe('전체 entries 없음', () => {
-    it('shows the empty-all message and an Ask CTA link, not the filter empty message', () => {
-      renderList([]);
-      expect(screen.getByText('아직 저장된 기록이 없어요')).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /질문하러 가기/ })).toBeInTheDocument();
-      expect(screen.queryByText('해당 유형의 기록이 아직 없어요')).not.toBeInTheDocument();
-    });
-
-    it('does not render the type filter', () => {
-      renderList([]);
-      expect(screen.queryByRole('group')).not.toBeInTheDocument();
-    });
+  it('shows the empty-all message and an Ask CTA link', () => {
+    renderList([], { status: 'empty' });
+    expect(screen.getByText('아직 저장된 기록이 없어요')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /질문하러 가기/ })).toBeInTheDocument();
   });
 
-  describe('populated', () => {
-    it('renders all cards and the count when filter is "all"', () => {
-      renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      expect(screen.getByText('반도체 기업 A')).toBeInTheDocument();
-      expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
-      expect(screen.getByText('2개의 기록')).toBeInTheDocument();
-    });
-
-    it('marks the "all" filter button as pressed initially', () => {
-      renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      expect(screen.getByRole('button', { name: '전체' })).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByRole('button', { name: '판단 기록' })).toHaveAttribute(
-        'aria-pressed',
-        'false',
-      );
-    });
-
-    it('filters to investment entries only', () => {
-      renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
-
-      expect(screen.getByText('반도체 기업 A')).toBeInTheDocument();
-      expect(screen.queryByText('월말 리밸런싱')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '판단 기록' })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-      expect(screen.getByText('1개의 기록')).toBeInTheDocument();
-    });
-
-    it('filters to study entries only', () => {
-      renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '학습 노트' }));
-
-      expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
-      expect(screen.queryByText('반도체 기업 A')).not.toBeInTheDocument();
-    });
+  it('renders only investment/study summary data and no client-side type filter', () => {
+    renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
+    expect(screen.getByText('ETF')).toBeInTheDocument();
+    expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
+    expect(screen.getByText('판단 기록')).toBeInTheDocument();
+    expect(screen.getByText('학습 노트')).toBeInTheDocument();
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    expect(screen.queryByText('2개의 기록')).not.toBeInTheDocument();
   });
 
-  describe('필터 결과 없음', () => {
-    it('shows the filter-empty message (not the empty-all message) and a reset button', () => {
-      renderList([STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
+  it('renders loading, initial error, and retry states', () => {
+    renderList([], { status: 'loading' });
+    expect(screen.getByRole('status')).toHaveTextContent('저널을 불러오는 중이에요');
+    cleanup();
 
-      expect(screen.getByText('해당 유형의 기록이 아직 없어요')).toBeInTheDocument();
-      expect(screen.queryByText('아직 저장된 기록이 없어요')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '전체 보기' })).toBeInTheDocument();
+    const onRetry = vi.fn();
+    renderList([], {
+      status: 'error',
+      error: { code: 'read_failed' },
+      errorPhase: 'initial',
+      onRetry,
     });
+    expect(screen.getByText('저널을 불러오지 못했어요')).toBeInTheDocument();
+    screen.getByRole('button', { name: '다시 시도' }).click();
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
 
-    it('resets the filter back to "all" via the reset action', () => {
-      renderList([STUDY_ENTRY]);
-      fireEvent.click(screen.getByRole('button', { name: '판단 기록' }));
-      expect(screen.getByText('해당 유형의 기록이 아직 없어요')).toBeInTheDocument();
+  it('renders continuation and keeps loaded items visible when loading more fails', () => {
+    const onLoadMore = vi.fn();
+    renderList([INVESTMENT_ENTRY], { nextCursor: 'opaque-next', onLoadMore });
+    screen.getByRole('button', { name: '더 불러오기' }).click();
+    expect(onLoadMore).toHaveBeenCalledOnce();
+    cleanup();
 
-      fireEvent.click(screen.getByRole('button', { name: '전체 보기' }));
-
-      expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '전체' })).toHaveAttribute('aria-pressed', 'true');
+    const onRetry = vi.fn();
+    renderList([INVESTMENT_ENTRY], {
+      status: 'error',
+      nextCursor: 'opaque-next',
+      error: { code: 'read_failed' },
+      errorPhase: 'load-more',
+      onRetry,
     });
+    expect(screen.getAllByText('ETF')).toHaveLength(1);
+    expect(screen.getByText('다음 기록을 불러오지 못했어요')).toBeInTheDocument();
+    screen.getByRole('button', { name: '다시 시도' }).click();
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it('renders terminal state when nextCursor is null', () => {
+    renderList([INVESTMENT_ENTRY], { nextCursor: null });
+    expect(screen.getByText('모든 기록을 확인했어요.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '더 불러오기' })).not.toBeInTheDocument();
   });
 });

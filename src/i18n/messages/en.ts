@@ -231,6 +231,25 @@ export const en: Messages = {
     },
     journalList: {
       title: 'Journal',
+      loading: {
+        title: 'Loading your journal',
+        description: 'Checking the record list from the server.',
+      },
+      error: {
+        title: 'We could not load your journal',
+        description: 'Please try again in a moment.',
+        retry: 'Try again',
+      },
+      invalidRequest: {
+        title: 'Check the journal request',
+        description: 'The list request was not valid.',
+        retry: 'Try again',
+      },
+      invalidResult: {
+        title: 'The journal response is unavailable',
+        description: 'The server response could not be displayed safely.',
+        retry: 'Try again',
+      },
       filters: {
         groupLabel: 'Filter by record type',
         all: 'All',
@@ -252,6 +271,14 @@ export const en: Messages = {
         title: 'No records of this type yet',
         description: 'Try a different type or view all records.',
         resetAction: 'View all',
+      },
+      loadMore: 'Load more',
+      loadingMore: 'Loading more…',
+      endOfList: 'You have reached the end of the journal.',
+      loadMoreError: {
+        title: 'We could not load the next records',
+        description: 'The records already loaded are still available.',
+        retry: 'Try again',
       },
       subjects: {
         semiconductorCompanyA: 'Semiconductor Company A',
@@ -402,17 +429,24 @@ export const en: Messages = {
       metadata: {
         recordType: 'Record type',
         recordedAt: 'Recorded on',
+        timeZone: 'Record time zone',
+        createdAt: 'Created at',
+        updatedAt: 'Updated at',
         subject: 'Subject',
         pastAction: 'Action at the time',
         pastEmotion: 'Emotion at the time',
       },
       investment: {
+        reasoningHeading: 'Why I made this judgment',
         questionHeading: 'Question at the time',
         aiChecklistHeading: 'Past AI checklist',
         recordHeading: 'My record',
         checkedItemsHeading: 'Items checked',
       },
       study: {
+        keyContentHeading: 'Key content',
+        openQuestionsHeading: 'Open questions',
+        noOpenQuestions: 'There are no additional questions to check.',
         questionHeading: 'Original question',
         summaryHeading: 'What I learned',
         nextChecksHeading: 'What to check next',
@@ -438,6 +472,25 @@ export const en: Messages = {
       navigation: {
         review: 'Review with AI',
         list: 'Back to records',
+      },
+      loading: {
+        title: 'Loading record details',
+        description: 'Checking the selected record from the server.',
+      },
+      error: {
+        title: 'We could not load the record details',
+        description: 'Please try again in a moment.',
+        retry: 'Try again',
+      },
+      invalidRequest: {
+        title: 'Check the record request',
+        description: 'The record identifier was not valid.',
+        retry: 'Try again',
+      },
+      invalidResult: {
+        title: 'The record response is unavailable',
+        description: 'The server response could not be displayed safely.',
+        retry: 'Try again',
       },
       notFound: {
         heading: 'Record not found',

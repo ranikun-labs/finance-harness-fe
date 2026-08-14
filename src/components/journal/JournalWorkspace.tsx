@@ -1,10 +1,9 @@
 import { matchPath, Outlet, useLocation } from 'react-router';
 
-import { JournalList } from '@/components/journal/JournalList';
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
-import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 import { cn } from '@/lib/utils';
+import { JournalListPage } from '@/pages/JournalListPage';
 
 /**
  * Shared List | Detail presentation for landscape/tablet-wide surfaces. The route
@@ -29,11 +28,7 @@ export function JournalWorkspace() {
         className="journal-workspace-list-pane min-w-0"
         aria-label={t('app.journalWorkspace.listPaneLabel')}
       >
-        {isDetailRoute ? (
-          <JournalList entries={JOURNAL_ENTRIES} selectedId={selectedId} />
-        ) : (
-          <Outlet />
-        )}
+        {isDetailRoute ? <JournalListPage selectedId={selectedId} /> : <Outlet />}
       </aside>
 
       <section

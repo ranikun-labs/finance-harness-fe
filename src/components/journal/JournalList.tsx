@@ -1,35 +1,119 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { JournalRecordCard } from '@/components/journal/JournalRecordCard';
-import {
-  JournalTypeFilter,
-  type JournalTypeFilterValue,
-} from '@/components/journal/JournalTypeFilter';
+import { JournalSummaryCard } from '@/components/journal/JournalSummaryCard';
 import { buttonVariants } from '@/components/ui/button';
 import { buildAppAskPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
+import type {
+  JournalListErrorPhase,
+  JournalListStatus,
+} from '@/features/journal-read/model/journalListState';
+import type { JournalReadError } from '@/features/journal-read/model/journalReadPort';
+import type { JournalListItemViewModel } from '@/features/journal-read/model/journalReadViewModel';
 import { cn } from '@/lib/utils';
-import type { JournalEntry } from '@/mocks/journalEntries';
 
 interface JournalListProps {
-  entries: JournalEntry[];
+  entries: JournalListItemViewModel[];
   selectedId?: string;
+  status?: JournalListStatus;
+  nextCursor?: string | null;
+  error?: JournalReadError | null;
+  errorPhase?: JournalListErrorPhase | null;
+  onRetry?: () => void;
+  onLoadMore?: () => void;
+}
+
+function StatusMessage({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 px-6 py-10 text-center" role="status">
+      <p className="text-foreground text-base font-semibold">{title}</p>
+      <p className="text-muted-foreground text-sm">{description}</p>
+      {action}
+    </div>
+  );
+}
+
+function ErrorMessage({
+  error,
+  phase,
+  onRetry,
+}: {
+  error: JournalReadError;
+  phase: JournalListErrorPhase | null | undefined;
+  onRetry?: () => void;
+}) {
+  const { t } = useTranslation();
+  const copy =
+    phase === 'load-more'
+      ? t('app.journalList.loadMoreError.title')
+      : error.code === 'invalid_request'
+        ? t('app.journalList.invalidRequest.title')
+        : error.code === 'invalid_result'
+          ? t('app.journalList.invalidResult.title')
+          : t('app.journalList.error.title');
+  const description =
+    phase === 'load-more'
+      ? t('app.journalList.loadMoreError.description')
+      : error.code === 'invalid_request'
+        ? t('app.journalList.invalidRequest.description')
+        : error.code === 'invalid_result'
+          ? t('app.journalList.invalidResult.description')
+          : t('app.journalList.error.description');
+  const retryLabel =
+    phase === 'load-more'
+      ? t('app.journalList.loadMoreError.retry')
+      : error.code === 'invalid_request'
+        ? t('app.journalList.invalidRequest.retry')
+        : error.code === 'invalid_result'
+          ? t('app.journalList.invalidResult.retry')
+          : t('app.journalList.error.retry');
+
+  return (
+    <StatusMessage
+      title={copy}
+      description={description}
+      action={
+        onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+          >
+            {retryLabel}
+          </button>
+        )
+      }
+    />
+  );
 }
 
 /**
- * 전체 없음 / populated / 필터 결과 없음 세 상태를 분기하는 presentational composition.
- * 선택 필터는 이 컴포넌트가 소유하는 유일한 local UI state다.
+ * Renders only the canonical paginated summary projection. The loaded length is never shown
+ * as a total because the server deliberately does not provide totalCount.
  */
-export function JournalList({ entries, selectedId }: JournalListProps) {
+export function JournalList({
+  entries,
+  selectedId,
+  status = 'loaded',
+  nextCursor = null,
+  error = null,
+  errorPhase = null,
+  onRetry,
+  onLoadMore,
+}: JournalListProps) {
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<JournalTypeFilterValue>('all');
   const Heading = selectedId ? 'h2' : 'h1';
-
-  const hasAnyEntries = entries.length > 0;
-  const filteredEntries =
-    filter === 'all' ? entries : entries.filter((entry) => entry.type === filter);
+  const isInitialLoading = status === 'loading';
+  const hasInitialError = status === 'error' && entries.length === 0;
 
   return (
     <div className="flex min-h-full flex-col gap-4 p-4">
@@ -37,7 +121,14 @@ export function JournalList({ entries, selectedId }: JournalListProps) {
         {t('app.journalList.title')}
       </Heading>
 
-      {!hasAnyEntries ? (
+      {isInitialLoading ? (
+        <StatusMessage
+          title={t('app.journalList.loading.title')}
+          description={t('app.journalList.loading.description')}
+        />
+      ) : hasInitialError && error ? (
+        <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
+      ) : status === 'empty' ? (
         <EmptyState
           title={t('app.journalList.emptyAll.title')}
           description={t('app.journalList.emptyAll.description')}
@@ -49,46 +140,51 @@ export function JournalList({ entries, selectedId }: JournalListProps) {
               <p className="text-muted-foreground max-w-[260px] text-center text-xs leading-relaxed">
                 {t('app.journalList.emptyAll.hint')}
               </p>
+              {nextCursor !== null && onLoadMore && (
+                <button
+                  type="button"
+                  onClick={onLoadMore}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+                >
+                  {t('app.journalList.loadMore')}
+                </button>
+              )}
             </div>
           }
         />
       ) : (
         <>
-          <JournalTypeFilter value={filter} onChange={setFilter} />
+          <div className="flex flex-col gap-3">
+            {entries.map((entry) => (
+              <JournalSummaryCard
+                key={entry.journalId}
+                entry={entry}
+                selected={entry.journalId === selectedId}
+              />
+            ))}
+          </div>
 
-          {filteredEntries.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
-              <div className="flex flex-col gap-1.5">
-                <p className="text-foreground text-base font-semibold">
-                  {t('app.journalList.emptyFilter.title')}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t('app.journalList.emptyFilter.description')}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFilter('all')}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-              >
-                {t('app.journalList.emptyFilter.resetAction')}
-              </button>
-            </div>
+          {status === 'error' && error && errorPhase === 'load-more' && (
+            <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
+          )}
+
+          {status === 'loading-more' ? (
+            <StatusMessage
+              title={t('app.journalList.loadingMore')}
+              description={t('app.journalList.loading.description')}
+            />
+          ) : nextCursor !== null && onLoadMore ? (
+            <button
+              type="button"
+              onClick={onLoadMore}
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'min-h-11')}
+            >
+              {t('app.journalList.loadMore')}
+            </button>
           ) : (
-            <>
-              <div className="flex flex-col gap-3">
-                {filteredEntries.map((entry) => (
-                  <JournalRecordCard
-                    key={entry.id}
-                    entry={entry}
-                    selected={entry.id === selectedId}
-                  />
-                ))}
-              </div>
-              <p className="text-muted-foreground pt-2 pb-1 text-center text-xs">
-                {t('app.journalList.countLabel', { count: String(filteredEntries.length) })}
-              </p>
-            </>
+            <p className="text-muted-foreground pt-2 pb-1 text-center text-xs">
+              {t('app.journalList.endOfList')}
+            </p>
           )}
         </>
       )}

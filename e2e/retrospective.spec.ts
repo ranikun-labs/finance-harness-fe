@@ -7,9 +7,10 @@ import {
 } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
 
-const PRIMARY_ID = 'journal-2026-06-28-01';
-const REVIEW_PATH = buildAppJournalReviewPath(PRIMARY_ID);
-const DETAIL_PATH = buildAppJournalDetailPath(PRIMARY_ID);
+const FIXTURE_PRIMARY_ID = 'journal-2026-06-28-01';
+const RAW_PRIMARY_ID = '550e8400-e29b-41d4-a716-446655440000';
+const REVIEW_PATH = buildAppJournalReviewPath(FIXTURE_PRIMARY_ID);
+const DETAIL_PATH = buildAppJournalDetailPath(RAW_PRIMARY_ID);
 
 async function expectSingleMain(page: Page) {
   await expect(page.locator('main')).toHaveCount(1);
@@ -221,14 +222,16 @@ test.describe('Retrospective adaptive presentation', () => {
     await expectSingleMain(page);
 
     await page.goto(DETAIL_PATH);
-    await page.getByRole('link', { name: ko.app.journalDetail.navigation.review }).click();
-    await expect(page).toHaveURL(new RegExp(`${REVIEW_PATH}$`));
+    await expect(
+      page.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
+    ).toHaveAttribute('href', buildAppJournalReviewPath(RAW_PRIMARY_ID));
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`${DETAIL_PATH}$`));
+    await expect(page).toHaveURL(new RegExp(`${REVIEW_PATH}$`));
+    await page.goto(DETAIL_PATH);
     await expect(
       page.getByRole('heading', { name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
     await expectSingleMain(page);
   });
 

@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     // `pnpm`/`npx`가 PATH에 shim으로 없는 환경(예: corepack을 직접 경유하는 설정)에서도
     // 동작하도록 node로 로컬 vite 바이너리를 직접 실행한다.
-    command: `node node_modules/vite/bin/vite.js preview --port ${PORT}`,
+    command: `node e2e/support/financeE2eServer.mjs`,
     url: `http://localhost:${PORT}`,
     // Finance E2E must own and start its preview. Reusing an unrelated process on the
     // shared port can make a passing test exercise another product; a port conflict

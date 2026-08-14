@@ -31,6 +31,8 @@ import { LearnPage } from '@/pages/public/LearnPage';
 import { PublicHomePage } from '@/pages/public/PublicHomePage';
 import { PublicNotFoundFallback, PublicNotFoundPage } from '@/pages/public/PublicNotFoundPage';
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
+import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
+import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -91,76 +93,80 @@ function JournalNewAuthRequiredRoute() {
 interface AppRouterProps {
   /** FE-local fixture/consumer state; production defaults to non-authoritative unknown. */
   authPresentation?: AuthPresentationConsumer;
+  /** Integration seam for the server-owned Journal List/Detail read flow. */
+  journalReadPort?: JournalReadPort;
 }
 
-export function AppRouter({ authPresentation }: AppRouterProps = {}) {
+export function AppRouter({ authPresentation, journalReadPort }: AppRouterProps = {}) {
   return (
     <AuthPresentationProvider value={authPresentation}>
-      <Routes>
-        {/* 루트: 기본 로케일로 redirect 전용 */}
-        <Route path="/" element={<RootRedirect />} />
+      <JournalReadPortProvider port={journalReadPort}>
+        <Routes>
+          {/* 루트: 기본 로케일로 redirect 전용 */}
+          <Route path="/" element={<RootRedirect />} />
 
-        {/* Provider-neutral Auth Entry — public surface without AppShell navigation. */}
-        <Route path={AUTH_ROUTE_PATHS.entry} element={<AuthEntryRoute />} />
+          {/* Provider-neutral Auth Entry — public surface without AppShell navigation. */}
+          <Route path={AUTH_ROUTE_PATHS.entry} element={<AuthEntryRoute />} />
 
-        {/* 공개 웹: /:locale (ko|en) — PublicLayout이 locale을 검증한다 */}
-        <Route path={LOCALE_BASE} element={<PublicLayout />}>
-          <Route index element={<PublicHomePage />} />
-          <Route
-            path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.features)}
-            element={<FeaturesPage />}
-          />
-          <Route
-            path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.learn)}
-            element={<LearnPage />}
-          />
-          <Route path="*" element={<PublicNotFoundPage />} />
-        </Route>
-
-        {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
-        <Route path={APP_BASE} element={<AppShell />}>
-          {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
-          <Route element={<TabLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)} element={<AskPage />} />
+          {/* 공개 웹: /:locale (ko|en) — PublicLayout이 locale을 검증한다 */}
+          <Route path={LOCALE_BASE} element={<PublicLayout />}>
+            <Route index element={<PublicHomePage />} />
             <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalList)}
-              element={<JournalListPage />}
+              path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.features)}
+              element={<FeaturesPage />}
             />
             <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
-              element={<JournalNewAuthRequiredRoute />}
+              path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.learn)}
+              element={<LearnPage />}
             />
-            <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
-              element={<JournalDetailPage />}
-            />
-            <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
-              element={
-                <AuthRequiredSurface
-                  fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
-                  fallbackCancelLabel="auth.entry.cancelReviewStart"
-                >
-                  <JournalReviewPage />
-                </AuthRequiredSurface>
-              }
-            />
+            <Route path="*" element={<PublicNotFoundPage />} />
           </Route>
 
-          {/* Primary navigation을 상속하지 않는 앱 화면 (AppShell 직속) */}
-          <Route
-            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.onboarding)}
-            element={<OnboardingPage />}
-          />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
+          {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
+          <Route path={APP_BASE} element={<AppShell />}>
+            {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
+            <Route element={<TabLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)} element={<AskPage />} />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalList)}
+                element={<JournalListPage />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
+                element={<JournalNewAuthRequiredRoute />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
+                element={<JournalDetailPage />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
+                element={
+                  <AuthRequiredSurface
+                    fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
+                    fallbackCancelLabel="auth.entry.cancelReviewStart"
+                  >
+                    <JournalReviewPage />
+                  </AuthRequiredSurface>
+                }
+              />
+            </Route>
 
-        {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리(DEFAULT_LOCALE
+            {/* Primary navigation을 상속하지 않는 앱 화면 (AppShell 직속) */}
+            <Route
+              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.onboarding)}
+              element={<OnboardingPage />}
+            />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+
+          {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리(DEFAULT_LOCALE
           provider를 스스로 소유하는 PublicNotFoundFallback — 여기엔 유효한 URL locale이
           없다) */}
-        <Route path="*" element={<PublicNotFoundFallback />} />
-      </Routes>
+          <Route path="*" element={<PublicNotFoundFallback />} />
+        </Routes>
+      </JournalReadPortProvider>
     </AuthPresentationProvider>
   );
 }

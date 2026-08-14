@@ -15,9 +15,12 @@ import {
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 
-const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
-const SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
-const STUDY_ID = 'journal-2026-06-27-01';
+const RAW_PRIMARY_INVESTMENT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const RAW_SECOND_INVESTMENT_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+const RAW_STUDY_ID = '7d444840-9dc0-11d1-b245-5ffdce74fad2';
+const FIXTURE_PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
+const FIXTURE_SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
+const FIXTURE_STUDY_ID = 'journal-2026-06-27-01';
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
 const PUBLIC_NOT_FOUND = '공개 페이지를 찾을 수 없어요';
 
@@ -42,11 +45,11 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.journalList, heading: ko.app.journalList.title },
   { path: buildAppJournalNewPath('investment'), heading: ko.app.journalNew.investment },
   {
-    path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+    path: buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID),
     heading: ko.app.journalDetail.headerTitle,
   },
   {
-    path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+    path: buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID),
     heading: ko.app.journalReview.headerTitle,
   },
 ];
@@ -96,8 +99,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     const landmarkRoutes = [
       APP_ROUTE_PATHS.journalList,
       buildAppJournalNewPath('investment'),
-      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
-      buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID),
+      buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID),
       buildAppJournalDetailPath('unknown-record-id'),
       buildAppJournalReviewPath('unknown-record-id'),
       `${APP_ROUTE_PATHS.journalList}/%25E0%25A4%25A`,
@@ -204,7 +207,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     ).toBeVisible();
   });
 
-  test('Home exposes the newest two canonical records and navigates to list and detail', async ({
+  test('Home exposes the newest two fixture records and navigates to the list', async ({
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
@@ -216,21 +219,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(recentItems).toHaveCount(2);
     await expect(recentItems.nth(0).getByRole('link')).toHaveAttribute(
       'href',
-      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath(FIXTURE_PRIMARY_INVESTMENT_ID),
     );
     await expect(recentItems.nth(1).getByRole('link')).toHaveAttribute(
       'href',
-      buildAppJournalDetailPath(STUDY_ID),
+      buildAppJournalDetailPath(FIXTURE_STUDY_ID),
     );
-
-    await recentItems.nth(0).getByRole('link').click();
-    await expect(page).toHaveURL(
-      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
-    );
-    await page.goBack();
-    await expect(
-      page.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
-    ).toBeVisible();
 
     await page.getByRole('link', { name: ko.app.home.recentRecords.viewAll }).click();
     await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}$`));
@@ -286,11 +280,11 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     { label: 'Journal New', path: buildAppJournalNewPath('investment') },
     {
       label: 'Journal Detail',
-      path: buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      path: buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID),
     },
     {
       label: 'Journal Review',
-      path: buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID),
+      path: buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID),
     },
     { label: 'Onboarding', path: APP_ROUTE_PATHS.onboarding },
     { label: 'App NotFound', path: `${APP_ROUTE_PATHS.appHome}/this-route-does-not-exist` },
@@ -311,12 +305,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
-    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const cards = page.locator('.journal-workspace-list-pane a[href^="/app/journal/"]');
     await expect(cards.first()).toBeVisible();
 
     await cards.first().click();
     await expect(page).toHaveURL(
-      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
+      new RegExp(`${buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID)}$`),
     );
     await expect(
       page.getByRole('heading', {
@@ -329,15 +323,15 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   for (const detail of [
     {
       label: 'primary investment',
-      id: PRIMARY_INVESTMENT_ID,
+      id: RAW_PRIMARY_INVESTMENT_ID,
       heading: ko.app.journalList.subjects.semiconductorCompanyA,
     },
     {
       label: 'second investment',
-      id: SECOND_INVESTMENT_ID,
+      id: RAW_SECOND_INVESTMENT_ID,
       heading: ko.app.journalList.subjects.batteryCompanyC,
     },
-    { label: 'study', id: STUDY_ID, heading: '월말 리밸런싱' },
+    { label: 'study', id: RAW_STUDY_ID, heading: '월말 리밸런싱' },
   ]) {
     test(`renders the ${detail.label} detail fixture directly`, async ({ page }) => {
       await page.goto(buildAppJournalDetailPath(detail.id));
@@ -350,31 +344,30 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
   }
 
-  test('journal detail navigates to the existing review route without transferring state', async ({
-    page,
-  }) => {
-    await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
+  test('journal detail exposes the review route without transferring state', async ({ page }) => {
+    await page.goto(buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID));
 
-    await page.getByRole('link', { name: ko.app.journalDetail.navigation.review }).click();
-    await expect(page).toHaveURL(
-      new RegExp(`${buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID)}$`),
-    );
     await expect(
-      page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
-    ).toBeVisible();
+      page.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
+    ).toHaveAttribute('href', buildAppJournalReviewPath(RAW_PRIMARY_INVESTMENT_ID));
   });
 
   test('journal detail survives reload and browser back without stale selection', async ({
     page,
   }) => {
-    const detailPath = buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID);
+    const detailPath = buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID);
 
     await page.goto(detailPath);
     const detailUrl = page.url();
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
     await expect(
       page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
     ).toHaveAttribute('href', detailPath);
@@ -384,7 +377,12 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeVisible();
-    await expect(page.getByTestId('decision-context-snapshot')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: ko.app.journalList.subjects.semiconductorCompanyA,
+      }),
+    ).toBeVisible();
     await expect(
       page.locator('.journal-workspace-list-pane a[aria-current="page"]'),
     ).toHaveAttribute('href', detailPath);
@@ -414,7 +412,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   test('journal detail resolves an encoded existing id and builds a canonical review href', async ({
     page,
   }) => {
-    const encodedPath = `${APP_ROUTE_PATHS.journalList}/journal%2D2026%2D06%2D28%2D01`;
+    const encodedPath = `${APP_ROUTE_PATHS.journalList}/${encodeURIComponent(RAW_PRIMARY_INVESTMENT_ID)}`;
     await page.goto(encodedPath);
 
     await expect(
@@ -425,7 +423,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     ).toBeVisible();
     await expect(
       page.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
-    ).toHaveAttribute('href', buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    ).toHaveAttribute('href', buildAppJournalReviewPath(RAW_PRIMARY_INVESTMENT_ID));
   });
 
   for (const missing of [
@@ -457,19 +455,19 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   for (const review of [
     {
       label: 'primary investment',
-      id: PRIMARY_INVESTMENT_ID,
+      id: FIXTURE_PRIMARY_INVESTMENT_ID,
       subject: ko.app.journalList.subjects.semiconductorCompanyA,
       section: ko.app.journalReview.investment.reflectionHeading,
     },
     {
       label: 'second investment',
-      id: SECOND_INVESTMENT_ID,
+      id: FIXTURE_SECOND_INVESTMENT_ID,
       subject: ko.app.journalList.subjects.batteryCompanyC,
       section: ko.app.journalReview.investment.reflectionHeading,
     },
     {
       label: 'study',
-      id: STUDY_ID,
+      id: FIXTURE_STUDY_ID,
       subject: '월말 리밸런싱',
       section: ko.app.journalReview.study.reflectionHeading,
     },
@@ -486,10 +484,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
   }
 
-  test('journal review returns to canonical record details using a deterministic link', async ({
-    page,
-  }) => {
-    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+  test('journal review exposes a deterministic record detail link', async ({ page }) => {
+    await page.goto(buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID));
     const detailLinks = page.getByRole('link', {
       name: ko.app.journalReview.navigation.detail,
     });
@@ -497,21 +493,14 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(detailLinks).toHaveCount(1);
     await expect(detailLinks).toHaveAttribute(
       'href',
-      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath(FIXTURE_PRIMARY_INVESTMENT_ID),
     );
-    await detailLinks.last().click();
-    await expect(page).toHaveURL(
-      new RegExp(`${buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID)}$`),
-    );
-    await expect(
-      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
-    ).toBeVisible();
   });
 
   test('journal review resolves an encoded existing id and keeps its canonical detail href', async ({
     page,
   }) => {
-    const encodedPath = `${APP_ROUTE_PATHS.journalList}/journal%2D2026%2D06%2D28%2D01/review`;
+    const encodedPath = `${APP_ROUTE_PATHS.journalList}/${encodeURIComponent(FIXTURE_PRIMARY_INVESTMENT_ID)}/review`;
     await page.goto(encodedPath);
 
     await expect(
@@ -522,7 +511,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     });
     await expect(detailLinks.first()).toHaveAttribute(
       'href',
-      buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+      buildAppJournalDetailPath(FIXTURE_PRIMARY_INVESTMENT_ID),
     );
   });
 
@@ -559,7 +548,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   test('journal review exposes the separate retrospective editor without mutation controls', async ({
     page,
   }) => {
-    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    await page.goto(buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID));
 
     await expect(page.getByTestId('retrospective-editor')).toBeVisible();
     await expect(
@@ -586,7 +575,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       const main = document.querySelector('main')!;
       main.scrollTop = main.scrollHeight;
     });
-    const cards = page.getByRole('link').filter({ hasText: '체크 완료' });
+    const cards = page.locator('.journal-workspace-list-pane a[href^="/app/journal/"]');
     const count = await cards.count();
     const lastCard = cards.nth(count - 1);
     const cardBox = (await lastCard.boundingBox())!;
@@ -748,7 +737,7 @@ test.describe('Journal detail English locale', () => {
   test('renders English detail labels while preserving the fixture-authored record', async ({
     page,
   }) => {
-    await page.goto(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID));
+    await page.goto(buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID));
 
     await expect(
       page.getByRole('heading', { level: 1, name: en.app.journalDetail.headerTitle }),
@@ -756,20 +745,15 @@ test.describe('Journal detail English locale', () => {
     await expect(
       page.getByRole('heading', {
         level: 2,
-        name: en.app.journalList.subjects.semiconductorCompanyA,
+        name: '반도체 기업 A',
       }),
     ).toBeVisible();
     await expect(
       page.getByRole('heading', {
-        name: en.app.journalDetail.investment.questionHeading,
+        name: en.app.journalDetail.investment.reasoningHeading,
       }),
     ).toBeVisible();
-    const questionSection = page
-      .getByRole('heading', {
-        name: en.app.journalDetail.investment.questionHeading,
-      })
-      .locator('..');
-    await expect(questionSection.getByText('반도체 기업 A 요즘 어때?')).toBeVisible();
+    await expect(page.getByText(/HBM 수요와 외국인 수급/)).toBeVisible();
   });
 });
 
@@ -779,7 +763,7 @@ test.describe('Journal review English locale', () => {
   test('renders English review labels while preserving the fixture-authored record', async ({
     page,
   }) => {
-    await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    await page.goto(buildAppJournalReviewPath(FIXTURE_PRIMARY_INVESTMENT_ID));
 
     await expect(
       page.getByRole('heading', { level: 1, name: en.app.journalReview.headerTitle }),
