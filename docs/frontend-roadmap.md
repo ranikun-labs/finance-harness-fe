@@ -17,9 +17,9 @@
 ## 결론 먼저 — 현재 위치
 
 - **완료:** STEP 0~10 (제품·정책 정리 / 네비게이션 설계 / 와이어프레임 확보 / React 스캐폴딩 / 와이어프레임 반입·매핑 / 공개 웹·앱 라우팅·Pre-render·SPA fallback / 한국어·영어 i18n 기반 / 디자인 시스템 / 핵심 화면 UI / 폼·상태·클라이언트 제출 경계)와 RPL-68 Slice 1–5 Adaptive P0 frontend contract, Final Review, master merge
-- **현재:** Finance FE Auth / Journal / Review UX Revision은 UX-1~5를 포함해
-  **CANONICAL COMPLETE**다. UX-5는 Final Hardening, Independent Review, feature
-  commit/push, PR #25, Pre-merge Review, normal merge, master reconciliation까지 완료했다.
+- **최근 canonical 완료:** Finance FE Auth / Journal / Review UX Revision(UX-1~5)에 이어
+  STEP 12 Accessibility / SEO / Performance Release Readiness가 PR #28 normal merge로
+  **CANONICAL COMPLETE**다.
 - **해결:** UX-5가 Preview Isolation, 정확히 500자 `openQuestion` 경계,
   `openQuestions = []` 검증의 기존 technical carryover 3건을 모두 해결했으며,
   technical carryover remaining은 0이다.
@@ -27,9 +27,9 @@
   token/cookie/session transport, final Shared Gateway publication, Decision Context
   persistence, Backend production integration, Production Create activation, 결제·개인화·
   실시간 데이터, 네이티브 프로젝트
-- **다음 행동:** UX Revision은 완료됐다. 이후 production integration은 owner contract가
-  준비된 별도 phase에서만 진행하며, Shared Identity/Gateway와 Backend/Review 계약을
-  추측해 FE에 추가하지 않는다.
+- **다음 행동:** STEP 13~15를 자동 시작하지 않는다. 공식 Capacitor `appId`, STEP 11
+  Production integration, Shared Platform/external runtime의 실제 dependency readiness를
+  다시 확인한 뒤 실행 가능한 작업을 resolve한다.
 
 상태 표기: ✅ 완료 · 🔶 진행/현재 · ⬜ 예정 · 🔒 선행 조건 미충족
 
@@ -64,7 +64,7 @@ React 기반 하나의 프론트엔드 코드베이스
 
 ---
 
-## 3. 현재 완료 상태 (STEP 9 완료 기준)
+## 3. 현재 완료 상태 (canonical master 기준)
 
 아래는 **실제 로컬 저장소에서 확인된 완료 사항만** 기록한다. 미구현 항목을 완료로 적지 않는다.
 
@@ -154,11 +154,11 @@ React 기반 하나의 프론트엔드 코드베이스
 | 8    | 디자인 시스템·공통 UI   | 공통 컴포넌트 구체화                        | 확장된 UI 세트                   | STEP 4                   | 핵심 공통 컴포넌트 구비         | ✅                                                                                                                      | 디자인 시스템 PR        | 화면별 로직                |
 | 9    | 핵심 화면 UI 구현       | 실제 화면 UI                                | 온보딩·Home·Ask·Journal 등       | STEP 8, 4                | 화면별 UI·정책 준수             | ✅                                                                                                                      | **화면/흐름별 다수 PR** | API 연동                   |
 | 10   | 폼·상태·데이터 흐름     | 입력·상태·클라이언트 데이터 흐름            | 폼·상태·Create/Submit 경계       | STEP 9                   | 흐름 동작(모의 데이터)          | ✅ RPL-18·RPL-43·RPL-44 완료; Form/Valid UI, Create/Submit, Retry, lifecycle, test-only Adapter 완료, Merge Commit 반영 | 상태/폼 PR              | 백엔드 연동                |
-| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | ⬜                                                                                                                      | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
-| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ⬜                                                                                                                      | 품질 PR                 | 네이티브                   |
-| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒                                                                                                                    | 네이티브 PR             | 출시 설정과 혼재           |
-| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜                                                                                                                      | 테스트 PR               | 신규 기능                  |
-| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜                                                                                                                      | 출시 설정 PR            | 신규 기능                  |
+| 11   | 백엔드 API 연동         | 실데이터 연동                               | API 클라이언트·연동              | STEP 10, 백엔드 계약     | 실데이터 왕복                   | 🔶 Raw Read 완료; Production integration 일부는 Backend/Shared Platform/external runtime dependency 대기                | **API 연동 다수 PR**    | 범용 추상 계층 선구현      |
+| 12   | 접근성·SEO·성능         | 웹 품질 보강                                | a11y·메타·성능 개선              | STEP 9                   | 목표 지표 충족                  | ✅ **CANONICAL COMPLETE** — PR #28; A11Y-01/02, META-01, PERF-01/02 PASS. SEO-01은 Product decision 대기                | 품질 PR                 | 네이티브                   |
+| 13   | Capacitor 네이티브 구성 | iOS·Android 프로젝트                        | `ios/`·`android/`                | **공식 `appId` 확정** 🔒 | 네이티브 빌드 성공              | ⬜🔒 공식 `appId` 미확정으로 blocked                                                                                    | 네이티브 PR             | 출시 설정과 혼재           |
+| 14   | 통합·회귀·실기기 테스트 | 실기기·회귀 검증                            | 테스트 결과                      | STEP 13, 11              | 핵심 시나리오 통과              | ⬜🔒 STEP 13과 STEP 11 dependency 충족 전 시작하지 않음                                                                 | 테스트 PR               | 신규 기능                  |
+| 15   | 웹·앱 배포·출시 준비    | 배포·출시 설정                              | 호스팅·스토어 설정               | STEP 12, 14              | 배포 파이프라인 동작            | ⬜🔒 STEP 12 완료; STEP 14 dependency 대기                                                                              | 출시 설정 PR            | 신규 기능                  |
 
 ---
 
@@ -193,8 +193,9 @@ React 기반 하나의 프론트엔드 코드베이스
 - ✅ **한국어·영어 i18n 기반 (STEP 7)**
 - ✅ **디자인 시스템·공통 UI 기반 (STEP 8, 이 PR)**
 - ✅ 화면 또는 사용자 흐름별 UI 구현(다수)
+- ✅ **STEP 12 웹 품질 보강 (PR #28)** — 접근성·메타데이터·성능
 - ⬜ API·상태 연동(다수)
-- ⬜ 출시 품질 보강
+- ⬜ 네이티브·통합·출시 준비(STEP 13~15, dependency 충족 후)
 
 **한 PR에 섞지 않는다:**
 
@@ -213,25 +214,25 @@ React 기반 하나의 프론트엔드 코드베이스
 - **P1** — 출시 품질을 높이지만 시점 조정 가능
 - **P2** — 사용자·트래픽·운영 요구가 확인된 뒤 진행
 
-| 작업                                  | 분류  | 비고                          |
-| ------------------------------------- | ----- | ----------------------------- |
-| 와이어프레임 반입·화면 매핑           | P0    | 완료                          |
-| 공개 웹/앱 라우팅 경계·`/app/*`       | P0    | 구조 결정                     |
-| 공개 웹 Pre-render + `/app/*` SPA     | P0    | SSR 아님                      |
-| 핵심 화면 UI(온보딩·Home·Ask·Journal) | P0    | 개발량 집중                   |
-| 폼·상태·데이터 흐름(경량)             | P0    | 과한 전역 상태 지양           |
-| 백엔드 API 연동(실데이터)             | P0    | 계약 확정 후                  |
-| 한국어·영어 i18n 기반                 | P1    | SaaS 없이 시작                |
-| 디자인 시스템 확장                    | P1    | 필요 범위만                   |
-| 접근성·SEO·성능 보강                  | P1    | 지표 기반                     |
-| Capacitor 네이티브 프로젝트           | P1 🔒 | **공식 `appId` 확정 전 금지** |
-| 실기기·회귀 테스트                    | P1    | 핵심 시나리오 우선            |
-| 요청별 SSR 서버                       | P2    | 필요성 검증 후                |
-| 복잡한 전역 상태관리 라이브러리       | P2    | 실제 필요 확인 후             |
-| 번역 SaaS                             | P2    | 규모 확인 후                  |
-| 범용 API 추상 계층(실데이터 없이)     | P2    | 선구현 금지                   |
-| 전 브라우저·전 기기 조합 테스트       | P2    | 트래픽 확인 후                |
-| 과도한 디자인 시스템 추상화           | P2    | 근거 기반                     |
+| 작업                                  | 분류  | 비고                                           |
+| ------------------------------------- | ----- | ---------------------------------------------- |
+| 와이어프레임 반입·화면 매핑           | P0    | 완료                                           |
+| 공개 웹/앱 라우팅 경계·`/app/*`       | P0    | 구조 결정                                      |
+| 공개 웹 Pre-render + `/app/*` SPA     | P0    | SSR 아님                                       |
+| 핵심 화면 UI(온보딩·Home·Ask·Journal) | P0    | 개발량 집중                                    |
+| 폼·상태·데이터 흐름(경량)             | P0    | 과한 전역 상태 지양                            |
+| 백엔드 API 연동(실데이터)             | P0    | 계약 확정 후                                   |
+| 한국어·영어 i18n 기반                 | P1    | SaaS 없이 시작                                 |
+| 디자인 시스템 확장                    | P1    | 필요 범위만                                    |
+| 접근성·SEO·성능 보강                  | P1    | STEP 12 완료; SEO 정책은 Product decision 대기 |
+| Capacitor 네이티브 프로젝트           | P1 🔒 | **공식 `appId` 확정 전 금지**                  |
+| 실기기·회귀 테스트                    | P1    | 핵심 시나리오 우선                             |
+| 요청별 SSR 서버                       | P2    | 필요성 검증 후                                 |
+| 복잡한 전역 상태관리 라이브러리       | P2    | 실제 필요 확인 후                              |
+| 번역 SaaS                             | P2    | 규모 확인 후                                   |
+| 범용 API 추상 계층(실데이터 없이)     | P2    | 선구현 금지                                    |
+| 전 브라우저·전 기기 조합 테스트       | P2    | 트래픽 확인 후                                 |
+| 과도한 디자인 시스템 추상화           | P2    | 근거 기반                                      |
 
 > **근거 없이 P0로 올리지 않는다:** 요청별 SSR 서버, 복잡한 전역 상태관리, 번역 SaaS,
 > 과도한 디자인 추상화, `appId` 확정 전 네이티브 프로젝트, 실데이터 없는 범용 API 계층,
@@ -358,11 +359,61 @@ PHASE**: real Shared Identity, OAuth execution/callback, token/cookie/session tr
 Shared Gateway publication, Decision Context persistence, Finance Backend production integration,
 Production Journal Create activation, Review Backend/API integration, and AI/RAG runtime.
 
-## 이후 STEP 11
+## STEP 12 Accessibility / SEO / Performance Release Readiness
 
-- Backend Repository와 ownership, 실제 Persistence/Auth 계약은 별도 확인한다.
-- Production Persistence와 Detail read model 연결은 승인된 backend contract 이후에만
-  진행한다.
+- Status: **CANONICAL COMPLETE**
+- Canonical merge: **PR #28**
+- Feature SHA: `899debaf8c81365851af7280ade814c19836ac01`
+- Merge SHA: `f9239a2faa7b87bda396d2e41176777c8e8da3ac`
+- Merged at: `2026-08-25T14:58:08Z`
+- Method: normal merge commit; merge tree equals the reviewed feature tree.
+
+### Closed findings
+
+- A11Y-01: **PASS** — audited routes keep `main = 1`, `h1 = 1`, nested `main = 0`.
+- A11Y-02: **PASS** — active light-theme text/CTA contrast is at least `4.5:1`.
+- META-01: **PASS** — route/locale-aware document title uses a shared client/prerender source.
+- PERF-01: **PASS** — Pretendard uses unicode-range subset delivery.
+- PERF-02: **PASS** — route-level code splitting and a stable accessible lazy-loading fallback
+  remove cold-load blank routes.
+
+Canonical performance evidence remains concise: entry JavaScript changed from `426.66 kB`
+(`123.79 kB` gzip) to `315.97 kB` (`100.78 kB` gzip). Public initial Journal/Review app-only
+requests and monolithic Pretendard initial requests are both `0`; unicode-range subset delivery
+passed.
+
+### Deferred Product decision
+
+- SEO-01: **DEFERRED_NEEDS_PRODUCT_DECISION**
+- Approved public description copy, canonical production origin, robots/indexability policy,
+  sitemap policy, and OG/social metadata policy are not yet confirmed. Finance FE does not invent
+  them.
+
+### Non-blocking carryover
+
+- `STEP12_LAZY_LIVE_ANNOUNCEMENT_DEDUP_FOLLOWUP`: nested lazy boundaries can sequentially
+  announce the same polite loading message.
+- Current impact: simultaneous status `1`, visual regression `0`, route regression `0`, Blocking
+  `0`, Major `0`. This follow-up does not reverse STEP 12 canonical completion.
+
+### Protected state
+
+- RPL-48, RPL-91, RPL-68: **PASS**
+- UX-1~5: **CANONICAL COMPLETE**
+- Primary IA: **검토 / 저널**
+- Production Create: **OFF**
+- `No Driver != Success`; `/auth` remains presentation-only.
+- Shared Identity/Gateway remains unconnected; Backend/API change for STEP 12 is `0`.
+
+## STEP 11 dependency state
+
+- Raw Read는 완료했다.
+- Production integration 일부는 Backend, Shared Platform, external runtime dependency가
+  남아 있다.
+- Backend Repository ownership과 실제 Persistence/Auth 계약을 별도 확인하고, Production
+  Persistence와 Detail read model 연결은 승인된 backend contract 이후에만 진행한다.
+- STEP 12 완료만으로 STEP 13~15를 시작하지 않는다. 현재 next action은 dependency-ready
+  work를 다시 resolve하는 것이다.
 
 **STEP 5 산출물:**
 
@@ -458,4 +509,5 @@ Production Journal Create activation, Review Backend/API integration, and AI/RAG
 2. [x] UX-5 exact feature commit/push 완료
 3. [x] PR #25 생성 및 Final Pre-merge Independent Review 완료
 4. [x] UX-5 normal merge 및 master reconciliation 완료
-5. [ ] Future production integration은 owner contract가 준비된 별도 phase에서 진행
+5. [x] STEP 12 Accessibility / SEO / Performance Release Readiness canonical merge 완료
+6. [ ] STEP 11·13~15 dependency readiness를 다시 확인해 실행 가능한 작업을 resolve
