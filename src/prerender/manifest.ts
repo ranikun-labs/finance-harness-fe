@@ -5,6 +5,7 @@ import {
   buildLearnPath,
   buildLocaleHomePath,
 } from '@/constants/routes';
+import { getDocumentTitle } from '@/metadata/documentTitle';
 
 export interface PrerenderManifestEntry {
   /** BrowserRouter가 매칭할 절대 경로. `src/entry-server.tsx`의 `render(path)`에 그대로 전달된다. */
@@ -17,6 +18,8 @@ export interface PrerenderManifestEntry {
    * 않는다(`scripts/prerender.mjs`가 fragile한 문자열 파싱 없이 바로 쓸 수 있게).
    */
   locale: Locale;
+  /** Shared route/locale-aware title consumed by the prerender script. */
+  title: string;
 }
 
 /**
@@ -37,7 +40,10 @@ export function buildPrerenderManifest(): PrerenderManifestEntry[] {
     { path: buildLocaleHomePath(locale), outFile: `${locale}/index.html`, locale },
     { path: buildFeaturesPath(locale), outFile: `${locale}/features/index.html`, locale },
     { path: buildLearnPath(locale), outFile: `${locale}/learn/index.html`, locale },
-  ]);
+  ]).map((entry) => ({
+    ...entry,
+    title: getDocumentTitle(entry.path, entry.locale),
+  }));
 }
 
 export const PRERENDER_MANIFEST: PrerenderManifestEntry[] = buildPrerenderManifest();

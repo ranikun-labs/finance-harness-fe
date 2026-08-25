@@ -15,6 +15,7 @@ const SSR_ENTRY_PATH = join(DIST_SSR_DIR, 'entry-server.js');
 const MANIFEST_SNAPSHOT_PATH = join(ROOT, '.prerender-manifest.json');
 
 const ROOT_DIV_PLACEHOLDER = '<div id="root"></div>';
+const TITLE_PLACEHOLDER = '<title>AI 투자 체크리스트</title>';
 /**
  * 클라이언트 템플릿(`index.html`)의 기본 lang. 모든 Pre-render 산출물은 이 값을
  * 자신의 로케일로 치환한다 — 그대로 두면 `dist/en/*.html`도 `lang="ko"`로 나가
@@ -44,15 +45,21 @@ async function main() {
       `${CLIENT_TEMPLATE_PATH}에서 "${LANG_ATTR_PLACEHOLDER}" placeholder를 찾을 수 없습니다.`,
     );
   }
+  if (!template.includes(TITLE_PLACEHOLDER)) {
+    throw new Error(
+      `${CLIENT_TEMPLATE_PATH}에서 "${TITLE_PLACEHOLDER}" placeholder를 찾을 수 없습니다.`,
+    );
+  }
 
   const { render, PRERENDER_MANIFEST } = await import(SSR_ENTRY_PATH);
 
-  for (const { path, outFile, locale } of PRERENDER_MANIFEST) {
+  for (const { path, outFile, locale, title } of PRERENDER_MANIFEST) {
     const innerHtml = render(path);
     const markedRoot = `<div id="root" data-render-mode="prerender">${innerHtml}</div>`;
     const html = template
       .replace(ROOT_DIV_PLACEHOLDER, markedRoot)
-      .replace(LANG_ATTR_PLACEHOLDER, `<html lang="${locale}">`);
+      .replace(LANG_ATTR_PLACEHOLDER, `<html lang="${locale}">`)
+      .replace(TITLE_PLACEHOLDER, `<title>${escapeHtml(title)}</title>`);
 
     const outPath = join(DIST_DIR, outFile);
     mkdirSync(dirname(outPath), { recursive: true });
@@ -63,6 +70,15 @@ async function main() {
   writeFileSync(MANIFEST_SNAPSHOT_PATH, JSON.stringify(PRERENDER_MANIFEST, null, 2), 'utf-8');
   rmSync(DIST_SSR_DIR, { recursive: true, force: true });
   console.log(`[prerender] ${PRERENDER_MANIFEST.length}개 경로 생성 완료, dist-ssr 정리됨.`);
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 main().catch((error) => {

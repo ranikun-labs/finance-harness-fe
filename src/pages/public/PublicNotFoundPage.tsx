@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 import { DEFAULT_LOCALE, buildLocaleHomePath } from '@/constants/routes';
 import { I18nProvider, useTranslation } from '@/i18n/I18nContext';
+import { RouteDocumentTitle } from '@/metadata/documentTitle';
 
 /**
  * 공개 웹 표면 전용 NotFound. 앱 NotFound(`NotFoundPage`)와 분리되어 있으며, 복귀
@@ -39,7 +40,10 @@ export function PublicNotFoundPage() {
 export function PublicNotFoundFallback() {
   return (
     <I18nProvider locale={DEFAULT_LOCALE}>
-      <PublicNotFoundPage />
+      <RouteDocumentTitle />
+      <main className="min-h-full">
+        <PublicNotFoundPage />
+      </main>
     </I18nProvider>
   );
 }

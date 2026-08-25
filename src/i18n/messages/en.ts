@@ -3,6 +3,7 @@ import type { Messages } from '@/i18n/dictionary';
 export const en: Messages = {
   common: {
     appName: 'AI Investment Checklist',
+    loading: 'Loading…',
   },
   nav: {
     review: 'Review',

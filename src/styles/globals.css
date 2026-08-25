@@ -18,7 +18,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: #191f28;
 
-  --primary: #3182f6;
+  --primary: #1d64d8;
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.96 0 0);
@@ -26,7 +26,7 @@
 
   /* neutral gray, not blue — brand blue lives only in --primary/--brand */
   --muted: oklch(0.96 0 0);
-  --muted-foreground: #8b95a1;
+  --muted-foreground: #66717d;
 
   --accent: oklch(0.96 0 0);
   --accent-foreground: #191f28;
@@ -39,7 +39,7 @@
   --ring: #3182f6;
 
   --text-secondary: #4e5968;
-  --text-tertiary: #8b95a1;
+  --text-tertiary: #66717d;
 }
 
 .dark {

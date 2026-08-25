@@ -18,6 +18,7 @@ export type SampleSubjectKey = 'semiconductorCompanyA' | 'platformCompanyB' | 'b
 export interface Messages {
   common: {
     appName: string;
+    loading: string;
   };
   nav: {
     review: string;
