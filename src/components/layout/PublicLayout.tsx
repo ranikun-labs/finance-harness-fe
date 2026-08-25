@@ -4,6 +4,7 @@ import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher';
 import { PublicNotFoundFallback } from '@/pages/public/PublicNotFoundPage';
 import { isSupportedLocale } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
+import { RouteDocumentTitle } from '@/metadata/documentTitle';
 
 /**
  * 공개 웹(`/:locale/*`)의 레이아웃 겸 locale 검증·i18n 주입 choke point.
@@ -25,8 +26,11 @@ export function PublicLayout() {
 
   return (
     <I18nProvider locale={locale}>
+      <RouteDocumentTitle />
       <LocaleSwitcher />
-      <Outlet />
+      <main className="min-h-full">
+        <Outlet />
+      </main>
     </I18nProvider>
   );
 }

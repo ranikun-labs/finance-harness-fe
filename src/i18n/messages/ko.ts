@@ -8,6 +8,7 @@ import type { Messages } from '@/i18n/dictionary';
 export const ko: Messages = {
   common: {
     appName: 'AI 투자 체크리스트',
+    loading: '불러오는 중이에요',
   },
   nav: {
     review: '검토',

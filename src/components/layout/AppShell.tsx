@@ -1,6 +1,9 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 
+import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
 import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
+import { RouteDocumentTitle } from '@/metadata/documentTitle';
 
 /** 승인된 Desktop contract의 앱 host 최대 폭. 그 이하에서는 viewport 폭을 전부 쓴다. */
 export const APP_SHELL_MAX_WIDTH = '1360px';
@@ -14,13 +17,16 @@ export const APP_SHELL_MAX_WIDTH = '1360px';
 export function AppShell() {
   return (
     <AppLocaleProvider>
+      <RouteDocumentTitle />
       <div className="bg-muted flex h-dvh w-full justify-center overflow-hidden">
         <div
           className="bg-background flex h-full min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto pt-[env(safe-area-inset-top)] xl:shadow-xl"
           data-testid="app-shell-host"
           style={{ maxWidth: APP_SHELL_MAX_WIDTH }}
         >
-          <Outlet />
+          <Suspense fallback={<LazyLoadingFallback asMain />}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </AppLocaleProvider>

@@ -66,6 +66,9 @@ test.describe('모바일 세로 스크롤 계약', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.home.hero.heading }),
+    ).toBeVisible();
     await page.evaluate(() => {
       const tall = document.createElement('div');
       tall.style.height = '3000px';
@@ -120,6 +123,9 @@ test.describe('모바일 세로 스크롤 계약', () => {
 
   test('탭 없는 화면은 AppShell 콘텐츠 영역만 스크롤한다', async ({ page }) => {
     await page.goto(APP_ROUTE_PATHS.onboarding);
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.onboarding.hero.title }),
+    ).toBeVisible();
     await page.evaluate(() => {
       const tall = document.createElement('div');
       // PageSkeleton 루트가 flex-col이라 기본 flex-shrink(1)에 눌리지 않도록 고정한다.
@@ -160,6 +166,9 @@ test.describe('모바일 세로 스크롤 계약', () => {
     page,
   }) => {
     await page.goto(buildAppAskPath('모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문'));
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
+    ).toBeVisible();
 
     const viewportHeight = page.viewportSize()!.height;
     const scrollContract = await page.evaluate(() => {
@@ -498,6 +507,9 @@ test.describe('기록 복기 모바일 레이아웃', () => {
 
   test('AppShell만 스크롤하고 마지막 상세 복귀 CTA가 완전히 노출된다', async ({ page }) => {
     await page.goto(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle }),
+    ).toBeVisible();
 
     const viewportHeight = page.viewportSize()!.height;
     const contract = await page.evaluate(() => {

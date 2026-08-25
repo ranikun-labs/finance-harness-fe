@@ -109,8 +109,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
 
     for (const route of landmarkRoutes) {
       await page.goto(route);
-      expect(await page.locator('main').count()).toBe(1);
       await expect(page.getByRole('main')).toHaveCount(1);
+      expect(await page.locator('main').count()).toBe(1);
     }
   });
 
@@ -569,6 +569,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
+    await expect(page.getByTestId('journal-workspace')).toBeVisible();
     // main이 유일한 스크롤 표면이므로, 끝까지 스크롤한 뒤에도 마지막 카드가 탭바
     // 위에서 완전히 보이는지 확인한다(스크롤 전 위치는 뷰포트 밖에 있는 게 정상).
     await page.evaluate(() => {

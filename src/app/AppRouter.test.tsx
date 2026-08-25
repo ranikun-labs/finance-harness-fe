@@ -143,22 +143,29 @@ describe('AppRouter', () => {
   });
 
   describe('provider-neutral Auth Entry ownership', () => {
-    it('renders Auth Entry outside the app shell and primary navigation', () => {
+    it('renders Auth Entry outside the app shell and primary navigation', async () => {
       renderAt(AUTH_ROUTE_PATHS.entry);
 
-      expect(
-        screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
-      ).toBeInTheDocument();
-      expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
+      });
       expect(screen.queryByRole('navigation')).toBeNull();
     });
 
-    it('does not auto-authenticate the production composition', () => {
+    it('does not auto-authenticate the production composition', async () => {
       renderAt(AUTH_ROUTE_PATHS.entry);
 
-      fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+      const providerButton = await screen.findByRole('button', {
+        name: ko.auth.entry.providerAction,
+      });
+      fireEvent.click(providerButton);
 
-      expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
+      await waitFor(() =>
+        expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable),
+      );
       expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
     });
   });
@@ -184,35 +191,43 @@ describe('AppRouter', () => {
   });
 
   describe('app ownership (/app/*)', () => {
-    it('renders the Review Start owner at /app', () => {
+    it('renders the Review Start owner at /app', async () => {
       renderAt(APP_ROUTE_PATHS.appHome);
-      expect(
-        screen.getByRole('heading', {
-          level: 1,
-          name: new RegExp(ko.app.home.hero.heading),
-        }),
-      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', {
+            level: 1,
+            name: new RegExp(ko.app.home.hero.heading),
+          }),
+        ).toBeInTheDocument(),
+      );
     });
 
     it.each([
       [APP_ROUTE_PATHS.ask, ko.app.ask.header.title],
       [APP_ROUTE_PATHS.journalList, ko.app.journalList.title],
       [APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title],
-    ])('renders %s', (path, heading) => {
+    ])('renders %s', async (path, heading) => {
       renderAt(path);
-      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
+      );
     });
 
-    it('renders the journal new/detail/review screens', () => {
+    it('renders the journal new/detail/review screens', async () => {
       renderAt(buildAppJournalNewPath('investment'));
-      expect(
-        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
-      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+        ).toBeInTheDocument(),
+      );
     });
 
-    it('renders app NotFound for an unknown /app sub-path', () => {
+    it('renders app NotFound for an unknown /app sub-path', async () => {
       renderAt(`${APP_ROUTE_PATHS.appHome}/nope`);
-      expect(screen.getByRole('heading', { name: APP_NOT_FOUND })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: APP_NOT_FOUND })).toBeInTheDocument(),
+      );
     });
   });
 
@@ -243,29 +258,35 @@ describe('AppRouter', () => {
       expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
     });
 
-    it('renders an authenticated fixture directly at a typed Journal Editor', () => {
+    it('renders an authenticated fixture directly at a typed Journal Editor', async () => {
       renderAt(buildAppJournalNewPath('study'), { state: 'authenticated' });
 
-      expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument(),
+      );
       expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
     });
 
-    it('keeps unknown state non-authoritative while preserving the existing Journal surface', () => {
+    it('keeps unknown state non-authoritative while preserving the existing Journal surface', async () => {
       renderAt(buildAppJournalNewPath('investment'));
 
-      expect(
-        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
-      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+        ).toBeInTheDocument(),
+      );
       expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
     });
 
     it.each([
       [APP_ROUTE_PATHS.appHome, ko.app.home.hero.heading],
       [buildAppAskPath('게스트 검토 결과'), ko.app.ask.structured.resultTitle],
-    ])('keeps the guest Review surface public at %s', (path, heading) => {
+    ])('keeps the guest Review surface public at %s', async (path, heading) => {
       renderAt(path, { state: 'guest' });
 
-      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
+      );
       expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
     });
 
@@ -277,12 +298,14 @@ describe('AppRouter', () => {
 
     it.each(untypedEntryStates)(
       'keeps the untyped Journal Entry Choice for the %s presentation state',
-      (_label, authPresentation) => {
+      async (_label, authPresentation) => {
         renderAt(APP_ROUTE_PATHS.journalNew, authPresentation);
 
-        expect(
-          screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
-        ).toBeInTheDocument();
+        await waitFor(() =>
+          expect(
+            screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+          ).toBeInTheDocument(),
+        );
         expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
         expect(
           screen.queryByRole('heading', { name: ko.app.journalNew.investment }),
@@ -335,10 +358,12 @@ describe('AppRouter', () => {
 
     it.each(authenticatedRoutes)(
       'renders authenticated fixture %s at its intended surface',
-      (_label, path, heading) => {
+      async (_label, path, heading) => {
         renderAt(path, { state: 'authenticated' });
 
-        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+        await waitFor(() =>
+          expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
+        );
         expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
       },
     );
@@ -369,31 +394,37 @@ describe('AppRouter', () => {
         await waitFor(() =>
           expect(screen.getByTestId('router-location')).toHaveTextContent(APP_ROUTE_PATHS.appHome),
         );
-        expect(
-          screen.getByRole('heading', {
-            level: 1,
-            name: new RegExp(ko.app.home.hero.heading),
-          }),
-        ).toBeInTheDocument();
+        await waitFor(() =>
+          expect(
+            screen.getByRole('heading', {
+              level: 1,
+              name: new RegExp(ko.app.home.hero.heading),
+            }),
+          ).toBeInTheDocument(),
+        );
       },
     );
   });
 
   describe('route priority: /app wins over /:locale', () => {
-    it('matches /app as the app home, not a public locale named "app"', () => {
+    it('matches /app as the app home, not a public locale named "app"', async () => {
       renderAt(APP_ROUTE_PATHS.appHome);
-      expect(
-        screen.getByRole('heading', {
-          level: 1,
-          name: new RegExp(ko.app.home.hero.heading),
-        }),
-      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', {
+            level: 1,
+            name: new RegExp(ko.app.home.hero.heading),
+          }),
+        ).toBeInTheDocument(),
+      );
       expect(screen.queryByRole('heading', { name: /공개 웹 홈/ })).toBeNull();
     });
 
-    it('matches /app/ask as the app screen, not public', () => {
+    it('matches /app/ask as the app screen, not public', async () => {
       renderAt(APP_ROUTE_PATHS.ask);
-      expect(screen.getByRole('heading', { name: ko.app.ask.header.title })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: ko.app.ask.header.title })).toBeInTheDocument(),
+      );
       expect(screen.queryByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeNull();
     });
   });
@@ -405,9 +436,11 @@ describe('AppRouter', () => {
       expect(screen.queryByRole('heading', { name: APP_NOT_FOUND })).toBeNull();
     });
 
-    it('shows the app NotFound (not the public one) on the app surface', () => {
+    it('shows the app NotFound (not the public one) on the app surface', async () => {
       renderAt(`${APP_ROUTE_PATHS.appHome}/missing`);
-      expect(screen.getByRole('heading', { name: APP_NOT_FOUND })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: APP_NOT_FOUND })).toBeInTheDocument(),
+      );
       expect(screen.queryByRole('heading', { name: PUBLIC_NOT_FOUND })).toBeNull();
     });
   });
@@ -436,17 +469,19 @@ describe('AppRouter', () => {
 
     it.each([APP_ROUTE_PATHS.appHome, APP_ROUTE_PATHS.ask, APP_ROUTE_PATHS.journalList])(
       'renders the adaptive primary navigation shell on %s',
-      (path) => {
+      async (path) => {
         renderAt(path);
-        expect(bottomNav()).not.toBeNull();
+        await waitFor(() => expect(bottomNav()).not.toBeNull());
       },
     );
 
     it.each([[APP_ROUTE_PATHS.onboarding, ko.app.onboarding.hero.title]])(
       'keeps the primary navigation outside the onboarding surface on %s',
-      (path, heading) => {
+      async (path, heading) => {
         renderAt(path);
-        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+        await waitFor(() =>
+          expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
+        );
         expect(bottomNav()).toBeNull();
       },
     );
@@ -456,9 +491,11 @@ describe('AppRouter', () => {
       [`${APP_ROUTE_PATHS.journalNew}?type=unknown`, ko.app.journalNew.invalidType.heading],
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
       [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],
-    ])('keeps adaptive primary navigation on internal journal route %s', (path, heading) => {
+    ])('keeps adaptive primary navigation on internal journal route %s', async (path, heading) => {
       renderAt(path);
-      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
+      );
       expect(bottomNav()).not.toBeNull();
       expect(bottomNav()).toHaveClass('hidden', 'md:flex');
     });
@@ -468,10 +505,10 @@ describe('AppRouter', () => {
       expect(bottomNav()).toBeNull();
     });
 
-    it('marks only Review active at /app', () => {
+    it('marks only Review active at /app', async () => {
       renderAt(APP_ROUTE_PATHS.appHome);
 
-      const reviewLink = screen.getByRole('link', { name: ko.nav.review });
+      const reviewLink = await screen.findByRole('link', { name: ko.nav.review });
       const journalLink = screen.getByRole('link', { name: ko.nav.journal });
 
       expect(reviewLink).toHaveAttribute('aria-current', 'page');
@@ -487,35 +524,39 @@ describe('AppRouter', () => {
       ['Journal Review', buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id)],
       ['Journal Detail Not Found', buildAppJournalDetailPath('unknown-record-id')],
       ['Journal Review Not Found', buildAppJournalReviewPath('unknown-record-id')],
-    ])('renders exactly one main landmark for %s', (_label, path) => {
+    ])('renders exactly one main landmark for %s', async (_label, path) => {
       renderAt(path);
 
-      expect(document.querySelectorAll('main')).toHaveLength(1);
-      expect(screen.getAllByRole('main')).toHaveLength(1);
+      await waitFor(() => {
+        expect(document.querySelectorAll('main')).toHaveLength(1);
+        expect(screen.getAllByRole('main')).toHaveLength(1);
+      });
     });
   });
 
   describe('journal adaptive workspace', () => {
-    it('keeps the list route as the selection surface without inventing a detail record', () => {
+    it('keeps the list route as the selection surface without inventing a detail record', async () => {
       renderAt(APP_ROUTE_PATHS.journalList);
 
-      expect(screen.getByTestId('journal-workspace')).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', {
-          level: 2,
-          name: ko.app.journalWorkspace.detailPrompt.heading,
-        }),
-      ).toBeInTheDocument();
-      expect(screen.getAllByRole('main')).toHaveLength(1);
+      await waitFor(() => {
+        expect(screen.getByTestId('journal-workspace')).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { level: 1, name: ko.app.journalList.title }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            level: 2,
+            name: ko.app.journalWorkspace.detailPrompt.heading,
+          }),
+        ).toBeInTheDocument();
+        expect(screen.getAllByRole('main')).toHaveLength(1);
+      });
     });
 
     it('keeps the direct detail route selected and renders server-owned detail data', async () => {
       renderAt(buildAppJournalDetailPath(TEST_JOURNAL_ID));
 
-      const workspace = screen.getByTestId('journal-workspace');
+      const workspace = await screen.findByTestId('journal-workspace');
       expect(workspace).toBeInTheDocument();
       await waitFor(() =>
         expect(within(workspace).getByRole('link', { current: 'page' })).toHaveAttribute(

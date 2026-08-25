@@ -62,7 +62,7 @@ function main() {
   }
 
   // 2) 매니페스트의 각 산출물: 존재 + marker 포함 + lang 일치 + asset 경로 일치
-  for (const { path, outFile, locale } of manifest) {
+  for (const { path, outFile, locale, title } of manifest) {
     const html = readDist(outFile);
     if (html === null) {
       fail(`매니페스트 경로 "${path}"의 산출물 dist/${outFile}이 존재하지 않습니다.`);
@@ -73,6 +73,9 @@ function main() {
     }
     if (!html.includes(`<html lang="${locale}">`)) {
       fail(`dist/${outFile}의 <html lang>이 "${locale}"와 일치하지 않습니다(경로: ${path}).`);
+    }
+    if (!html.includes(`<title>${escapeHtml(title)}</title>`)) {
+      fail(`dist/${outFile}의 <title>이 매니페스트 제목과 일치하지 않습니다(경로: ${path}).`);
     }
 
     const referencedAssets = [...html.matchAll(ASSET_TAG_PATTERN)].map((m) => m[1]);
@@ -104,6 +107,15 @@ function main() {
   }
 
   report();
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function report() {
