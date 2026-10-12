@@ -348,6 +348,11 @@ export const en: Messages = {
         submitTest: 'Submit test entry',
         submitting: 'Submitting test entry',
         failed: 'The test submission failed. Check your input and try again.',
+        invalidResult: 'The save response was unavailable. Retry the same submission.',
+        invalidRequest: 'The request was invalid. Edit your entries and submit again.',
+        idempotencyConflict:
+          'This submission key was used for a different request. Submit again as a new request.',
+        networkError: 'The connection failed. Retrying this submission safely repeats the request.',
         retry: 'Try again',
         validationSummary: 'Please check the entries below.',
         validation: {

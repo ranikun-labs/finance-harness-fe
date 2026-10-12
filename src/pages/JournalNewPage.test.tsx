@@ -9,7 +9,10 @@ import {
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
 } from '@/constants/routes';
-import type { JournalCreatePort } from '@/features/journal-new/model/journalCreatePort';
+import {
+  JournalCreatePortError,
+  type JournalCreatePort,
+} from '@/features/journal-new/model/journalCreatePort';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -324,14 +327,17 @@ describe('JournalNewPage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('detail-destination')).toHaveTextContent('REPLACE'),
     );
-    expect(create).toHaveBeenCalledWith({
-      type: 'investment',
-      assetName: '기업 A',
-      occurredAt: '2026-08-03T09:30',
-      action: 'interest',
-      reasoning: '근거를 적는다.',
-      emotion: undefined,
-    });
+    expect(create).toHaveBeenCalledWith(
+      {
+        type: 'investment',
+        assetName: '기업 A',
+        occurredAt: '2026-08-03T09:30',
+        action: 'interest',
+        reasoning: '근거를 적는다.',
+        emotion: undefined,
+      },
+      expect.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/),
+    );
 
     const savedContext = JSON.parse(screen.getByTestId('detail-context-state').textContent ?? '');
     expect(savedContext.originalQuestion).toBe(SAMPLE_DECISION_CONTEXT.originalQuestion);
@@ -355,14 +361,17 @@ describe('JournalNewPage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('detail-destination')).toHaveTextContent('REPLACE'),
     );
-    expect(create).toHaveBeenCalledWith({
-      type: 'investment',
-      assetName: '기업 A',
-      occurredAt: '2026-08-03T09:30',
-      action: 'interest',
-      reasoning: '근거를 적는다.',
-      emotion: undefined,
-    });
+    expect(create).toHaveBeenCalledWith(
+      {
+        type: 'investment',
+        assetName: '기업 A',
+        occurredAt: '2026-08-03T09:30',
+        action: 'interest',
+        reasoning: '근거를 적는다.',
+        emotion: undefined,
+      },
+      expect.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/),
+    );
     expect(screen.getByTestId('detail-context-state')).toHaveTextContent('none');
   });
 
@@ -638,14 +647,17 @@ describe('JournalNewPage', () => {
 
     await waitFor(() => {
       expect(create).toHaveBeenCalledTimes(1);
-      expect(create).toHaveBeenCalledWith({
-        type: 'investment',
-        assetName: '기업 A',
-        occurredAt: '2026-08-03T09:30',
-        action: 'interest',
-        reasoning: '근거를 적는다.',
-        emotion: undefined,
-      });
+      expect(create).toHaveBeenCalledWith(
+        {
+          type: 'investment',
+          assetName: '기업 A',
+          occurredAt: '2026-08-03T09:30',
+          action: 'interest',
+          reasoning: '근거를 적는다.',
+          emotion: undefined,
+        },
+        expect.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/),
+      );
     });
     await act(async () => resolveCreate!({ journalId: 'test/id' }));
     expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument();
@@ -653,18 +665,29 @@ describe('JournalNewPage', () => {
   });
 
   it('preserves values and permits an explicit retry after test-port failure', async () => {
+    const keys: string[] = [];
     const create = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('nope'))
-      .mockResolvedValueOnce({ journalId: 'id' });
+      .fn<JournalCreatePort['create']>()
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.reject(new JournalCreatePortError('network_error'));
+      })
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.resolve({ journalId: 'id' });
+      });
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('테스트 제출에 실패'));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(ko.app.journalNew.form.networkError),
+    );
     expect(screen.getByLabelText('대상')).toHaveValue(' 기업 A ');
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).toBe(keys[0]);
   });
 
   it('recovers a synchronous create throw into failure and retries the current command once', async () => {
@@ -715,13 +738,16 @@ describe('JournalNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
     await waitFor(() =>
-      expect(create).toHaveBeenCalledWith({
-        type: 'study',
-        title: '공부 제목',
-        occurredAt: '2026-08-03T09:30',
-        keyContent: '핵심 내용',
-        openQuestions: ['질문 하나', '질문 둘', '질문 하나'],
-      }),
+      expect(create).toHaveBeenCalledWith(
+        {
+          type: 'study',
+          title: '공부 제목',
+          occurredAt: '2026-08-03T09:30',
+          keyContent: '핵심 내용',
+          openQuestions: ['질문 하나', '질문 둘', '질문 하나'],
+        },
+        expect.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/),
+      ),
     );
   });
 
@@ -742,10 +768,17 @@ describe('JournalNewPage', () => {
   });
 
   it('clears create failure on edit and retries the current input', async () => {
+    const keys: string[] = [];
     const create = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('expected'))
-      .mockResolvedValueOnce({ journalId: 'created' });
+      .fn<JournalCreatePort['create']>()
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.reject(new Error('expected'));
+      })
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.resolve({ journalId: 'created' });
+      });
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
@@ -759,6 +792,51 @@ describe('JournalNewPage', () => {
 
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
     expect(create.mock.calls[1][0]).toMatchObject({ reasoning: '수정한 근거' });
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
+  });
+
+  it('releases a conflicting key so a deliberate resubmission gets a fresh key', async () => {
+    const keys: string[] = [];
+    const create = vi
+      .fn<JournalCreatePort['create']>()
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.reject(new JournalCreatePortError('idempotency_conflict'));
+      })
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.resolve({ journalId: 'created-with-new-key' });
+      });
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        ko.app.journalNew.form.idempotencyConflict,
+      ),
+    );
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+
+    await waitFor(() => expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument());
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
+  });
+
+  it('shows a safe correction message for a backend 400 request rejection', async () => {
+    const create = vi
+      .fn<JournalCreatePort['create']>()
+      .mockRejectedValueOnce(new JournalCreatePortError('invalid_request'));
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(ko.app.journalNew.form.invalidRequest),
+    );
+    expect(screen.getByLabelText('대상')).toHaveValue(' 기업 A ');
+    expect(screen.queryByText('private backend detail')).not.toBeInTheDocument();
   });
 
   it('does not call the port when retry validation finds an edited invalid form', async () => {
@@ -788,14 +866,16 @@ describe('JournalNewPage', () => {
     confirmSpy.mockRestore();
   });
 
-  it('treats blank result IDs as a generic failure without navigation', async () => {
+  it('treats blank result IDs as an invalid response without navigation', async () => {
     renderPage(buildAppJournalNewPath('investment'), 'ko', {
       create: () => Promise.resolve({ journalId: '   ' }),
     });
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('테스트 제출에 실패'));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(ko.app.journalNew.form.invalidResult),
+    );
     expect(screen.queryByText('detail destination')).not.toBeInTheDocument();
   });
 

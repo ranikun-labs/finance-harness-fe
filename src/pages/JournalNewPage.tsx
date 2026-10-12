@@ -15,7 +15,10 @@ import {
   toInvestmentJournalCreateCommand,
   toStudyJournalCreateCommand,
 } from '@/features/journal-new/model/journalCreateCommand';
-import type { JournalCreatePort } from '@/features/journal-new/model/journalCreatePort';
+import {
+  JournalCreatePortError,
+  type JournalCreatePort,
+} from '@/features/journal-new/model/journalCreatePort';
 import type {
   InvestmentJournalFormState,
   StudyJournalFormState,
@@ -72,6 +75,7 @@ export function JournalNewPage({ createPort }: Props) {
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
   const inFlightRef = useRef(false);
   const attemptRef = useRef(0);
+  const idempotencyAttemptRef = useRef<{ payload: string; key: string } | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -193,16 +197,24 @@ export function JournalNewPage({ createPort }: Props) {
   const submit = (state: InvestmentJournalFormState | StudyJournalFormState) => {
     if (!createPort || inFlightRef.current) return;
 
-    inFlightRef.current = true;
-    const attempt = ++attemptRef.current;
-    dispatch({ type: 'submitStarted' });
     const command =
       state.type === 'investment'
         ? toInvestmentJournalCreateCommand(state)
         : toStudyJournalCreateCommand(state);
+    const payloadSnapshot = JSON.stringify(command);
+    if (idempotencyAttemptRef.current?.payload !== payloadSnapshot) {
+      idempotencyAttemptRef.current = {
+        payload: payloadSnapshot,
+        key: globalThis.crypto.randomUUID(),
+      };
+    }
+    const idempotencyKey = idempotencyAttemptRef.current.key;
+    inFlightRef.current = true;
+    const attempt = ++attemptRef.current;
+    dispatch({ type: 'submitStarted' });
 
     void Promise.resolve()
-      .then(() => createPort.create(command))
+      .then(() => createPort.create(command, idempotencyKey))
       .then((result) => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;
         const journalId = result.journalId.trim();
@@ -210,6 +222,7 @@ export function JournalNewPage({ createPort }: Props) {
           dispatch({ type: 'submitFailed', error: 'invalid_result' });
           return;
         }
+        idempotencyAttemptRef.current = null;
         dispatch({ type: 'submitSucceeded', journalId });
         const savedDecisionContext =
           decisionContextEnabled && decisionContext
@@ -224,15 +237,24 @@ export function JournalNewPage({ createPort }: Props) {
           state: savedDecisionContext ? { decisionContext: savedDecisionContext } : undefined,
         });
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;
-        dispatch({ type: 'submitFailed', error: 'create_failed' });
+        const errorCode = error instanceof JournalCreatePortError ? error.code : 'create_failed';
+        if (errorCode === 'idempotency_conflict') {
+          // A 409 confirms this key belongs to another payload. Treat the next
+          // explicit submit as a new logical request with a fresh key.
+          idempotencyAttemptRef.current = null;
+        }
+        dispatch({ type: 'submitFailed', error: errorCode });
       })
       .finally(() => {
         if (attempt === attemptRef.current) inFlightRef.current = false;
       });
   };
-  const formEdited = () => dispatch({ type: 'formEdited' });
+  const formEdited = () => {
+    idempotencyAttemptRef.current = null;
+    dispatch({ type: 'formEdited' });
+  };
   const typeCopy =
     resolution.type === 'study'
       ? {
@@ -345,7 +367,15 @@ export function JournalNewPage({ createPort }: Props) {
           </p>
           {submitState.status === 'failed' && (
             <p role="alert" className="text-destructive mt-2 text-sm">
-              {t('app.journalNew.form.failed')}
+              {submitState.error === 'invalid_result'
+                ? t('app.journalNew.form.invalidResult')
+                : submitState.error === 'invalid_request'
+                  ? t('app.journalNew.form.invalidRequest')
+                  : submitState.error === 'idempotency_conflict'
+                    ? t('app.journalNew.form.idempotencyConflict')
+                    : submitState.error === 'network_error'
+                      ? t('app.journalNew.form.networkError')
+                      : t('app.journalNew.form.failed')}
             </p>
           )}
         </div>
