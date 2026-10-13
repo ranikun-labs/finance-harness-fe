@@ -72,10 +72,13 @@ export function JournalNewPage({ createPort }: Props) {
     Boolean(incomingDecisionContext) && locationState?.decisionContextEnabled !== false,
   );
   const [dirty, setDirty] = useState(false);
+  const [hasSubmission, setHasSubmission] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
   const inFlightRef = useRef(false);
   const attemptRef = useRef(0);
-  const idempotencyAttemptRef = useRef<{ payload: string; key: string } | null>(null);
+  // Keep every attempted payload until success or an explicit new submission.
+  // Editing (even submitting another payload) cannot prove an earlier request failed.
+  const idempotencyKeysRef = useRef(new Map<string, string>());
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -195,20 +198,17 @@ export function JournalNewPage({ createPort }: Props) {
     }
   };
   const submit = (state: InvestmentJournalFormState | StudyJournalFormState) => {
-    if (!createPort || inFlightRef.current) return;
+    if (!createPort || inFlightRef.current || submitState.status === 'succeeded') return;
 
     const command =
       state.type === 'investment'
         ? toInvestmentJournalCreateCommand(state)
         : toStudyJournalCreateCommand(state);
     const payloadSnapshot = JSON.stringify(command);
-    if (idempotencyAttemptRef.current?.payload !== payloadSnapshot) {
-      idempotencyAttemptRef.current = {
-        payload: payloadSnapshot,
-        key: globalThis.crypto.randomUUID(),
-      };
-    }
-    const idempotencyKey = idempotencyAttemptRef.current.key;
+    const idempotencyKey =
+      idempotencyKeysRef.current.get(payloadSnapshot) ?? globalThis.crypto.randomUUID();
+    idempotencyKeysRef.current.set(payloadSnapshot, idempotencyKey);
+    setHasSubmission(true);
     inFlightRef.current = true;
     const attempt = ++attemptRef.current;
     dispatch({ type: 'submitStarted' });
@@ -222,7 +222,8 @@ export function JournalNewPage({ createPort }: Props) {
           dispatch({ type: 'submitFailed', error: 'invalid_result' });
           return;
         }
-        idempotencyAttemptRef.current = null;
+        idempotencyKeysRef.current.clear();
+        setHasSubmission(false);
         dispatch({ type: 'submitSucceeded', journalId });
         const savedDecisionContext =
           decisionContextEnabled && decisionContext
@@ -240,20 +241,20 @@ export function JournalNewPage({ createPort }: Props) {
       .catch((error: unknown) => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;
         const errorCode = error instanceof JournalCreatePortError ? error.code : 'create_failed';
-        if (errorCode === 'idempotency_conflict') {
-          // A 409 confirms this key belongs to another payload. Treat the next
-          // explicit submit as a new logical request with a fresh key.
-          idempotencyAttemptRef.current = null;
-        }
         dispatch({ type: 'submitFailed', error: errorCode });
       })
       .finally(() => {
         if (attempt === attemptRef.current) inFlightRef.current = false;
       });
   };
-  const formEdited = () => {
-    idempotencyAttemptRef.current = null;
-    dispatch({ type: 'formEdited' });
+  const formEdited = () => dispatch({ type: 'formEdited' });
+  const startNewSubmission = () => {
+    if (inFlightRef.current || !window.confirm(t('app.journalNew.form.newSubmissionConfirm'))) {
+      return;
+    }
+    idempotencyKeysRef.current.clear();
+    setHasSubmission(false);
+    dispatch({ type: 'newSubmission' });
   };
   const typeCopy =
     resolution.type === 'study'
@@ -377,6 +378,15 @@ export function JournalNewPage({ createPort }: Props) {
                       ? t('app.journalNew.form.networkError')
                       : t('app.journalNew.form.failed')}
             </p>
+          )}
+          {hasSubmission && submitState.status !== 'submitting' && (
+            <button
+              type="button"
+              onClick={startNewSubmission}
+              className="text-primary focus-visible:ring-ring/50 mt-2 min-h-11 rounded-md text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+            >
+              {t('app.journalNew.form.newSubmission')}
+            </button>
           )}
         </div>
       )}

@@ -10,7 +10,8 @@ export type JournalSubmitEvent =
   | { type: 'submitStarted' }
   | { type: 'submitSucceeded'; journalId: string }
   | { type: 'submitFailed'; error: JournalCreateErrorCode }
-  | { type: 'formEdited' };
+  | { type: 'formEdited' }
+  | { type: 'newSubmission' };
 
 export const initialJournalSubmitState: JournalSubmitState = { status: 'idle' };
 
@@ -31,5 +32,7 @@ export function journalSubmitReducer(
       return state.status === 'submitting' ? { status: 'failed', error: event.error } : state;
     case 'formEdited':
       return state.status === 'failed' ? initialJournalSubmitState : state;
+    case 'newSubmission':
+      return state.status === 'idle' || state.status === 'failed' ? { status: 'idle' } : state;
   }
 }

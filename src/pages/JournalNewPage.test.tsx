@@ -13,6 +13,10 @@ import {
   JournalCreatePortError,
   type JournalCreatePort,
 } from '@/features/journal-new/model/journalCreatePort';
+import {
+  HttpJournalCreatePort,
+  type JournalFetch,
+} from '@/features/journal-new/adapter/HttpJournalCreatePort';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -122,7 +126,132 @@ function deferredResult() {
   };
 }
 
+// Model the BE key/payload replay contract and lose the first response AFTER commit.
+function ambiguousHttpPort(failure: 'network' | 'timeout' | 'invalid_result' | 'server_error') {
+  const journals = new Map<string, { body: string; journalId: string }>();
+  const fetchMock = vi.fn<JournalFetch>(async (_input, init) => {
+    const key = new Headers(init?.headers).get('Idempotency-Key')!;
+    const body = String(init?.body);
+    const existing = journals.get(key);
+    if (existing) {
+      if (existing.body !== body) return new Response(null, { status: 409 });
+      return new Response(JSON.stringify({ journalId: existing.journalId }), { status: 201 });
+    }
+    journals.set(key, { body, journalId: `journal-${journals.size + 1}` });
+    if (failure === 'timeout') throw new DOMException('Response timed out', 'TimeoutError');
+    if (failure === 'network') throw new TypeError('Response lost');
+    if (failure === 'server_error') return new Response(null, { status: 500 });
+    return new Response('unreadable response', { status: 201 });
+  });
+  return {
+    journals,
+    fetchMock,
+    port: new HttpJournalCreatePort({ fetchImpl: fetchMock, timeZone: 'Asia/Seoul' }),
+  };
+}
+
 describe('JournalNewPage', () => {
+  it.each(['network', 'timeout', 'invalid_result', 'server_error'] as const)(
+    'replays a committed investment after %s and edit/revert without another Journal',
+    async (failure) => {
+      const { port, journals, fetchMock } = ambiguousHttpPort(failure);
+      renderPage(buildAppJournalNewPath('investment'), 'ko', port, true);
+      fillInvestmentForm();
+      fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+      await screen.findByRole('alert');
+      const reasoning = screen.getByLabelText('왜 그렇게 판단했나요?');
+      fireEvent.change(reasoning, { target: { value: '수정한 근거' } });
+      fireEvent.change(reasoning, { target: { value: '근거를 적는다.' } });
+      fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+      await screen.findByTestId('detail-destination');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][1]).toEqual(fetchMock.mock.calls[0][1]);
+      expect(journals.size).toBe(1);
+    },
+  );
+
+  it('keeps both ambiguous study submissions so A/B/A replays the original key', async () => {
+    const { port, journals, fetchMock } = ambiguousHttpPort('network');
+    renderPage(buildAppJournalNewPath('study'), 'ko', port);
+    fillStudyForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByRole('alert');
+    const content = screen.getByLabelText('핵심 정리');
+    fireEvent.change(content, { target: { value: '다른 내용' } });
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByRole('alert');
+    fireEvent.change(content, { target: { value: '핵심 내용' } });
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByTestId('detail-destination');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[2][1]).toEqual(fetchMock.mock.calls[0][1]);
+    expect(journals.size).toBe(2);
+  });
+
+  it('only creates an additional identical Journal after confirming a new submission', async () => {
+    const { port, journals, fetchMock } = ambiguousHttpPort('network');
+    renderPage(buildAppJournalNewPath('investment'), 'ko', port);
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByRole('alert');
+    fireEvent.change(screen.getByLabelText('왜 그렇게 판단했나요?'), {
+      target: { value: '근거를 적는다.' },
+    });
+    const confirm = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    expect(
+      screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }),
+    ).toBeEnabled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    expect(confirm).toHaveBeenCalledWith(ko.app.journalNew.form.newSubmissionConfirm);
+    expect(screen.queryByRole('button', { name: ko.app.journalNew.form.newSubmission })).toBeNull();
+    expect(screen.getByLabelText('대상')).toHaveValue(' 기업 A ');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByRole('alert');
+    expect(journals.size).toBe(2);
+    expect(fetchMock.mock.calls[1][1]?.headers).not.toEqual(fetchMock.mock.calls[0][1]?.headers);
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    await screen.findByTestId('detail-destination');
+    expect(fetchMock.mock.calls[2][1]).toEqual(fetchMock.mock.calls[1][1]);
+    expect(journals.size).toBe(2);
+    confirm.mockRestore();
+  });
+
+  it('preserves the key when cancelling new submission after a lost response', async () => {
+    const { port, journals, fetchMock } = ambiguousHttpPort('network');
+    renderPage(buildAppJournalNewPath('investment'), 'ko', port);
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByRole('alert');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    await screen.findByTestId('detail-destination');
+    expect(fetchMock.mock.calls[1][1]).toEqual(fetchMock.mock.calls[0][1]);
+    expect(journals.size).toBe(1);
+    confirm.mockRestore();
+  });
+
+  it('uses a fresh key for an identical entry started after successful navigation', async () => {
+    const create = vi.fn<JournalCreatePort['create']>().mockResolvedValue({ journalId: 'saved' });
+    const first = renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByTestId('detail-destination');
+    first.unmount();
+    renderPage(buildAppJournalNewPath('investment'), 'ko', { create });
+    fillInvestmentForm();
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+    await screen.findByTestId('detail-destination');
+    expect(create.mock.calls[1][0]).toEqual(create.mock.calls[0][0]);
+    expect(create.mock.calls[1][1]).not.toBe(create.mock.calls[0][1]);
+  });
+
   it('keeps decision handoff fields user-owned and does not prefill action, reasoning, or emotion', () => {
     const reviewHandoff: ReviewJournalHandoff = {
       kind: 'investment',
@@ -644,6 +773,7 @@ describe('JournalNewPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
     fireEvent.submit(screen.getByRole('button', { name: '테스트 제출 중' }).closest('form')!);
+    expect(screen.queryByRole('button', { name: ko.app.journalNew.form.newSubmission })).toBeNull();
 
     await waitFor(() => {
       expect(create).toHaveBeenCalledTimes(1);
@@ -796,10 +926,14 @@ describe('JournalNewPage', () => {
     expect(keys[1]).not.toBe(keys[0]);
   });
 
-  it('releases a conflicting key so a deliberate resubmission gets a fresh key', async () => {
+  it('keeps a conflicting key for retry and only rotates after explicit new submission', async () => {
     const keys: string[] = [];
     const create = vi
       .fn<JournalCreatePort['create']>()
+      .mockImplementationOnce((_command, key) => {
+        keys.push(key);
+        return Promise.reject(new JournalCreatePortError('idempotency_conflict'));
+      })
       .mockImplementationOnce((_command, key) => {
         keys.push(key);
         return Promise.reject(new JournalCreatePortError('idempotency_conflict'));
@@ -818,10 +952,18 @@ describe('JournalNewPage', () => {
       ),
     );
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(keys[1]).toBe(keys[0]);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    expect(confirm).toHaveBeenCalledWith(ko.app.journalNew.form.newSubmissionConfirm);
+    expect(create).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
     await waitFor(() => expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument());
-    expect(keys).toHaveLength(2);
-    expect(keys[1]).not.toBe(keys[0]);
+    expect(keys).toHaveLength(3);
+    expect(keys[2]).not.toBe(keys[0]);
+    confirm.mockRestore();
   });
 
   it('shows a safe correction message for a backend 400 request rejection', async () => {

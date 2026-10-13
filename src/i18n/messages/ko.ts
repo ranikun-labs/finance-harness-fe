@@ -346,8 +346,12 @@ export const ko: Messages = {
         failed: '테스트 제출에 실패했습니다. 입력을 확인한 뒤 다시 시도하세요.',
         invalidResult: '저장 응답을 확인할 수 없습니다. 같은 제출을 다시 시도하세요.',
         invalidRequest: '요청 형식이 올바르지 않습니다. 입력을 수정한 뒤 다시 제출하세요.',
-        idempotencyConflict: '제출 키가 다른 요청에 사용되었습니다. 새 요청으로 다시 제출하세요.',
+        idempotencyConflict:
+          '제출 키가 다른 요청에 사용되었습니다. 별도 기록을 만들려면 새 요청 시작을 선택하세요.',
         networkError: '연결에 실패했습니다. 같은 제출을 다시 시도하면 안전하게 재요청합니다.',
+        newSubmission: '새 요청 시작',
+        newSubmissionConfirm:
+          '이전 요청이 이미 저장되었을 수 있습니다. 새 요청으로 제출하면 같은 내용의 기록이 추가로 생성될 수 있습니다. 새 요청을 시작할까요?',
         retry: '다시 시도',
         validationSummary: '입력 내용을 확인해주세요.',
         validation: {

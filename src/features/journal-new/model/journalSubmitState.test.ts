@@ -50,4 +50,22 @@ describe('journal submit state', () => {
       error: 'invalid_result',
     });
   });
+
+  it('resets an explicit new submission only when no request is in flight or completed', () => {
+    const submitting = journalSubmitReducer(initialJournalSubmitState, { type: 'submitStarted' });
+    const failed = journalSubmitReducer(submitting, {
+      type: 'submitFailed',
+      error: 'network_error',
+    });
+    expect(journalSubmitReducer(failed, { type: 'newSubmission' })).toEqual({ status: 'idle' });
+    expect(journalSubmitReducer(initialJournalSubmitState, { type: 'newSubmission' })).toEqual({
+      status: 'idle',
+    });
+    expect(journalSubmitReducer(submitting, { type: 'newSubmission' })).toBe(submitting);
+    const succeeded = journalSubmitReducer(submitting, {
+      type: 'submitSucceeded',
+      journalId: 'saved',
+    });
+    expect(journalSubmitReducer(succeeded, { type: 'newSubmission' })).toBe(succeeded);
+  });
 });

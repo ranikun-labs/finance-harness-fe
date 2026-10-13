@@ -237,6 +237,8 @@ export interface Messages {
         invalidRequest: string;
         idempotencyConflict: string;
         networkError: string;
+        newSubmission: string;
+        newSubmissionConfirm: string;
         retry: string;
         validationSummary: string;
         validation: {
