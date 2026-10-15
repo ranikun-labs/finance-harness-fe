@@ -1,7 +1,8 @@
 import type { JournalCreateCommand } from '@/features/journal-new/model/journalCreateCommand';
-import type {
-  JournalCreatePort,
-  JournalCreateResult,
+import {
+  JournalCreatePortError,
+  type JournalCreatePort,
+  type JournalCreateResult,
 } from '@/features/journal-new/model/journalCreatePort';
 import { toCreateJournalRequest } from '@/features/journal-new/adapter/journalCreateRequest';
 
@@ -13,6 +14,7 @@ type HttpJournalCreatePortOptions = {
 };
 
 const INVALID_RESULT: JournalCreateResult = { journalId: '' };
+const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/;
 
 export class HttpJournalCreatePort implements JournalCreatePort {
   private readonly fetchImpl: JournalFetch;
@@ -24,22 +26,40 @@ export class HttpJournalCreatePort implements JournalCreatePort {
     this.timeZone = timeZone;
   }
 
-  async create(command: JournalCreateCommand): Promise<JournalCreateResult> {
+  async create(
+    command: JournalCreateCommand,
+    idempotencyKey: string,
+  ): Promise<JournalCreateResult> {
+    const idempotencyKeyMatch =
+      typeof idempotencyKey === 'string' && IDEMPOTENCY_KEY_PATTERN.exec(idempotencyKey);
+    if (!idempotencyKeyMatch || idempotencyKeyMatch[0] !== idempotencyKey) {
+      throw new JournalCreatePortError('invalid_request');
+    }
+
     const request = toCreateJournalRequest(command, this.timeZone);
     let response: Response;
 
     try {
       response = await this.fetchImpl('/finance/journals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
         body: JSON.stringify(request),
       });
     } catch {
-      throw createFailedError();
+      throw new JournalCreatePortError('network_error');
     }
 
     if (response.status < 200 || response.status >= 300) {
-      throw createFailedError();
+      if (response.status === 400) {
+        throw new JournalCreatePortError('invalid_request');
+      }
+      if (response.status === 409) {
+        throw new JournalCreatePortError('idempotency_conflict');
+      }
+      throw new JournalCreatePortError('create_failed');
     }
 
     if (response.status !== 201) {
@@ -69,8 +89,4 @@ function toJournalCreateResult(body: unknown): JournalCreateResult {
 
 function invalidResult(): JournalCreateResult {
   return { ...INVALID_RESULT };
-}
-
-function createFailedError(): Error {
-  return new Error('create_failed');
 }

@@ -17,7 +17,7 @@ describe('DeterministicJournalCreatePort', () => {
   it('returns its fixed default result and snapshots each command', async () => {
     const port = new DeterministicJournalCreatePort();
     const command = createStudyCommand();
-    const result = await port.create(command);
+    const result = await port.create(command, 'deterministic-key');
     command.openQuestions[0] = 'Changed later';
 
     expect(result).toEqual({ journalId: 'test-journal-001' });
@@ -31,16 +31,18 @@ describe('DeterministicJournalCreatePort', () => {
 
   it('can deterministically fail', async () => {
     const port = new DeterministicJournalCreatePort({ failure: new Error('expected') });
-    await expect(port.create(createStudyCommand())).rejects.toThrow('expected');
+    await expect(port.create(createStudyCommand(), 'deterministic-key')).rejects.toThrow(
+      'expected',
+    );
   });
 
   it('returns a configured immediate result and records every call', async () => {
     const port = new DeterministicJournalCreatePort({ result: { journalId: 'configured-id' } });
 
-    await expect(port.create(createStudyCommand())).resolves.toEqual({
+    await expect(port.create(createStudyCommand(), 'deterministic-key')).resolves.toEqual({
       journalId: 'configured-id',
     });
-    await expect(port.create(createStudyCommand())).resolves.toEqual({
+    await expect(port.create(createStudyCommand(), 'deterministic-key')).resolves.toEqual({
       journalId: 'configured-id',
     });
     expect(port.calls).toHaveLength(2);
@@ -48,7 +50,7 @@ describe('DeterministicJournalCreatePort', () => {
 
   it('keeps pending creates controlled until explicitly resolved', async () => {
     const port = new DeterministicJournalCreatePort({ pending: true });
-    const promise = port.create(createStudyCommand());
+    const promise = port.create(createStudyCommand(), 'deterministic-key');
     port.resolve({ journalId: 'known-id' });
 
     await expect(promise).resolves.toEqual({ journalId: 'known-id' });
@@ -56,7 +58,7 @@ describe('DeterministicJournalCreatePort', () => {
 
   it('can explicitly reject a pending create', async () => {
     const port = new DeterministicJournalCreatePort({ pending: true });
-    const promise = port.create(createStudyCommand());
+    const promise = port.create(createStudyCommand(), 'deterministic-key');
     port.reject(new Error('controlled failure'));
 
     await expect(promise).rejects.toThrow('controlled failure');
