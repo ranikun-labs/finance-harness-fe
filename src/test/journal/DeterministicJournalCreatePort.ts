@@ -18,12 +18,14 @@ type Deferred = {
 /** Test-only port: it never persists, fetches, or mutates fixtures. */
 export class DeterministicJournalCreatePort implements JournalCreatePort {
   readonly calls: JournalCreateCommand[] = [];
+  readonly idempotencyKeys: string[] = [];
   private readonly deferred: Deferred[] = [];
 
   constructor(private readonly options: Options = {}) {}
 
-  create(command: JournalCreateCommand): Promise<JournalCreateResult> {
+  create(command: JournalCreateCommand, idempotencyKey: string): Promise<JournalCreateResult> {
     this.calls.push(snapshot(command));
+    this.idempotencyKeys.push(idempotencyKey);
     if (this.options.failure) return Promise.reject(this.options.failure);
     if (!this.options.pending) {
       return Promise.resolve(this.options.result ?? { journalId: 'test-journal-001' });

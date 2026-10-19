@@ -233,6 +233,12 @@ export interface Messages {
         submitTest: string;
         submitting: string;
         failed: string;
+        invalidResult: string;
+        invalidRequest: string;
+        idempotencyConflict: string;
+        networkError: string;
+        newSubmission: string;
+        newSubmissionConfirm: string;
         retry: string;
         validationSummary: string;
         validation: {
