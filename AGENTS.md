@@ -30,8 +30,8 @@ route/navigation/accessibility/protected-contract 구현 guard만 소유하며 P
 프론트엔드 전체 실행 순서·단계 경계·현재 위치는 `docs/frontend-roadmap.md`가 기준이다.
 새 작업을 시작하기 전에 현재 STEP과 해당 단계에서 허용/금지되는 범위를 그 문서에서 확인한다.
 
-
 ## PR 작성 및 본문 갱신
+
 - PR 생성 또는 본문 수정 전에 대상 base 브랜치의 `.github/PULL_REQUEST_TEMPLATE.md` 실제 내용을 확인한다.
 - 저장소에 작업 유형별 전용 PR 템플릿이 있으면 현재 작업과 맞는 형식을 우선한다.
 - `/핵심정리` 형식은 한국어로 `목적`, `변경`, `검증`, `Finding`, `Source Merge`, `Production Gate`, `참조`를 구분해 작성한다.
