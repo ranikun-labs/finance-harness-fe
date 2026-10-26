@@ -3,16 +3,26 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
 import { AppRouter } from '@/app/AppRouter';
+import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
 import { shouldHydrate } from '@/prerender/shouldHydrate';
 
 import '@/styles/globals.css';
 
 const rootElement = document.getElementById('root')!;
+// Journal Create stays off by default; an explicit deployment/local opt-in enables the
+// existing same-origin HTTP adapter without changing the server-owned request contract.
+const journalCreatePort =
+  import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED === 'true'
+    ? createProductionJournalCreatePort()
+    : undefined;
 
 const tree = (
   <StrictMode>
     <BrowserRouter>
-      <AppRouter />
+      <AppRouter
+        journalCreatePort={journalCreatePort}
+        journalCreateMode={journalCreatePort ? 'production' : undefined}
+      />
     </BrowserRouter>
   </StrictMode>
 );

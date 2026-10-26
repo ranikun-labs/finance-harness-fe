@@ -341,9 +341,13 @@ export const ko: Messages = {
         checkEntries: '입력 확인',
         validUnsaved: '입력 형식을 확인했습니다. 아직 저장되지 않았습니다.',
         testFlowNotice: '테스트 흐름이며 저장되지 않습니다.',
+        saveFlowNotice: '기록 저장을 선택하면 기록이 서버에 저장됩니다.',
         submitTest: '테스트 제출',
+        submitSave: '기록 저장',
         submitting: '테스트 제출 중',
+        saving: '저장 중',
         failed: '테스트 제출에 실패했습니다. 입력을 확인한 뒤 다시 시도하세요.',
+        saveFailed: '기록을 저장하지 못했습니다. 입력을 확인한 뒤 다시 시도하세요.',
         invalidResult: '저장 응답을 확인할 수 없습니다. 같은 제출을 다시 시도하세요.',
         invalidRequest: '요청 형식이 올바르지 않습니다. 입력을 수정한 뒤 다시 제출하세요.',
         idempotencyConflict:
