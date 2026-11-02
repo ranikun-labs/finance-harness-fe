@@ -60,19 +60,6 @@ jobs:
           EXPECTED_FE_SHA: ${{ github.event.pull_request.head.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_FE_SHA"
 
-      - name: Check out pinned Finance BE
-        uses: actions/checkout@v4
-        with:
-          repository: ranikun-labs/finance-harness-be
-          ref: 13d686794cc3409f15bdf9ae02d5aa79a06710f2
-          path: finance-harness-be
-          persist-credentials: false
-
-      - name: Assert pinned Finance BE source
-        run: |
-          test "$(git -C finance-harness-be rev-parse HEAD)" = '13d686794cc3409f15bdf9ae02d5aa79a06710f2'
-          test "$(git -C finance-harness-be rev-parse 'HEAD^{tree}')" = '4a8605933a05120402db2989ee2f6c2008515c7f'
-
       - uses: pnpm/action-setup@v4
         with:
           version: 11.15.1
@@ -110,6 +97,19 @@ jobs:
 
       - name: Run Journal adaptive Playwright tests
         run: pnpm exec playwright test e2e/journal-adaptive.spec.ts
+
+      - name: Check out pinned Finance BE
+        uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/finance-harness-be
+          ref: 13d686794cc3409f15bdf9ae02d5aa79a06710f2
+          path: finance-harness-be
+          persist-credentials: false
+
+      - name: Assert pinned Finance BE source
+        run: |
+          test "$(git -C finance-harness-be rev-parse HEAD)" = '13d686794cc3409f15bdf9ae02d5aa79a06710f2'
+          test "$(git -C finance-harness-be rev-parse 'HEAD^{tree}')" = '4a8605933a05120402db2989ee2f6c2008515c7f'
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
