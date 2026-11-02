@@ -6,6 +6,8 @@ on:
       - master
     paths:
       - .github/workflows/rpl34-journal-create-be12.yml
+      - .node-version
+      - .nvmrc
       - e2e/journal-backend.integration.spec.ts
       - e2e/support/**
       - package.json
@@ -13,6 +15,8 @@ on:
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
       - src/**
+      - tsconfig*.json
+      - vite.config.ts
 
 permissions:
   contents: read
