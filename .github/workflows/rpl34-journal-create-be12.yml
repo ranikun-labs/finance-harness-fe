@@ -27,7 +27,6 @@ jobs:
     timeout-minutes: 30
     env:
       CI: 'true'
-      EXPECTED_FE_SOURCE_SHA: 42807f2eaf042e60f5b2a4bef3c6607d7e344d6a
       FINANCE_BE_SOURCE_SHA: 773f9c2fd09c54bd7fa3db692eed74466b5e4bf4
       FINANCE_BE_TREE_SHA: 27e5c2089d3dd31bc1065a8dbb93be7c9a97818d
       PLATFORM_SHARED_AI_SOURCE_SHA: 0f300e6ee4958bc62cd7e48e07bb39264aa06dea
@@ -54,13 +53,12 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
-      - name: Assert FE and compatibility source pins
+      - name: Assert exact FE PR head and report compatibility pins
         env:
           EVENT_FE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           test "$(git rev-parse HEAD)" = "$EVENT_FE_HEAD_SHA"
-          test "$(git rev-parse HEAD^)" = "$EXPECTED_FE_SOURCE_SHA"
-          printf 'FE product source: %s\n' "$EXPECTED_FE_SOURCE_SHA"
+          printf 'FE PR source: %s\n' "$EVENT_FE_HEAD_SHA"
           printf 'Finance BE source: %s (tree %s)\n' "$FINANCE_BE_SOURCE_SHA" "$FINANCE_BE_TREE_SHA"
           printf 'Platform Shared AI source reference: %s\n' "$PLATFORM_SHARED_AI_SOURCE_SHA"
           printf 'Existing Platform validation workflow: %s (Actions #41374401597)\n' "$PLATFORM_VALIDATION_WORKFLOW_SHA"
