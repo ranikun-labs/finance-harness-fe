@@ -37,7 +37,10 @@ async function openInvestmentForm(page: Page, assetName: string) {
   await expect(page.getByRole('heading', { name: ko.app.journalNew.investment })).toBeVisible();
   await page.locator('#assetName').fill(assetName);
   await page.locator('#reasoning').fill('RPL-34 real FE to BE integration evidence.');
-  await page.getByRole('radio', { name: ko.recordTags.action.interest }).check();
+  await page
+    .getByRole('radio', { name: ko.recordTags.action.interest })
+    .locator('xpath=..')
+    .click();
 }
 
 async function expectBackendBHasNoRecord(request: APIRequestContext, journalId: string) {
