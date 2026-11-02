@@ -13,10 +13,12 @@ import {
   toRelativeUnder,
   buildAppJournalNewPath,
 } from '@/constants/routes';
-import { AuthPresentationProvider } from '@/features/auth/AuthPresentationContext';
+import {
+  AuthPresentationProvider,
+  useAuthPresentation,
+} from '@/features/auth/AuthPresentationContext';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
-import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
-import type { AuthResumeIntent } from '@/features/auth/authPresentation';
+import type { AuthPresentationConsumer, AuthResumeIntent } from '@/features/auth/authPresentation';
 import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
 import { FeaturesPage } from '@/pages/public/FeaturesPage';
 import { LearnPage } from '@/pages/public/LearnPage';
@@ -84,11 +86,17 @@ function JournalNewAuthRequiredRoute({
   createMode?: 'test' | 'production';
 }) {
   const location = useLocation();
+  const activeCreatePort = useAuthPresentation().state === 'authenticated' ? createPort : undefined;
   const resolution = resolveJournalType(new URLSearchParams(location.search));
   if (!resolution.ok) {
     // Entry Choice and invalid-type guidance are pre-editor surfaces. The
     // auth-required boundary begins only after a concrete editor is selected.
-    return <LazyJournalNewPage createPort={createPort} createMode={createMode} />;
+    return (
+      <LazyJournalNewPage
+        createPort={activeCreatePort}
+        createMode={activeCreatePort ? createMode : undefined}
+      />
+    );
   }
 
   const resumeIntent: AuthResumeIntent | undefined = resolution.ok
@@ -105,7 +113,10 @@ function JournalNewAuthRequiredRoute({
       fallbackCancelLabel="auth.entry.cancelEntry"
       resumeIntent={resumeIntent}
     >
-      <LazyJournalNewPage createPort={createPort} createMode={createMode} />
+      <LazyJournalNewPage
+        createPort={activeCreatePort}
+        createMode={activeCreatePort ? createMode : undefined}
+      />
     </AuthRequiredSurface>
   );
 }

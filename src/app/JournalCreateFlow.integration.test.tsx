@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AppRouter } from '@/app/AppRouter';
 import {
+  AUTH_ROUTE_PATHS,
   APP_ROUTE_PATHS,
   buildAppJournalDetailPath,
   buildAppJournalNewPath,
@@ -45,6 +46,53 @@ describe('opt-in Journal Create route integration (mocked HTTP)', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ko.app.journalNew.form.submitSave })).toBeNull();
     expect(screen.queryByText(ko.app.journalNew.form.saveFlowNotice)).toBeNull();
+  });
+
+  it('keeps an opted-in create port inactive while auth is unknown', async () => {
+    const fetchImpl = vi.fn<JournalFetch>();
+
+    render(
+      <MemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
+        <AppRouter
+          authPresentation={{ state: 'unknown' }}
+          journalCreatePort={createProductionJournalCreatePort({
+            fetchImpl,
+            timeZone: 'Asia/Seoul',
+          })}
+          journalCreateMode="production"
+        />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole('button', { name: ko.app.journalNew.form.checkEntries }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ko.app.journalNew.form.submitSave })).toBeNull();
+    expect(screen.queryByText(ko.app.journalNew.form.saveFlowNotice)).toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('redirects guest users away from an opted-in create port without posting', async () => {
+    const fetchImpl = vi.fn<JournalFetch>();
+
+    render(
+      <MemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
+        <RoutePathProbe />
+        <AppRouter
+          authPresentation={{ state: 'guest' }}
+          journalCreatePort={createProductionJournalCreatePort({
+            fetchImpl,
+            timeZone: 'Asia/Seoul',
+          })}
+          journalCreateMode="production"
+        />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('route-path')).toHaveTextContent(AUTH_ROUTE_PATHS.entry),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it('saves through the existing adapter, opens the returned ID, and reads it in detail and list', async () => {
