@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      CI: "true"
+      CI: 'true'
     steps:
       - uses: actions/checkout@v4
 
