@@ -345,9 +345,13 @@ export const en: Messages = {
         checkEntries: 'Check entries',
         validUnsaved: 'Your entries are valid. They have not been saved yet.',
         testFlowNotice: 'This is a test flow and does not save your entry.',
+        saveFlowNotice: 'Choose Save entry to store this record on the server.',
         submitTest: 'Submit test entry',
+        submitSave: 'Save entry',
         submitting: 'Submitting test entry',
+        saving: 'Saving entry',
         failed: 'The test submission failed. Check your input and try again.',
+        saveFailed: 'The record could not be saved. Check your input and try again.',
         invalidResult: 'The save response was unavailable. Retry the same submission.',
         invalidRequest: 'The request was invalid. Edit your entries and submit again.',
         idempotencyConflict:
