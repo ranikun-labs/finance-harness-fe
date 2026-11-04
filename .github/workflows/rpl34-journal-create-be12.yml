@@ -27,8 +27,8 @@ jobs:
     timeout-minutes: 30
     env:
       CI: 'true'
-      FINANCE_BE_SOURCE_SHA: 773f9c2fd09c54bd7fa3db692eed74466b5e4bf4
-      FINANCE_BE_TREE_SHA: 27e5c2089d3dd31bc1065a8dbb93be7c9a97818d
+      FINANCE_BE_SOURCE_SHA: d8fae6be7b497cf5afbe153a06bb19214d67ec35
+      FINANCE_BE_TREE_SHA: e04a728c0380ec21fc9ae441e1aed0c77e30f9b6
       PLATFORM_SHARED_AI_SOURCE_SHA: 0f300e6ee4958bc62cd7e48e07bb39264aa06dea
       PLATFORM_VALIDATION_WORKFLOW_SHA: 0949fc7802b5e4d44973a4c70ac1c3a8b921f83f
     services:
@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ranikun-labs/finance-harness-be
-          ref: 773f9c2fd09c54bd7fa3db692eed74466b5e4bf4
+          ref: d8fae6be7b497cf5afbe153a06bb19214d67ec35
           path: finance-harness-be
           persist-credentials: false
 
