@@ -45,6 +45,12 @@ export interface Messages {
       redirecting: string;
       unavailable: string;
       unavailableDescription: string;
+      referenceNotice: string;
+      referenceUserId: string;
+      referencePassword: string;
+      referenceAction: string;
+      referenceSession: string;
+      referenceLogout: string;
     };
   };
   public: {

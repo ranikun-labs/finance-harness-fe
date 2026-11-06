@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AppRouter } from '@/app/AppRouter';
 import {
@@ -17,6 +17,7 @@ import {
 import { ko } from '@/i18n/messages/ko';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
+import type { FinanceReferenceFetch } from '@/features/auth/financeReferenceAuth';
 import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
@@ -232,6 +233,97 @@ describe('AppRouter', () => {
   });
 
   describe('auth-required Journal presentation consumer', () => {
+    it.each([
+      ['Journal List', false],
+      ['Journal Detail', true],
+    ] as const)(
+      'removes loaded %s content on local logout in the default AppRouter composition',
+      async (_label, openDetail) => {
+        const journalSummary = {
+          journalId: TEST_JOURNAL_ID,
+          type: 'investment',
+          occurredAt: '2026-08-12T14:30:15.123',
+          timeZone: 'Asia/Seoul',
+          assetName: 'Private Account A Fixture',
+          action: 'buy',
+        };
+        const fetchMock = vi.fn<FinanceReferenceFetch>();
+        fetchMock.mockImplementation(async (input, init) => {
+          const path = String(input);
+          if (path === '/api/v1/auth/finance-reference/login') {
+            return new Response(
+              JSON.stringify({
+                status: 200,
+                message: 'ok',
+                data: {
+                  accessToken: 'public-reference-fixture-token',
+                  tokenType: 'Bearer',
+                  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+                },
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            );
+          }
+
+          expect(new Headers(init?.headers).get('Authorization')).toBe(
+            'Bearer public-reference-fixture-token',
+          );
+          if (path === '/finance/journals?limit=20') {
+            return new Response(JSON.stringify({ items: [journalSummary], nextCursor: null }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+          if (path === `/finance/journals/${TEST_JOURNAL_ID}`) {
+            return new Response(
+              JSON.stringify({
+                ...journalSummary,
+                createdAt: '2026-08-12T05:31:02.123Z',
+                updatedAt: '2026-08-12T05:31:02.123Z',
+                reasoning: 'Private detail-only fixture text',
+                emotion: null,
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            );
+          }
+          return new Response(null, { status: 404 });
+        });
+
+        render(
+          <MemoryRouter initialEntries={[AUTH_ROUTE_PATHS.entry]}>
+            <RouterProbe />
+            <AppRouter financeReferenceAuthEnabled financeReferenceFetchImpl={fetchMock} />
+          </MemoryRouter>,
+        );
+
+        fireEvent.change(await screen.findByLabelText(ko.auth.entry.referenceUserId), {
+          target: { value: 'synthetic-account-a' },
+        });
+        fireEvent.change(await screen.findByLabelText(ko.auth.entry.referencePassword), {
+          target: { value: 'public-fixture-password' },
+        });
+        fireEvent.click(screen.getByTestId('finance-reference-login'));
+
+        await waitFor(() =>
+          expect(screen.getByTestId('router-location')).toHaveTextContent(APP_ROUTE_PATHS.appHome),
+        );
+        fireEvent.click(await screen.findByRole('link', { name: ko.nav.journal }));
+        await screen.findByText('Private Account A Fixture');
+        if (openDetail) {
+          fireEvent.click(screen.getByRole('link', { name: /Private Account A Fixture/ }));
+          await screen.findByText('Private detail-only fixture text');
+        }
+        expect(screen.getByTestId('journal-workspace')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /Sign out locally/ }));
+        await screen.findByTestId('auth-entry');
+
+        expect(screen.queryByTestId('journal-workspace')).not.toBeInTheDocument();
+        expect(screen.queryByText('Private Account A Fixture')).not.toBeInTheDocument();
+        expect(screen.queryByText('Private detail-only fixture text')).not.toBeInTheDocument();
+      },
+    );
+
     it('routes a guest Journal List to the Auth Entry without treating it as a grant', async () => {
       renderAt(APP_ROUTE_PATHS.journalList, { state: 'guest' });
 
