@@ -142,6 +142,12 @@ export function useJournalList({
     };
   }, [loadInitial]);
 
+  useEffect(() => {
+    const changed = () => loadInitial();
+    window.addEventListener('finance-journal-updated', changed);
+    return () => window.removeEventListener('finance-journal-updated', changed);
+  }, [loadInitial]);
+
   return { state, retry, loadMore } satisfies UseJournalListResult;
 }
 

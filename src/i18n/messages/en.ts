@@ -1,6 +1,17 @@
 import type { Messages } from '@/i18n/dictionary';
 
 export const en: Messages = {
+  journalEdit: {
+    edit: 'Edit record',
+    save: 'Save changes',
+    cancel: 'Cancel',
+    reload: 'Reload latest record',
+    conflict:
+      'This record changed on another device. Your changes were not saved. Reload before trying again.',
+    failed: 'Changes could not be confirmed. Reload the record before retrying.',
+    notice:
+      'Changing a record requires a new review. Existing context and retrospective remain unchanged.',
+  },
   common: {
     appName: 'AI Investment Checklist',
     loading: 'Loading…',

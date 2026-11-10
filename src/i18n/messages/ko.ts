@@ -6,6 +6,16 @@ import type { Messages } from '@/i18n/dictionary';
  * 수 없어요'` 등)이 이 값에 의존하므로 임의로 다듬지 않는다.
  */
 export const ko: Messages = {
+  journalEdit: {
+    edit: '기록 수정',
+    save: '수정 저장',
+    cancel: '취소',
+    reload: '최신 기록 다시 읽기',
+    conflict:
+      '다른 기기에서 기록이 변경되어 저장하지 않았습니다. 최신 기록을 다시 읽은 뒤 수정하세요.',
+    failed: '저장 결과를 확인하지 못했습니다. 다시 시도하기 전에 기록을 다시 읽어 주세요.',
+    notice: '수정한 내용은 새 검토가 필요합니다. 기존 문맥과 복기 기록은 변경하지 않습니다.',
+  },
   common: {
     appName: 'AI 투자 체크리스트',
     loading: '불러오는 중이에요',

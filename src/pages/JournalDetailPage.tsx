@@ -1,3 +1,4 @@
+import { JournalEditor } from '@/features/journal-edit/JournalEditor';
 import { Link, useParams } from 'react-router';
 import type { ReactNode } from 'react';
 
@@ -237,7 +238,7 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
             buttonVariants({ size: 'lg' }),
             'h-auto min-h-[54px] w-full text-center whitespace-normal',
           )}
-          to={buildAppJournalReviewPath(detail.journalId)}
+          to={buildAppJournalReviewPath(detail.journalId, detail.revision)}
         >
           {t('app.journalDetail.navigation.review')}
         </Link>
@@ -272,7 +273,16 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
       {state.status === 'error' && state.error && (
         <DetailError error={state.error} onRetry={retry} />
       )}
-      {state.status === 'success' && state.data && <JournalDetailContent detail={state.data} />}
+      {state.status === 'success' && state.data && (
+        <>
+          <JournalEditor
+            key={`${state.data.journalId}:${state.data.revision}`}
+            detail={state.data}
+            onSaved={retry}
+          />
+          <JournalDetailContent detail={state.data} />
+        </>
+      )}
     </div>
   );
 }
