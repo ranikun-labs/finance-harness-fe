@@ -1,6 +1,27 @@
 import type { Messages } from '@/i18n/dictionary';
 
 export const en: Messages = {
+  journalLifecycle: {
+    remove: 'Delete record',
+    confirm: 'Confirm record deletion',
+    retained:
+      'Hidden from normal reads and analysis. Retained for restoration, not physically erased. A retention period is not yet set.',
+    deletedList: 'Deleted records',
+    restore: 'Restore record',
+    empty: 'No deleted records.',
+    more: 'Only the latest 100 deleted records are shown. More records are not yet supported here.',
+  },
+  journalEdit: {
+    edit: 'Edit record',
+    save: 'Save changes',
+    cancel: 'Cancel',
+    reload: 'Reload latest record',
+    conflict:
+      'This record changed on another device. Your changes were not saved. Reload before trying again.',
+    failed: 'Changes could not be confirmed. Reload the record before retrying.',
+    notice:
+      'Changing a record requires a new review. Existing context and retrospective remain unchanged.',
+  },
   common: {
     appName: 'AI Investment Checklist',
     loading: 'Loading…',
@@ -31,6 +52,13 @@ export const en: Messages = {
       redirecting: 'Taking you to the sign-in screen.',
       unavailable: 'The authentication connection is not ready.',
       unavailableDescription: 'The next screen will not open until an auth result is provided.',
+      referenceNotice:
+        'Nonproduction reference login. Use only a selected synthetic account. This is not signup or production login; password input is cleared on submit.',
+      referenceUserId: 'Synthetic account user ID',
+      referencePassword: 'Password',
+      referenceAction: 'Continue with nonproduction reference login',
+      referenceSession: 'Nonproduction Finance reference session',
+      referenceLogout: 'Sign out locally',
     },
   },
   public: {
@@ -345,9 +373,13 @@ export const en: Messages = {
         checkEntries: 'Check entries',
         validUnsaved: 'Your entries are valid. They have not been saved yet.',
         testFlowNotice: 'This is a test flow and does not save your entry.',
+        saveFlowNotice: 'Choose Save entry to store this record on the server.',
         submitTest: 'Submit test entry',
+        submitSave: 'Save entry',
         submitting: 'Submitting test entry',
+        saving: 'Saving entry',
         failed: 'The test submission failed. Check your input and try again.',
+        saveFailed: 'The record could not be saved. Check your input and try again.',
         invalidResult: 'The save response was unavailable. Retry the same submission.',
         invalidRequest: 'The request was invalid. Edit your entries and submit again.',
         idempotencyConflict:

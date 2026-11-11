@@ -36,6 +36,7 @@ type Props = {
   onValidSubmit?: (state: InvestmentJournalFormState) => void;
   onFormEdited?: () => void;
   submitState?: JournalSubmitState;
+  createMode?: 'test' | 'production';
 };
 
 export function InvestmentJournalForm({
@@ -43,6 +44,7 @@ export function InvestmentJournalForm({
   onValidSubmit,
   onFormEdited,
   submitState,
+  createMode = 'test',
 }: Props) {
   const { t } = useTranslation();
   const initialValues = useMemo(() => createInitialValues(), []);
@@ -279,8 +281,16 @@ export function InvestmentJournalForm({
           ? submitState?.status === 'failed'
             ? t('app.journalNew.form.retry')
             : submitting
-              ? t('app.journalNew.form.submitting')
-              : t('app.journalNew.form.submitTest')
+              ? t(
+                  createMode === 'production'
+                    ? 'app.journalNew.form.saving'
+                    : 'app.journalNew.form.submitting',
+                )
+              : t(
+                  createMode === 'production'
+                    ? 'app.journalNew.form.submitSave'
+                    : 'app.journalNew.form.submitTest',
+                )
           : t('app.journalNew.form.checkEntries')}
       </Button>
     </form>

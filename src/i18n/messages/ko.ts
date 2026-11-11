@@ -6,6 +6,26 @@ import type { Messages } from '@/i18n/dictionary';
  * 수 없어요'` 등)이 이 값에 의존하므로 임의로 다듬지 않는다.
  */
 export const ko: Messages = {
+  journalLifecycle: {
+    remove: '기록 삭제',
+    confirm: '이 기록 삭제 확인',
+    retained:
+      '일반 목록과 분석에서 숨깁니다. 복원을 위해 보관하며 물리적 파기가 아닙니다. 보관기간은 아직 정해지지 않았습니다.',
+    deletedList: '삭제한 기록',
+    restore: '직접 복원',
+    empty: '삭제한 기록이 없습니다.',
+    more: '최근 삭제 100건만 표시합니다. 추가 기록은 이 화면에서 아직 지원하지 않습니다.',
+  },
+  journalEdit: {
+    edit: '기록 수정',
+    save: '수정 저장',
+    cancel: '취소',
+    reload: '최신 기록 다시 읽기',
+    conflict:
+      '다른 기기에서 기록이 변경되어 저장하지 않았습니다. 최신 기록을 다시 읽은 뒤 수정하세요.',
+    failed: '저장 결과를 확인하지 못했습니다. 다시 시도하기 전에 기록을 다시 읽어 주세요.',
+    notice: '수정한 내용은 새 검토가 필요합니다. 기존 문맥과 복기 기록은 변경하지 않습니다.',
+  },
   common: {
     appName: 'AI 투자 체크리스트',
     loading: '불러오는 중이에요',
@@ -35,6 +55,13 @@ export const ko: Messages = {
       redirecting: '로그인 화면으로 이동하고 있어요.',
       unavailable: '인증 연결을 기다리고 있어요.',
       unavailableDescription: '현재 인증 연결이 준비되지 않아 다음 화면으로 이동하지 않습니다.',
+      referenceNotice:
+        '비운영 참조 로그인입니다. 선택된 합성 계정만 사용하세요. 신규 가입이나 운영 로그인이 아니며, 비밀번호 입력은 제출 즉시 지웁니다.',
+      referenceUserId: '합성 계정 사용자 ID',
+      referencePassword: '비밀번호',
+      referenceAction: '비운영 참조 로그인으로 계속하기',
+      referenceSession: '비운영 Finance 참조 세션',
+      referenceLogout: '이 탭에서 로그아웃',
     },
   },
   public: {
@@ -341,9 +368,13 @@ export const ko: Messages = {
         checkEntries: '입력 확인',
         validUnsaved: '입력 형식을 확인했습니다. 아직 저장되지 않았습니다.',
         testFlowNotice: '테스트 흐름이며 저장되지 않습니다.',
+        saveFlowNotice: '기록 저장을 선택하면 기록이 서버에 저장됩니다.',
         submitTest: '테스트 제출',
+        submitSave: '기록 저장',
         submitting: '테스트 제출 중',
+        saving: '저장 중',
         failed: '테스트 제출에 실패했습니다. 입력을 확인한 뒤 다시 시도하세요.',
+        saveFailed: '기록을 저장하지 못했습니다. 입력을 확인한 뒤 다시 시도하세요.',
         invalidResult: '저장 응답을 확인할 수 없습니다. 같은 제출을 다시 시도하세요.',
         invalidRequest: '요청 형식이 올바르지 않습니다. 입력을 수정한 뒤 다시 제출하세요.',
         idempotencyConflict:
