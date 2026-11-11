@@ -274,7 +274,7 @@ export function createFinanceReferenceJournalFetch(
     }
     if (
       !(isJournalBase && (method === 'GET' || method === 'POST')) &&
-      !(isJournalDetail && method === 'GET')
+      !(isJournalDetail && (method === 'GET' || method === 'PATCH'))
     ) {
       throw new FinanceReferenceAuthError('external_request');
     }

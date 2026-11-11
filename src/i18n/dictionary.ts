@@ -16,6 +16,15 @@ import { ko } from '@/i18n/messages/ko';
 export type SampleSubjectKey = 'semiconductorCompanyA' | 'platformCompanyB' | 'batteryCompanyC';
 
 export interface Messages {
+  journalEdit: {
+    edit: string;
+    save: string;
+    cancel: string;
+    reload: string;
+    conflict: string;
+    failed: string;
+    notice: string;
+  };
   common: {
     appName: string;
     loading: string;

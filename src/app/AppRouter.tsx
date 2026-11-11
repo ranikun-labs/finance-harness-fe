@@ -1,3 +1,5 @@
+import { JournalRevisionReviewBoundary } from '@/features/journal-edit/JournalRevisionReviewBoundary';
+import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { lazy, Suspense, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
 
@@ -213,110 +215,114 @@ export function AppRouter({
   const activePresentation = authPresentation ?? { state: authSnapshot.state };
 
   return (
-    <AuthPresentationProvider value={activePresentation}>
-      {referenceAuthEnabled && authSnapshot.session && (
-        <aside
-          role="status"
-          data-testid="finance-reference-session"
-          className="border-border bg-muted flex items-center justify-between gap-3 border-b px-4 py-2 text-xs"
-        >
-          <span>비운영 Finance 참조 세션 / Nonproduction Finance reference session</span>
-          <button
-            type="button"
-            className="underline underline-offset-4"
-            onClick={() => financeAuth.localLogout()}
+    <JournalEditFetchContext.Provider value={referenceAuthEnabled ? financeAuth.fetch : undefined}>
+      <AuthPresentationProvider value={activePresentation}>
+        {referenceAuthEnabled && authSnapshot.session && (
+          <aside
+            role="status"
+            data-testid="finance-reference-session"
+            className="border-border bg-muted flex items-center justify-between gap-3 border-b px-4 py-2 text-xs"
           >
-            이 탭에서 로그아웃 / Sign out locally
-          </button>
-        </aside>
-      )}
-      <Routes>
-        {/* 루트: 기본 로케일로 redirect 전용 */}
-        <Route path="/" element={<RootRedirect />} />
+            <span>비운영 Finance 참조 세션 / Nonproduction Finance reference session</span>
+            <button
+              type="button"
+              className="underline underline-offset-4"
+              onClick={() => financeAuth.localLogout()}
+            >
+              이 탭에서 로그아웃 / Sign out locally
+            </button>
+          </aside>
+        )}
+        <Routes>
+          {/* 루트: 기본 로케일로 redirect 전용 */}
+          <Route path="/" element={<RootRedirect />} />
 
-        {/* Provider-neutral Auth Entry — public surface without AppShell navigation. */}
-        <Route
-          path={AUTH_ROUTE_PATHS.entry}
-          element={
-            <AuthEntryRoute
-              financeReferenceAuth={
-                referenceAuthEnabled
-                  ? {
-                      enabled: true,
-                      login: (credentials, signal) => financeAuth.login(credentials, signal),
-                    }
-                  : undefined
-              }
-            />
-          }
-        />
-
-        {/* 공개 웹: /:locale (ko|en) — PublicLayout이 locale을 검증한다 */}
-        <Route path={LOCALE_BASE} element={<PublicLayout />}>
-          <Route index element={<PublicHomePage />} />
+          {/* Provider-neutral Auth Entry — public surface without AppShell navigation. */}
           <Route
-            path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.features)}
-            element={<FeaturesPage />}
+            path={AUTH_ROUTE_PATHS.entry}
+            element={
+              <AuthEntryRoute
+                financeReferenceAuth={
+                  referenceAuthEnabled
+                    ? {
+                        enabled: true,
+                        login: (credentials, signal) => financeAuth.login(credentials, signal),
+                      }
+                    : undefined
+                }
+              />
+            }
           />
-          <Route
-            path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.learn)}
-            element={<LearnPage />}
-          />
-          <Route path="*" element={<PublicNotFoundPage />} />
-        </Route>
 
-        {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
-        <Route path={APP_BASE} element={<AppShell />}>
-          {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
-          <Route element={<LazyTabLayout journalReadPort={activeJournalReadPort} />}>
-            <Route index element={<LazyHomePage />} />
+          {/* 공개 웹: /:locale (ko|en) — PublicLayout이 locale을 검증한다 */}
+          <Route path={LOCALE_BASE} element={<PublicLayout />}>
+            <Route index element={<PublicHomePage />} />
             <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)}
-              element={<LazyAskPage />}
+              path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.features)}
+              element={<FeaturesPage />}
             />
             <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalList)}
-              element={<LazyJournalListPage />}
+              path={toRelativeUnder(LOCALE_BASE, PUBLIC_ROUTE_PATHS.learn)}
+              element={<LearnPage />}
             />
-            <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
-              element={
-                <JournalNewAuthRequiredRoute
-                  createPort={activeJournalCreatePort}
-                  createMode={activeCreateMode}
-                />
-              }
-            />
-            <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
-              element={<LazyJournalDetailPage />}
-            />
-            <Route
-              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
-              element={
-                <AuthRequiredSurface
-                  fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
-                  fallbackCancelLabel="auth.entry.cancelReviewStart"
-                >
-                  <LazyJournalReviewPage />
-                </AuthRequiredSurface>
-              }
-            />
+            <Route path="*" element={<PublicNotFoundPage />} />
           </Route>
 
-          {/* Primary navigation을 상속하지 않는 앱 화면 (AppShell 직속) */}
-          <Route
-            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.onboarding)}
-            element={<LazyOnboardingPage />}
-          />
-          <Route path="*" element={<LazyNotFoundPage />} />
-        </Route>
+          {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
+          <Route path={APP_BASE} element={<AppShell />}>
+            {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
+            <Route element={<LazyTabLayout journalReadPort={activeJournalReadPort} />}>
+              <Route index element={<LazyHomePage />} />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)}
+                element={<LazyAskPage />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalList)}
+                element={<LazyJournalListPage />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
+                element={
+                  <JournalNewAuthRequiredRoute
+                    createPort={activeJournalCreatePort}
+                    createMode={activeCreateMode}
+                  />
+                }
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}
+                element={<LazyJournalDetailPage />}
+              />
+              <Route
+                path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalReview)}
+                element={
+                  <AuthRequiredSurface
+                    fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
+                    fallbackCancelLabel="auth.entry.cancelReviewStart"
+                  >
+                    <JournalRevisionReviewBoundary>
+                      <LazyJournalReviewPage />
+                    </JournalRevisionReviewBoundary>
+                  </AuthRequiredSurface>
+                }
+              />
+            </Route>
 
-        {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리(DEFAULT_LOCALE
+            {/* Primary navigation을 상속하지 않는 앱 화면 (AppShell 직속) */}
+            <Route
+              path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.onboarding)}
+              element={<LazyOnboardingPage />}
+            />
+            <Route path="*" element={<LazyNotFoundPage />} />
+          </Route>
+
+          {/* 어느 브랜치에도 속하지 않는 최상위 경로: 공개 NotFound로 처리(DEFAULT_LOCALE
         provider를 스스로 소유하는 PublicNotFoundFallback — 여기엔 유효한 URL locale이
         없다) */}
-        <Route path="*" element={<PublicNotFoundFallback />} />
-      </Routes>
-    </AuthPresentationProvider>
+          <Route path="*" element={<PublicNotFoundFallback />} />
+        </Routes>
+      </AuthPresentationProvider>
+    </JournalEditFetchContext.Provider>
   );
 }
