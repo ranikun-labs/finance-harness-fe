@@ -21,6 +21,7 @@ type StudyJournalFormProps = {
   onValidSubmit?: (state: StudyJournalFormState) => void;
   onFormEdited?: () => void;
   submitState?: JournalSubmitState;
+  createMode?: 'test' | 'production';
 };
 
 function createInitialValues(
@@ -43,6 +44,7 @@ export function StudyJournalForm({
   onValidSubmit,
   onFormEdited,
   submitState,
+  createMode = 'test',
 }: StudyJournalFormProps) {
   const { t } = useTranslation();
   const initialValues = useMemo(
@@ -319,8 +321,16 @@ export function StudyJournalForm({
           ? submitState?.status === 'failed'
             ? t('app.journalNew.form.retry')
             : submitting
-              ? t('app.journalNew.form.submitting')
-              : t('app.journalNew.form.submitTest')
+              ? t(
+                  createMode === 'production'
+                    ? 'app.journalNew.form.saving'
+                    : 'app.journalNew.form.submitting',
+                )
+              : t(
+                  createMode === 'production'
+                    ? 'app.journalNew.form.submitSave'
+                    : 'app.journalNew.form.submitTest',
+                )
           : t('app.journalNew.form.checkEntries')}
       </Button>
     </form>

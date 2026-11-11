@@ -37,7 +37,7 @@ import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
  * `type` 쿼리 값('investment'/'study')은 도메인 식별자이며 번역 대상이 아니다 —
  * 표시 문구만 `t()`로 조회한다.
  */
-type Props = { createPort?: JournalCreatePort };
+type Props = { createPort?: JournalCreatePort; createMode?: 'test' | 'production' };
 
 interface JournalNewLocationState {
   decisionContext?: DecisionContextSnapshot;
@@ -46,7 +46,7 @@ interface JournalNewLocationState {
   authResumeNotice?: boolean;
 }
 
-export function JournalNewPage({ createPort }: Props) {
+export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -350,6 +350,7 @@ export function JournalNewPage({ createPort }: Props) {
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}
           submitState={createPort ? submitState : undefined}
+          createMode={createMode}
         />
       ) : (
         <StudyJournalForm
@@ -358,13 +359,20 @@ export function JournalNewPage({ createPort }: Props) {
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}
           submitState={createPort ? submitState : undefined}
+          createMode={createMode}
         />
       )}
       {createPort && (
         <div className="px-4 pb-4">
           <p role="status" aria-live="polite" className="text-muted-foreground text-sm">
-            {t('app.journalNew.form.testFlowNotice')}
-            {submitState.status === 'submitting' ? ` ${t('app.journalNew.form.submitting')}` : ''}
+            {t(
+              createMode === 'production'
+                ? 'app.journalNew.form.saveFlowNotice'
+                : 'app.journalNew.form.testFlowNotice',
+            )}
+            {submitState.status === 'submitting'
+              ? ` ${t(createMode === 'production' ? 'app.journalNew.form.saving' : 'app.journalNew.form.submitting')}`
+              : ''}
           </p>
           {submitState.status === 'failed' && (
             <p role="alert" className="text-destructive mt-2 text-sm">
@@ -376,7 +384,11 @@ export function JournalNewPage({ createPort }: Props) {
                     ? t('app.journalNew.form.idempotencyConflict')
                     : submitState.error === 'network_error'
                       ? t('app.journalNew.form.networkError')
-                      : t('app.journalNew.form.failed')}
+                      : t(
+                          createMode === 'production'
+                            ? 'app.journalNew.form.saveFailed'
+                            : 'app.journalNew.form.failed',
+                        )}
             </p>
           )}
           {hasSubmission && submitState.status !== 'submitting' && (

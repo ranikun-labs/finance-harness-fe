@@ -16,6 +16,24 @@ import { ko } from '@/i18n/messages/ko';
 export type SampleSubjectKey = 'semiconductorCompanyA' | 'platformCompanyB' | 'batteryCompanyC';
 
 export interface Messages {
+  journalLifecycle: {
+    remove: string;
+    confirm: string;
+    retained: string;
+    deletedList: string;
+    restore: string;
+    empty: string;
+    more: string;
+  };
+  journalEdit: {
+    edit: string;
+    save: string;
+    cancel: string;
+    reload: string;
+    conflict: string;
+    failed: string;
+    notice: string;
+  };
   common: {
     appName: string;
     loading: string;
@@ -45,6 +63,12 @@ export interface Messages {
       redirecting: string;
       unavailable: string;
       unavailableDescription: string;
+      referenceNotice: string;
+      referenceUserId: string;
+      referencePassword: string;
+      referenceAction: string;
+      referenceSession: string;
+      referenceLogout: string;
     };
   };
   public: {
@@ -230,9 +254,13 @@ export interface Messages {
         checkEntries: string;
         validUnsaved: string;
         testFlowNotice: string;
+        saveFlowNotice: string;
         submitTest: string;
+        submitSave: string;
         submitting: string;
+        saving: string;
         failed: string;
+        saveFailed: string;
         invalidResult: string;
         invalidRequest: string;
         idempotencyConflict: string;
