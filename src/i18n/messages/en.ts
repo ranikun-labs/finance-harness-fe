@@ -31,6 +31,13 @@ export const en: Messages = {
       redirecting: 'Taking you to the sign-in screen.',
       unavailable: 'The authentication connection is not ready.',
       unavailableDescription: 'The next screen will not open until an auth result is provided.',
+      referenceNotice:
+        'Nonproduction reference login. Use only a selected synthetic account. This is not signup or production login; password input is cleared on submit.',
+      referenceUserId: 'Synthetic account user ID',
+      referencePassword: 'Password',
+      referenceAction: 'Continue with nonproduction reference login',
+      referenceSession: 'Nonproduction Finance reference session',
+      referenceLogout: 'Sign out locally',
     },
   },
   public: {

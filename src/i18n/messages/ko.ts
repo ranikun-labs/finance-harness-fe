@@ -35,6 +35,13 @@ export const ko: Messages = {
       redirecting: '로그인 화면으로 이동하고 있어요.',
       unavailable: '인증 연결을 기다리고 있어요.',
       unavailableDescription: '현재 인증 연결이 준비되지 않아 다음 화면으로 이동하지 않습니다.',
+      referenceNotice:
+        '비운영 참조 로그인입니다. 선택된 합성 계정만 사용하세요. 신규 가입이나 운영 로그인이 아니며, 비밀번호 입력은 제출 즉시 지웁니다.',
+      referenceUserId: '합성 계정 사용자 ID',
+      referencePassword: '비밀번호',
+      referenceAction: '비운영 참조 로그인으로 계속하기',
+      referenceSession: '비운영 Finance 참조 세션',
+      referenceLogout: '이 탭에서 로그아웃',
     },
   },
   public: {
