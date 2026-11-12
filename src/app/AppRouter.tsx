@@ -13,10 +13,12 @@ import {
   toRelativeUnder,
   buildAppJournalNewPath,
 } from '@/constants/routes';
-import { AuthPresentationProvider } from '@/features/auth/AuthPresentationContext';
+import {
+  AuthPresentationProvider,
+  useAuthPresentation,
+} from '@/features/auth/AuthPresentationContext';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
-import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
-import type { AuthResumeIntent } from '@/features/auth/authPresentation';
+import type { AuthPresentationConsumer, AuthResumeIntent } from '@/features/auth/authPresentation';
 import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
 import { FeaturesPage } from '@/pages/public/FeaturesPage';
 import { LearnPage } from '@/pages/public/LearnPage';
@@ -25,6 +27,7 @@ import { PublicNotFoundFallback, PublicNotFoundPage } from '@/pages/public/Publi
 import { resolveJournalType } from '@/features/journal-new/model/journalType';
 import { RouteDocumentTitle } from '@/metadata/documentTitle';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
+import type { JournalCreatePort } from '@/features/journal-new/model/journalCreatePort';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -75,13 +78,25 @@ function AuthEntryRoute() {
   );
 }
 
-function JournalNewAuthRequiredRoute() {
+function JournalNewAuthRequiredRoute({
+  createPort,
+  createMode,
+}: {
+  createPort?: JournalCreatePort;
+  createMode?: 'test' | 'production';
+}) {
   const location = useLocation();
+  const activeCreatePort = useAuthPresentation().state === 'authenticated' ? createPort : undefined;
   const resolution = resolveJournalType(new URLSearchParams(location.search));
   if (!resolution.ok) {
     // Entry Choice and invalid-type guidance are pre-editor surfaces. The
     // auth-required boundary begins only after a concrete editor is selected.
-    return <LazyJournalNewPage />;
+    return (
+      <LazyJournalNewPage
+        createPort={activeCreatePort}
+        createMode={activeCreatePort ? createMode : undefined}
+      />
+    );
   }
 
   const resumeIntent: AuthResumeIntent | undefined = resolution.ok
@@ -98,7 +113,10 @@ function JournalNewAuthRequiredRoute() {
       fallbackCancelLabel="auth.entry.cancelEntry"
       resumeIntent={resumeIntent}
     >
-      <LazyJournalNewPage />
+      <LazyJournalNewPage
+        createPort={activeCreatePort}
+        createMode={activeCreatePort ? createMode : undefined}
+      />
     </AuthRequiredSurface>
   );
 }
@@ -125,9 +143,18 @@ interface AppRouterProps {
   authPresentation?: AuthPresentationConsumer;
   /** Integration seam for the server-owned Journal List/Detail read flow. */
   journalReadPort?: JournalReadPort;
+  /** Integration seam for the opt-in server-owned Journal Create flow. */
+  journalCreatePort?: JournalCreatePort;
+  /** Production composition switches submission copy from test to save language. */
+  journalCreateMode?: 'test' | 'production';
 }
 
-export function AppRouter({ authPresentation, journalReadPort }: AppRouterProps = {}) {
+export function AppRouter({
+  authPresentation,
+  journalReadPort,
+  journalCreatePort,
+  journalCreateMode,
+}: AppRouterProps = {}) {
   return (
     <AuthPresentationProvider value={authPresentation}>
       <Routes>
@@ -166,7 +193,12 @@ export function AppRouter({ authPresentation, journalReadPort }: AppRouterProps 
             />
             <Route
               path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
-              element={<JournalNewAuthRequiredRoute />}
+              element={
+                <JournalNewAuthRequiredRoute
+                  createPort={journalCreatePort}
+                  createMode={journalCreateMode}
+                />
+              }
             />
             <Route
               path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalDetail)}

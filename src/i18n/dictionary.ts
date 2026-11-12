@@ -230,9 +230,13 @@ export interface Messages {
         checkEntries: string;
         validUnsaved: string;
         testFlowNotice: string;
+        saveFlowNotice: string;
         submitTest: string;
+        submitSave: string;
         submitting: string;
+        saving: string;
         failed: string;
+        saveFailed: string;
         invalidResult: string;
         invalidRequest: string;
         idempotencyConflict: string;
