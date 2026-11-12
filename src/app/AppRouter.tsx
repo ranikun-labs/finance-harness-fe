@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
 
 import { RootRedirect } from '@/app/RootRedirect';
@@ -181,14 +181,9 @@ export function AppRouter({
       import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
       import.meta.env.PROD,
     );
-  const authRef = useRef<FinanceReferenceAuthSession | null>(null);
-  if (authRef.current === null) {
-    authRef.current = new FinanceReferenceAuthSession(
-      referenceAuthEnabled,
-      financeReferenceFetchImpl,
-    );
-  }
-  const financeAuth = authRef.current;
+  const [financeAuth] = useState(
+    () => new FinanceReferenceAuthSession(referenceAuthEnabled, financeReferenceFetchImpl),
+  );
   const authSnapshot = useSyncExternalStore(
     financeAuth.subscribe,
     financeAuth.getSnapshot,
