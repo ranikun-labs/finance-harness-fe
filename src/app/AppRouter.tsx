@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
 
 import { RootRedirect } from '@/app/RootRedirect';
@@ -28,6 +28,14 @@ import { resolveJournalType } from '@/features/journal-new/model/journalType';
 import { RouteDocumentTitle } from '@/metadata/documentTitle';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import type { JournalCreatePort } from '@/features/journal-new/model/journalCreatePort';
+import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
+import { createProductionJournalReadPort } from '@/features/journal-read/adapter/productionJournalReadPort';
+import {
+  FinanceReferenceAuthSession,
+  isFinanceReferenceAuthEnabled,
+  type FinanceReferenceCredentials,
+  type FinanceReferenceFetch,
+} from '@/features/auth/financeReferenceAuth';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -67,12 +75,19 @@ const LazyOnboardingPage = lazy(() =>
   import('@/pages/OnboardingPage').then(({ OnboardingPage }) => ({ default: OnboardingPage })),
 );
 
-function AuthEntryRoute() {
+function AuthEntryRoute({
+  financeReferenceAuth,
+}: {
+  financeReferenceAuth?: {
+    enabled: boolean;
+    login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
+  };
+}) {
   return (
     <AppLocaleProvider>
       <RouteDocumentTitle />
       <Suspense fallback={<LazyLoadingFallback asMain />}>
-        <LazyAuthEntryPage />
+        <LazyAuthEntryPage financeReferenceAuth={financeReferenceAuth} />
       </Suspense>
     </AppLocaleProvider>
   );
@@ -147,6 +162,9 @@ interface AppRouterProps {
   journalCreatePort?: JournalCreatePort;
   /** Production composition switches submission copy from test to save language. */
   journalCreateMode?: 'test' | 'production';
+  /** Explicit nonproduction-only test seam; omitted production composition uses Vite env. */
+  financeReferenceAuthEnabled?: boolean;
+  financeReferenceFetchImpl?: FinanceReferenceFetch;
 }
 
 export function AppRouter({
@@ -154,15 +172,84 @@ export function AppRouter({
   journalReadPort,
   journalCreatePort,
   journalCreateMode,
+  financeReferenceAuthEnabled,
+  financeReferenceFetchImpl,
 }: AppRouterProps = {}) {
+  const referenceAuthEnabled =
+    financeReferenceAuthEnabled ??
+    isFinanceReferenceAuthEnabled(
+      import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
+      import.meta.env.PROD,
+    );
+  const authRef = useRef<FinanceReferenceAuthSession | null>(null);
+  if (authRef.current === null) {
+    authRef.current = new FinanceReferenceAuthSession(
+      referenceAuthEnabled,
+      financeReferenceFetchImpl,
+    );
+  }
+  const financeAuth = authRef.current;
+  const authSnapshot = useSyncExternalStore(
+    financeAuth.subscribe,
+    financeAuth.getSnapshot,
+    financeAuth.getSnapshot,
+  );
+  useEffect(() => () => financeAuth.dispose(), [financeAuth]);
+  const activeJournalReadPort = useMemo(
+    () =>
+      referenceAuthEnabled
+        ? createProductionJournalReadPort({ fetchImpl: financeAuth.fetch })
+        : journalReadPort,
+    [financeAuth, journalReadPort, referenceAuthEnabled],
+  );
+  const activeJournalCreatePort = useMemo(
+    () =>
+      referenceAuthEnabled
+        ? createProductionJournalCreatePort({ fetchImpl: financeAuth.fetch })
+        : journalCreatePort,
+    [financeAuth, journalCreatePort, referenceAuthEnabled],
+  );
+  const activeCreateMode = referenceAuthEnabled ? 'test' : journalCreateMode;
+  const activePresentation = authPresentation ?? { state: authSnapshot.state };
+
   return (
-    <AuthPresentationProvider value={authPresentation}>
+    <AuthPresentationProvider value={activePresentation}>
+      {referenceAuthEnabled && authSnapshot.session && (
+        <aside
+          role="status"
+          data-testid="finance-reference-session"
+          className="border-border bg-muted flex items-center justify-between gap-3 border-b px-4 py-2 text-xs"
+        >
+          <span>비운영 Finance 참조 세션 / Nonproduction Finance reference session</span>
+          <button
+            type="button"
+            className="underline underline-offset-4"
+            onClick={() => financeAuth.localLogout()}
+          >
+            이 탭에서 로그아웃 / Sign out locally
+          </button>
+        </aside>
+      )}
       <Routes>
         {/* 루트: 기본 로케일로 redirect 전용 */}
         <Route path="/" element={<RootRedirect />} />
 
         {/* Provider-neutral Auth Entry — public surface without AppShell navigation. */}
-        <Route path={AUTH_ROUTE_PATHS.entry} element={<AuthEntryRoute />} />
+        <Route
+          path={AUTH_ROUTE_PATHS.entry}
+          element={
+            <AuthEntryRoute
+              financeReferenceAuth={
+                referenceAuthEnabled
+                  ? {
+                      enabled: true,
+                      login: (credentials, signal) => financeAuth.login(credentials, signal),
+                    }
+                  : undefined
+              }
+            />
+          }
+        />
 
         {/* 공개 웹: /:locale (ko|en) — PublicLayout이 locale을 검증한다 */}
         <Route path={LOCALE_BASE} element={<PublicLayout />}>
@@ -181,7 +268,7 @@ export function AppRouter({
         {/* 웹앱/Capacitor: /app/* — SPA. AppShell = 앱 URL 경계 */}
         <Route path={APP_BASE} element={<AppShell />}>
           {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
-          <Route element={<LazyTabLayout journalReadPort={journalReadPort} />}>
+          <Route element={<LazyTabLayout journalReadPort={activeJournalReadPort} />}>
             <Route index element={<LazyHomePage />} />
             <Route
               path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)}
@@ -195,8 +282,8 @@ export function AppRouter({
               path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
               element={
                 <JournalNewAuthRequiredRoute
-                  createPort={journalCreatePort}
-                  createMode={journalCreateMode}
+                  createPort={activeJournalCreatePort}
+                  createMode={activeCreateMode}
                 />
               }
             />
