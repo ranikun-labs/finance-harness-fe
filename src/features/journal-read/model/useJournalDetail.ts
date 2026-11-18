@@ -37,6 +37,23 @@ export function useJournalDetail(
     const controller = new AbortController();
     let active = true;
 
+    const lifecycle = (event: Event) => {
+      const changed = (event as CustomEvent<{ journalId: string; state: string }>).detail;
+      if (changed?.journalId !== journalId) return;
+      if (changed.state === 'deleted') {
+        active = false;
+        controller.abort();
+        setState({
+          status: 'error',
+          data: null,
+          error: { code: 'journal_not_found', status: 404 },
+        });
+      } else {
+        retry();
+      }
+    };
+    window.addEventListener('finance-journal-lifecycle', lifecycle);
+
     void Promise.resolve().then(async () => {
       if (!active || controller.signal.aborted) return;
 
@@ -75,8 +92,9 @@ export function useJournalDetail(
     return () => {
       active = false;
       controller.abort();
+      window.removeEventListener('finance-journal-lifecycle', lifecycle);
     };
-  }, [journalId, port, retryToken]);
+  }, [journalId, port, retryToken, retry]);
 
   return { state, retry };
 }

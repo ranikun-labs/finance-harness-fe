@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import type {
   AuthPresentationDriver,
   AuthResumeIntent,
 } from '@/features/auth/authPresentation';
+import type { FinanceReferenceCredentials } from '@/features/auth/financeReferenceAuth';
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
@@ -17,6 +19,11 @@ type AuthPhase = 'idle' | 'loading' | 'failure' | 'unavailable';
 interface AuthEntryPageProps {
   /** Explicit test/fixture driver. Production composition intentionally omits it. */
   driver?: AuthPresentationDriver;
+  /** Explicit nonproduction diagnostic login only. Production OAuth-first copy is unchanged. */
+  financeReferenceAuth?: {
+    enabled: boolean;
+    login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
+  };
   fallbackCancelTarget?: string;
   fallbackCancelLabel?: string;
 }
@@ -43,6 +50,7 @@ function destinationState(intent: AuthResumeIntent | undefined) {
  */
 export function AuthEntryPage({
   driver,
+  financeReferenceAuth,
   fallbackCancelTarget,
   fallbackCancelLabel,
 }: AuthEntryPageProps) {
@@ -52,7 +60,18 @@ export function AuthEntryPage({
   const locationState = readLocationState(location.state);
   const intent = locationState.authResumeIntent;
   const [phase, setPhase] = useState<AuthPhase>('idle');
+  const [userId, setUserId] = useState('');
   const attemptRef = useRef(0);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const loginControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(
+    () => () => {
+      loginControllerRef.current?.abort();
+      if (passwordInputRef.current) passwordInputRef.current.value = '';
+    },
+    [],
+  );
 
   const cancelTarget = intent?.reviewHandoff
     ? intent.returnTarget
@@ -93,6 +112,33 @@ export function AuthEntryPage({
       })
       .catch(() => {
         if (attempt === attemptRef.current) setPhase('failure');
+      });
+  }
+
+  function beginFinanceReferenceAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (phase === 'loading' || !financeReferenceAuth?.enabled) return;
+
+    const password = passwordInputRef.current?.value ?? '';
+    if (passwordInputRef.current) passwordInputRef.current.value = '';
+    const credentials = { userId, password };
+    const attempt = ++attemptRef.current;
+    const controller = new AbortController();
+    loginControllerRef.current = controller;
+    setPhase('loading');
+
+    void financeReferenceAuth
+      .login(credentials, controller.signal)
+      .then(() => {
+        if (attempt !== attemptRef.current) return;
+        navigate(targetRoute, { replace: true, state: destinationState(intent) });
+      })
+      .catch(() => {
+        if (attempt === attemptRef.current && !controller.signal.aborted) setPhase('failure');
+      })
+      .finally(() => {
+        if (passwordInputRef.current) passwordInputRef.current.value = '';
+        if (!controller.signal.aborted) setUserId('');
       });
   }
 
@@ -148,13 +194,15 @@ export function AuthEntryPage({
               <p className="text-muted-foreground text-sm leading-6">
                 {t('auth.entry.failureDescription')}
               </p>
-              <button
-                type="button"
-                onClick={beginAuth}
-                className={cn(buttonVariants(), 'min-h-11 self-start')}
-              >
-                {t('auth.entry.retry')}
-              </button>
+              {!financeReferenceAuth?.enabled && (
+                <button
+                  type="button"
+                  onClick={beginAuth}
+                  className={cn(buttonVariants(), 'min-h-11 self-start')}
+                >
+                  {t('auth.entry.retry')}
+                </button>
+              )}
             </div>
           )}
 
@@ -169,19 +217,59 @@ export function AuthEntryPage({
             </p>
           )}
 
+          {financeReferenceAuth?.enabled ? (
+            <form onSubmit={beginFinanceReferenceAuth} className="flex flex-col gap-3">
+              <p className="border-border bg-muted rounded-xl border p-3 text-sm">
+                {t('auth.entry.referenceNotice')}
+              </p>
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                {t('auth.entry.referenceUserId')}
+                <input
+                  autoComplete="username"
+                  className="border-input bg-background focus-visible:ring-ring min-h-11 rounded-md border px-3 outline-none focus-visible:ring-2"
+                  value={userId}
+                  onChange={(event) => setUserId(event.target.value)}
+                  disabled={phase === 'loading'}
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                {t('auth.entry.referencePassword')}
+                <input
+                  ref={passwordInputRef}
+                  type="password"
+                  autoComplete="current-password"
+                  className="border-input bg-background focus-visible:ring-ring min-h-11 rounded-md border px-3 outline-none focus-visible:ring-2"
+                  disabled={phase === 'loading'}
+                  required
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={phase === 'loading'}
+                className={cn(buttonVariants({ size: 'lg' }), 'min-h-11 w-full')}
+                data-testid="finance-reference-login"
+              >
+                {t('auth.entry.referenceAction')}
+              </button>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={beginAuth}
+                disabled={phase === 'loading'}
+                className={cn(buttonVariants({ size: 'lg' }), 'min-h-11 w-full')}
+                data-testid="auth-provider-cta"
+              >
+                {t('auth.entry.providerAction')}
+              </button>
+              <p className="text-muted-foreground text-center text-xs leading-5">
+                {t('auth.entry.providerNeutralNotice')}
+              </p>
+            </div>
+          )}
           <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={beginAuth}
-              disabled={phase === 'loading'}
-              className={cn(buttonVariants({ size: 'lg' }), 'min-h-11 w-full')}
-              data-testid="auth-provider-cta"
-            >
-              {t('auth.entry.providerAction')}
-            </button>
-            <p className="text-muted-foreground text-center text-xs leading-5">
-              {t('auth.entry.providerNeutralNotice')}
-            </p>
             <button
               type="button"
               onClick={cancel}

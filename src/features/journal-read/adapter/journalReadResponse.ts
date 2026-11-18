@@ -13,6 +13,7 @@ export interface InvestmentJournalDetailResponse {
   timeZone: string;
   createdAt: string;
   updatedAt: string;
+  revision?: number;
   assetName: string;
   action: RecordAction;
   reasoning: string;
@@ -26,6 +27,7 @@ export interface StudyJournalDetailResponse {
   timeZone: string;
   createdAt: string;
   updatedAt: string;
+  revision?: number;
   title: string;
   keyContent: string;
   openQuestions: string[];
@@ -149,7 +151,13 @@ function parseCommonDetail(value: Record<string, unknown>): {
   timeZone: string;
   createdAt: string;
   updatedAt: string;
+  revision?: number;
 } {
+  if (
+    value.revision !== undefined &&
+    (!Number.isSafeInteger(value.revision) || (value.revision as number) < 0)
+  )
+    throw new JournalResponseValidationError();
   if (
     !isJournalId(value.journalId) ||
     !isJournalOccurredAt(value.occurredAt) ||
@@ -166,6 +174,7 @@ function parseCommonDetail(value: Record<string, unknown>): {
     timeZone: value.timeZone,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
+    ...(value.revision !== undefined ? { revision: value.revision as number } : {}),
   };
 }
 

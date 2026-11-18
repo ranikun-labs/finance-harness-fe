@@ -21,6 +21,7 @@ interface JournalTimeViewModel {
 interface JournalAuditTimestampsViewModel {
   createdAt: JournalUtcInstant;
   updatedAt: JournalUtcInstant;
+  revision?: number;
 }
 
 export type InvestmentJournalSummaryViewModel = JournalTimeViewModel &
@@ -85,6 +86,7 @@ export function toJournalDetailViewModel(response: JournalDetailResponse): Journ
       timeZone: response.timeZone,
       createdAt: toUtcInstant(response.createdAt),
       updatedAt: toUtcInstant(response.updatedAt),
+      revision: response.revision,
       assetName: response.assetName,
       action: response.action,
       reasoning: response.reasoning,
@@ -99,6 +101,7 @@ export function toJournalDetailViewModel(response: JournalDetailResponse): Journ
     timeZone: response.timeZone,
     createdAt: toUtcInstant(response.createdAt),
     updatedAt: toUtcInstant(response.updatedAt),
+    revision: response.revision,
     title: response.title,
     keyContent: response.keyContent,
     openQuestions: [...response.openQuestions],

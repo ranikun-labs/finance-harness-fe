@@ -202,6 +202,7 @@ export function buildAppJournalDetailPath(id: string): string {
   return substituteJournalId(APP_ROUTE_PATHS.journalDetail, id);
 }
 
-export function buildAppJournalReviewPath(id: string): string {
-  return substituteJournalId(APP_ROUTE_PATHS.journalReview, id);
+export function buildAppJournalReviewPath(id: string, revision?: number): string {
+  const path = substituteJournalId(APP_ROUTE_PATHS.journalReview, id);
+  return revision === undefined ? path : `${path}?sourceRevision=${revision}`;
 }

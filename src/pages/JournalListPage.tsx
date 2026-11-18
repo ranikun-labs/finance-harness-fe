@@ -1,3 +1,4 @@
+import { DeletedJournalList } from '@/features/journal-delete/JournalLifecycleControls';
 import { JournalList } from '@/components/journal/JournalList';
 import { useJournalReadPort } from '@/features/journal-read/JournalReadPortContext';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
@@ -13,15 +14,18 @@ export function JournalListPage({ selectedId, readPort }: JournalListPageProps) 
   const { state, retry, loadMore } = useJournalList({ port: readPort ?? contextPort });
 
   return (
-    <JournalList
-      entries={state.items}
-      selectedId={selectedId}
-      status={state.status}
-      nextCursor={state.nextCursor}
-      error={state.error}
-      errorPhase={state.errorPhase}
-      onRetry={retry}
-      onLoadMore={loadMore}
-    />
+    <>
+      <DeletedJournalList />
+      <JournalList
+        entries={state.items}
+        selectedId={selectedId}
+        status={state.status}
+        nextCursor={state.nextCursor}
+        error={state.error}
+        errorPhase={state.errorPhase}
+        onRetry={retry}
+        onLoadMore={loadMore}
+      />
+    </>
   );
 }

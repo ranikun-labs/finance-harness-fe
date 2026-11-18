@@ -142,6 +142,38 @@ export function useJournalList({
     };
   }, [loadInitial]);
 
+  useEffect(() => {
+    const changed = () => loadInitial();
+    window.addEventListener('finance-journal-updated', changed);
+    return () => window.removeEventListener('finance-journal-updated', changed);
+  }, [loadInitial]);
+
+  useEffect(() => {
+    const lifecycle = (event: Event) => {
+      const changed = (event as CustomEvent<{ journalId: string; state: string }>).detail;
+      if (!changed?.journalId) return;
+      activeRequestRef.current?.abort();
+      requestIdRef.current += 1;
+      moreRequestRef.current = false;
+      if (changed.state === 'deleted') {
+        setState((current) => {
+          const items = current.items.filter((item) => item.journalId !== changed.journalId);
+          return {
+            ...current,
+            items,
+            status: items.length ? 'loaded' : 'empty',
+            error: null,
+            errorPhase: null,
+          };
+        });
+      } else {
+        loadInitial();
+      }
+    };
+    window.addEventListener('finance-journal-lifecycle', lifecycle);
+    return () => window.removeEventListener('finance-journal-lifecycle', lifecycle);
+  }, [loadInitial]);
+
   return { state, retry, loadMore } satisfies UseJournalListResult;
 }
 
