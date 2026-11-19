@@ -78,17 +78,20 @@ describe('AuthEntryPage presentation seam', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: ko.auth.entry.providerAction })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: ko.auth.entry.providerAction }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /signup|회원가입/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
-    expect(screen.getByText(ko.auth.entry.providerNeutralNotice)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
   });
 
   it('does not manufacture success when no explicit driver is provided', () => {
     renderAuth(createReviewIntent('study'));
 
-    fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
-
+    expect(
+      screen.queryByRole('button', { name: ko.auth.entry.providerAction }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
     expect(screen.getByTestId('auth-entry')).toBeInTheDocument();
     expect(screen.queryByLabelText('무엇을 배웠나요?')).not.toBeInTheDocument();

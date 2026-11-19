@@ -364,7 +364,6 @@ test.describe('Adaptive app shell', () => {
 
   test('keeps adaptive primary navigation on internal journal routes', async ({ page }) => {
     const journalRoutes = [
-      buildAppJournalNewPath('investment'),
       buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000'),
       buildAppJournalReviewPath('journal-2026-06-28-01'),
     ];

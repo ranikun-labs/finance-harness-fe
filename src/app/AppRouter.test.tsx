@@ -202,10 +202,10 @@ describe('AppRouter', () => {
     it('does not auto-authenticate the production composition', async () => {
       renderAt(AUTH_ROUTE_PATHS.entry);
 
-      const providerButton = await screen.findByRole('button', {
-        name: ko.auth.entry.providerAction,
-      });
-      fireEvent.click(providerButton);
+      await screen.findByRole('status');
+      expect(
+        screen.queryByRole('button', { name: ko.auth.entry.providerAction }),
+      ).not.toBeInTheDocument();
 
       await waitFor(() =>
         expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable),
@@ -261,7 +261,7 @@ describe('AppRouter', () => {
     });
 
     it('renders the journal new/detail/review screens', async () => {
-      renderAt(buildAppJournalNewPath('investment'));
+      renderAt(buildAppJournalNewPath('investment'), { state: 'authenticated' });
       await waitFor(() =>
         expect(
           screen.getByRole('heading', { name: ko.app.journalNew.investment }),
@@ -391,7 +391,9 @@ describe('AppRouter', () => {
         ).toBeInTheDocument(),
       );
       expect(screen.getByRole('button', { name: ko.auth.entry.cancelEntry })).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+      expect(
+        screen.queryByRole('button', { name: ko.auth.entry.providerAction }),
+      ).not.toBeInTheDocument();
       expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.unavailable);
     });
 
@@ -404,16 +406,20 @@ describe('AppRouter', () => {
       expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
     });
 
-    it('keeps unknown state non-authoritative while preserving the existing Journal surface', async () => {
-      renderAt(buildAppJournalNewPath('investment'));
-
-      await waitFor(() =>
+    it.each(['investment', 'study'] as const)(
+      'redirects unknown %s editor to authentication without rendering the form',
+      async (type) => {
+        renderAt(buildAppJournalNewPath(type));
+        await waitFor(() =>
+          expect(screen.getByRole('heading', { name: ko.auth.entry.heading })).toBeInTheDocument(),
+        );
         expect(
-          screen.getByRole('heading', { name: ko.app.journalNew.investment }),
-        ).toBeInTheDocument(),
-      );
-      expect(screen.queryByTestId('auth-entry')).not.toBeInTheDocument();
-    });
+          screen.queryByRole('heading', {
+            name: type === 'study' ? ko.app.journalNew.study : ko.app.journalNew.investment,
+          }),
+        ).not.toBeInTheDocument();
+      },
+    );
 
     it.each([
       [APP_ROUTE_PATHS.appHome, ko.app.home.hero.heading],
@@ -632,7 +638,7 @@ describe('AppRouter', () => {
       [buildAppJournalDetailPath(JOURNAL_ENTRIES[0].id), ko.app.journalDetail.headerTitle],
       [buildAppJournalReviewPath(JOURNAL_ENTRIES[0].id), ko.app.journalReview.headerTitle],
     ])('keeps adaptive primary navigation on internal journal route %s', async (path, heading) => {
-      renderAt(path);
+      renderAt(path, { state: 'authenticated' });
       await waitFor(() =>
         expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument(),
       );

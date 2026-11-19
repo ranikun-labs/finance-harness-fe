@@ -84,6 +84,7 @@ export function AuthEntryPage({
       : (fallbackCancelLabel ?? locationState.fallbackCancelLabel ?? 'auth.entry.cancelEntry')
   ) as MessageKey;
   const targetRoute = intent?.targetRoute ?? APP_ROUTE_PATHS.appHome;
+  const authUnavailable = !driver && !financeReferenceAuth?.enabled;
 
   function cancel() {
     if (phase === 'loading') return;
@@ -170,10 +171,16 @@ export function AuthEntryPage({
             <h1 className="text-foreground text-2xl leading-tight font-extrabold tracking-tight sm:text-3xl">
               {t('auth.entry.heading')}
             </h1>
-            <p className="text-muted-foreground text-sm leading-6">{t('auth.entry.description')}</p>
-            <p className="text-muted-foreground text-sm leading-6">
-              {intent ? t('auth.entry.resumeDescription') : t('auth.entry.noIntent')}
-            </p>
+            {!authUnavailable && (
+              <p className="text-muted-foreground text-sm leading-6">
+                {t('auth.entry.description')}
+              </p>
+            )}
+            {!authUnavailable && (
+              <p className="text-muted-foreground text-sm leading-6">
+                {intent ? t('auth.entry.resumeDescription') : t('auth.entry.noIntent')}
+              </p>
+            )}
           </div>
 
           {phase === 'loading' && (
@@ -208,7 +215,7 @@ export function AuthEntryPage({
             </div>
           )}
 
-          {phase === 'unavailable' && (
+          {(phase === 'unavailable' || authUnavailable) && (
             <p
               role="status"
               aria-live="polite"
@@ -255,7 +262,7 @@ export function AuthEntryPage({
                 {t('auth.entry.referenceAction')}
               </button>
             </form>
-          ) : (
+          ) : driver ? (
             <div className="flex flex-col gap-3">
               <button
                 type="button"
@@ -270,7 +277,7 @@ export function AuthEntryPage({
                 {t('auth.entry.providerNeutralNotice')}
               </p>
             </div>
-          )}
+          ) : null}
           <div className="flex flex-col gap-3">
             <button
               type="button"

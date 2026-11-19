@@ -235,6 +235,8 @@ export interface Messages {
       cancelDirectEntry: string;
       backToJournalDirtyConfirm: string;
       entryChoice: {
+        authNotice: string;
+        authUnavailable: string;
         heading: string;
         prompt: string;
         investment: { title: string; description: string };

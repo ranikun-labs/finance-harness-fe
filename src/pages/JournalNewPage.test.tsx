@@ -553,6 +553,7 @@ describe('JournalNewPage', () => {
       screen.getByRole('heading', { level: 1, name: ko.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
     expect(screen.getByText(ko.app.journalNew.entryChoice.prompt)).toBeInTheDocument();
+    expect(screen.getByText(ko.app.journalNew.entryChoice.authUnavailable)).toBeInTheDocument();
     expect(
       screen.getByRole('link', {
         name: new RegExp(ko.app.journalNew.entryChoice.investment.title),
@@ -640,6 +641,7 @@ describe('JournalNewPage', () => {
       screen.getByRole('heading', { level: 1, name: en.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
     expect(screen.getByText(en.app.journalNew.entryChoice.prompt)).toBeInTheDocument();
+    expect(screen.getByText(en.app.journalNew.entryChoice.authUnavailable)).toBeInTheDocument();
     expect(
       screen.getByRole('link', {
         name: new RegExp(en.app.journalNew.entryChoice.investment.title),

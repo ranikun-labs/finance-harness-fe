@@ -44,7 +44,7 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
   { path: APP_ROUTE_PATHS.appHome, heading: ko.app.home.hero.heading },
   { path: buildAppAskPath(), heading: ko.app.ask.header.title },
   { path: APP_ROUTE_PATHS.journalList, heading: ko.app.journalList.title },
-  { path: buildAppJournalNewPath('investment'), heading: ko.app.journalNew.investment },
+  { path: buildAppJournalNewPath('investment'), heading: ko.auth.entry.heading },
   {
     path: buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID),
     heading: ko.app.journalDetail.headerTitle,
@@ -636,11 +636,33 @@ test.describe('Ask empty and result states', () => {
       await startReview(page, question);
       await page.getByRole('link', { name: item.label }).click();
       await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
-      await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
+      await expect(page.getByRole('button', { name: ko.auth.entry.providerAction })).toHaveCount(0);
       await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
       await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
       await page.goto(item.target);
-      await expect(page.getByRole('heading', { name: /판단 기록|학습 노트/ })).toBeVisible();
+      await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+      await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+    }
+  });
+
+  test('direct editor links and refresh require authentication for both record types', async ({
+    page,
+  }) => {
+    for (const type of ['investment', 'study'] as const) {
+      for (const reload of [false, true]) {
+        await page.goto(buildAppJournalNewPath(type));
+        if (reload) {
+          await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+          await expect(page.getByRole('heading', { name: ko.auth.entry.heading })).toBeVisible();
+          const deepLink = buildAppJournalNewPath(type);
+          await page.evaluate((path) => history.replaceState(history.state, '', path), deepLink);
+          await expect(page).toHaveURL(deepLink);
+          await page.reload();
+        }
+        await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+        await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
+        await expect(page.getByRole('button', { name: ko.auth.entry.cancelEntry })).toBeVisible();
+      }
     }
   });
 

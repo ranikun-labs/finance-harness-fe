@@ -11,6 +11,7 @@ interface Props {
   fallbackCancelTarget: string;
   fallbackCancelLabel: string;
   resumeIntent?: AuthResumeIntent;
+  requireKnownAuthentication?: boolean;
 }
 
 /**
@@ -22,13 +23,16 @@ export function AuthRequiredSurface({
   fallbackCancelTarget,
   fallbackCancelLabel,
   resumeIntent,
+  requireKnownAuthentication = false,
 }: Props) {
   const { state } = useAuthPresentation();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const mustRedirect = state === 'guest' || (requireKnownAuthentication && state === 'unknown');
+
   useEffect(() => {
-    if (state !== 'guest') return;
+    if (!mustRedirect) return;
 
     const locationState: AuthEntryLocationState = {
       authResumeIntent: resumeIntent,
@@ -36,9 +40,9 @@ export function AuthRequiredSurface({
       fallbackCancelLabel,
     };
     navigate(AUTH_ROUTE_PATHS.entry, { replace: true, state: locationState });
-  }, [fallbackCancelLabel, fallbackCancelTarget, navigate, resumeIntent, state]);
+  }, [fallbackCancelLabel, fallbackCancelTarget, navigate, resumeIntent, mustRedirect]);
 
-  if (state === 'guest') {
+  if (mustRedirect) {
     return (
       <p role="status" aria-live="polite" className="p-4 text-sm">
         {t('auth.entry.redirecting')}

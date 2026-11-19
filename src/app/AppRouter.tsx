@@ -98,9 +98,11 @@ function AuthEntryRoute({
 function JournalNewAuthRequiredRoute({
   createPort,
   createMode,
+  authAvailable,
 }: {
   createPort?: JournalCreatePort;
   createMode?: 'test' | 'production';
+  authAvailable: boolean;
 }) {
   const location = useLocation();
   const activeCreatePort = useAuthPresentation().state === 'authenticated' ? createPort : undefined;
@@ -110,6 +112,7 @@ function JournalNewAuthRequiredRoute({
     // auth-required boundary begins only after a concrete editor is selected.
     return (
       <LazyJournalNewPage
+        authAvailable={authAvailable}
         createPort={activeCreatePort}
         createMode={activeCreatePort ? createMode : undefined}
       />
@@ -129,8 +132,10 @@ function JournalNewAuthRequiredRoute({
       fallbackCancelTarget={APP_ROUTE_PATHS.journalNew}
       fallbackCancelLabel="auth.entry.cancelEntry"
       resumeIntent={resumeIntent}
+      requireKnownAuthentication
     >
       <LazyJournalNewPage
+        authAvailable={authAvailable}
         createPort={activeCreatePort}
         createMode={activeCreatePort ? createMode : undefined}
       />
@@ -280,6 +285,7 @@ export function AppRouter({
                 path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.journalNew)}
                 element={
                   <JournalNewAuthRequiredRoute
+                    authAvailable={referenceAuthEnabled}
                     createPort={activeJournalCreatePort}
                     createMode={activeCreateMode}
                   />

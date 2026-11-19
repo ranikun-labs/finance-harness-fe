@@ -38,7 +38,11 @@ import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
  * `type` 쿼리 값('investment'/'study')은 도메인 식별자이며 번역 대상이 아니다 —
  * 표시 문구만 `t()`로 조회한다.
  */
-type Props = { createPort?: JournalCreatePort; createMode?: 'test' | 'production' };
+type Props = {
+  createPort?: JournalCreatePort;
+  createMode?: 'test' | 'production';
+  authAvailable?: boolean;
+};
 
 interface JournalNewLocationState {
   decisionContext?: DecisionContextSnapshot;
@@ -47,7 +51,7 @@ interface JournalNewLocationState {
   authResumeNotice?: boolean;
 }
 
-export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
+export function JournalNewPage({ createPort, createMode = 'test', authAvailable = false }: Props) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -130,6 +134,15 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
             {t('app.journalNew.entryChoice.heading')}
           </h1>
           <p className="text-muted-foreground text-sm">{t('app.journalNew.entryChoice.prompt')}</p>
+          {authPresentationState !== 'authenticated' && (
+            <p className="text-muted-foreground text-sm">
+              {t(
+                authAvailable
+                  ? 'app.journalNew.entryChoice.authNotice'
+                  : 'app.journalNew.entryChoice.authUnavailable',
+              )}
+            </p>
+          )}
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           <Link

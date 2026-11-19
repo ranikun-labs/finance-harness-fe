@@ -349,6 +349,8 @@ export const en: Messages = {
       study: 'Learning note',
       entryChoice: {
         heading: 'New record',
+        authUnavailable: 'Sign-in is required to create a record, but it is not available yet.',
+        authNotice: 'Select a record type to continue to the sign-in screen.',
         prompt: 'What would you like to leave behind?',
         investment: {
           title: 'Decision record',

@@ -343,6 +343,8 @@ export const ko: Messages = {
       study: '학습 노트',
       entryChoice: {
         heading: '새 기록',
+        authUnavailable: '기록을 남기려면 로그인이 필요하지만 현재 로그인 연결을 준비하고 있어요.',
+        authNotice: '기록을 선택하면 로그인 안내로 이동합니다.',
         prompt: '무엇을 남길까요?',
         investment: {
           title: '판단 기록',
