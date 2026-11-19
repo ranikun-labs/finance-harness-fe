@@ -30,6 +30,7 @@ export const en: Messages = {
     review: 'Review',
     journal: 'Journal',
     ariaLabel: 'Primary navigation',
+    signIn: 'Sign in',
   },
   auth: {
     entry: {
@@ -62,7 +63,12 @@ export const en: Messages = {
     },
   },
   public: {
-    home: { title: 'Public Home' },
+    home: {
+      title: 'A clearer record for investment decisions',
+      description: 'Review your questions, record your thinking, and return to it later.',
+      action: 'Start the app',
+      note: 'Your decisions remain your own.',
+    },
     features: { title: 'Features' },
     learn: { title: 'Learn' },
     notFound: {
@@ -92,10 +98,12 @@ export const en: Messages = {
         description:
           'I won’t tell you to buy or sell. I’ll organize what to check, evidence-based facts, and what is still unknown.',
         action: 'Start review',
-        ariaLabel: 'Start a review',
+        ariaLabel: 'Start the app',
       },
       question: {
         label: 'My question',
+        exampleNotice:
+          'Review results are examples of the screen flow, not analysis of your question.',
         placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
         helper: 'Keep your question intact while the review separates checks from evidence.',
         submit: 'Start review',
@@ -113,6 +121,7 @@ export const en: Messages = {
         'A review does not provide buy/sell recommendations or return predictions. Anything not verified remains unknown.',
       recentRecords: {
         heading: 'Recent records',
+        sampleNotice: 'The records below are examples, not your records.',
         viewAll: 'View all records',
       },
       empty: {

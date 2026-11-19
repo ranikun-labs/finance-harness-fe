@@ -17,7 +17,10 @@ export function LocaleSwitcher() {
   const location = useLocation();
 
   return (
-    <nav aria-label={t('public.localeSwitcher.ariaLabel')} className="flex gap-2 p-2 text-sm">
+    <nav
+      aria-label={t('public.localeSwitcher.ariaLabel')}
+      className="flex items-center gap-1 text-sm"
+    >
       {SUPPORTED_LOCALES.map((target) => {
         const peerPathname = buildLocalePeerPath(location.pathname, target);
         const isCurrent = target === locale;
@@ -26,6 +29,7 @@ export function LocaleSwitcher() {
             key={target}
             to={{ pathname: peerPathname, search: location.search, hash: location.hash }}
             aria-current={isCurrent ? 'true' : undefined}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 aria-[current=true]:text-foreground flex min-h-11 items-center rounded-md px-3 focus-visible:ring-3 focus-visible:outline-none aria-[current=true]:font-bold"
           >
             {LOCALE_LABELS[target]}
           </Link>

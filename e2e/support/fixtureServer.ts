@@ -21,7 +21,8 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
  * 1. 실제 파일이 존재하면 그 파일을 정확한 Content-Type으로 제공.
  * 2. `<path>/index.html`이 존재하면 그것을 제공(trailing slash 포함 — `/ko`와
  *    `/ko/` 모두 `dist/ko/index.html`로 resolve).
- * 3. asset으로 판별된 요청인데 파일이 없으면 404(index.html로 새지 않음).
+ * 3. 파일이 없는 `/favicon.ico`의 이미지 Accept 요청은 204 (브라우저 fixture 전용).
+ *    그 외 asset 요청은 파일이 없으면 404(index.html로 새지 않음).
  * 4. 그 외 `Accept: text/html`인 document 요청만 `dist/index.html`로 fallback.
  * 5. 그 밖은 404.
  *
@@ -164,6 +165,14 @@ function handleRequest(distRoot: string, req: IncomingMessage, res: ServerRespon
   const indexFile = indexPath && fileIfExists(indexPath);
   if (indexFile) {
     serveFile(req, res, indexFile, 'directory-index');
+    return;
+  }
+
+  // Browser documents implicitly request `/favicon.ico`; keep that fixture-only
+  // side request from surfacing as a console error. APIRequestContext requests use
+  // `Accept: */*` and still exercise the explicit missing-icon 404 contract below.
+  if (pathname === '/favicon.ico' && req.headers.accept?.startsWith('image/')) {
+    respond(req, res, 204, 'image/x-icon', '', 'browser-favicon-empty');
     return;
   }
 

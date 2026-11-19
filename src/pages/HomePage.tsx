@@ -73,6 +73,9 @@ export function HomePage() {
 
       <Card className="border-primary/20 from-primary/10 via-card to-card min-w-0 rounded-3xl bg-gradient-to-br p-5 shadow-md">
         <form className="flex min-w-0 flex-col gap-3" onSubmit={handleSubmit} noValidate>
+          <p className="text-muted-foreground text-sm leading-5">
+            {t('app.home.question.exampleNotice')}
+          </p>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="review-question" className="text-base font-bold">
               {t('app.home.question.label')}
@@ -143,13 +146,16 @@ export function HomePage() {
 
         {recentEntries.length > 0 ? (
           <>
+            <p className="text-muted-foreground text-sm">
+              {t('app.home.recentRecords.sampleNotice')}
+            </p>
             <ul className="flex min-w-0 flex-col gap-3">
               {recentEntries.map((entry) => (
                 <li
                   key={entry.id}
                   className="[&_a]:focus-visible:ring-ring/50 min-w-0 [&_a]:rounded-lg [&_a]:outline-none [&_a]:focus-visible:ring-3 [&_p]:[overflow-wrap:anywhere] [&_span]:[overflow-wrap:anywhere]"
                 >
-                  <JournalRecordCard entry={entry} />
+                  <JournalRecordCard entry={entry} displayOnly />
                 </li>
               ))}
             </ul>

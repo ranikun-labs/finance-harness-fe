@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { AppShell, APP_SHELL_MAX_WIDTH } from '@/components/layout/AppShell';
 import { TabLayout } from '@/components/layout/TabLayout';
-import { APP_BASE, APP_ROUTE_PATHS, toRelativeUnder } from '@/constants/routes';
+import { APP_BASE, APP_ROUTE_PATHS, AUTH_ROUTE_PATHS, toRelativeUnder } from '@/constants/routes';
+import { AuthPresentationProvider } from '@/features/auth/AuthPresentationContext';
 
 function renderShell(path: string = APP_ROUTE_PATHS.appHome) {
   return render(
@@ -25,6 +26,51 @@ function renderShell(path: string = APP_ROUTE_PATHS.appHome) {
 }
 
 describe('adaptive app shell', () => {
+  it('offers a sign-in entry when the session is unknown', () => {
+    renderShell();
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute(
+      'href',
+      AUTH_ROUTE_PATHS.entry,
+    );
+  });
+
+  it('links the service name to review and hides sign-in on a review result', () => {
+    renderShell(APP_ROUTE_PATHS.ask);
+    expect(screen.getByRole('link', { name: 'AI 투자 체크리스트' })).toHaveAttribute(
+      'href',
+      APP_ROUTE_PATHS.appHome,
+    );
+    expect(screen.queryByRole('link', { name: '로그인' })).toBeNull();
+  });
+
+  it('does not add an unguarded home link on journal routes', () => {
+    render(
+      <MemoryRouter initialEntries={[APP_ROUTE_PATHS.journalNew]}>
+        <Routes>
+          <Route path={APP_BASE} element={<AppShell />}>
+            <Route path="journal/new" element={<main />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('link', { name: 'AI 투자 체크리스트' })).toBeNull();
+  });
+
+  it('does not offer sign-in to an authenticated session', () => {
+    render(
+      <MemoryRouter initialEntries={[APP_ROUTE_PATHS.appHome]}>
+        <AuthPresentationProvider value={{ state: 'authenticated' }}>
+          <Routes>
+            <Route path={APP_BASE} element={<AppShell />}>
+              <Route index element={<main />} />
+            </Route>
+          </Routes>
+        </AuthPresentationProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('link', { name: '로그인' })).toBeNull();
+  });
+
   it('uses the approved desktop maximum without retaining the global 480px frame', () => {
     renderShell();
 

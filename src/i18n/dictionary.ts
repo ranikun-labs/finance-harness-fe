@@ -42,6 +42,7 @@ export interface Messages {
     review: string;
     journal: string;
     ariaLabel: string;
+    signIn: string;
   };
   auth: {
     entry: {
@@ -72,7 +73,7 @@ export interface Messages {
     };
   };
   public: {
-    home: { title: string };
+    home: { title: string; description: string; action: string; note: string };
     features: { title: string };
     learn: { title: string };
     notFound: { heading: string; description: string; backHome: string };
@@ -100,6 +101,7 @@ export interface Messages {
       };
       question: {
         label: string;
+        exampleNotice: string;
         placeholder: string;
         helper: string;
         submit: string;
@@ -112,6 +114,7 @@ export interface Messages {
       policyNotice: string;
       recentRecords: {
         heading: string;
+        sampleNotice: string;
         viewAll: string;
       };
       empty: {

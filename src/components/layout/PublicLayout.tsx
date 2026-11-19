@@ -27,7 +27,9 @@ export function PublicLayout() {
   return (
     <I18nProvider locale={locale}>
       <RouteDocumentTitle />
-      <LocaleSwitcher />
+      <header className="border-border mx-auto flex w-full max-w-5xl items-center justify-end border-b px-4 py-2 sm:px-8">
+        <LocaleSwitcher />
+      </header>
       <main className="min-h-full">
         <Outlet />
       </main>

@@ -1,7 +1,10 @@
 import { Suspense } from 'react';
-import { Outlet } from 'react-router';
+import { Link, Outlet, matchPath, useLocation } from 'react-router';
 
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
+import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
+import { useTranslation } from '@/i18n/I18nContext';
 import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
 import { RouteDocumentTitle } from '@/metadata/documentTitle';
 
@@ -14,6 +17,49 @@ export const APP_SHELL_MAX_WIDTH = '1360px';
  * navigator.language → DEFAULT_LOCALE 우선순위로 복원)을 제공한다. URL에는 locale
  * prefix가 없다 — 공개 웹과 무관한 별도 상태다.
  */
+function AppHeader() {
+  const { state } = useAuthPresentation();
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const showSignIn =
+    matchPath({ path: APP_ROUTE_PATHS.appHome, end: true }, pathname) !== null &&
+    state !== 'authenticated';
+  const mayContainJournalEdits = [
+    APP_ROUTE_PATHS.journalNew,
+    APP_ROUTE_PATHS.journalDetail,
+    APP_ROUTE_PATHS.journalReview,
+  ].some((path) => matchPath({ path, end: true }, pathname) !== null);
+
+  return (
+    <header className="border-border bg-background flex min-h-14 shrink-0 items-center justify-between border-b px-4 sm:px-6">
+      {mayContainJournalEdits ? (
+        <span className="text-foreground inline-flex min-h-11 items-center px-2 text-sm font-bold">
+          {t('common.appName')}
+        </span>
+      ) : (
+        <Link
+          to={APP_ROUTE_PATHS.appHome}
+          className="text-foreground focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-bold focus-visible:ring-3 focus-visible:outline-none"
+        >
+          {t('common.appName')}
+        </Link>
+      )}
+      {showSignIn && (
+        <Link
+          to={AUTH_ROUTE_PATHS.entry}
+          state={{
+            fallbackCancelTarget: APP_ROUTE_PATHS.appHome,
+            fallbackCancelLabel: 'auth.entry.cancelReviewStart',
+          }}
+          className="text-primary focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold hover:underline focus-visible:ring-3 focus-visible:outline-none"
+        >
+          {t('nav.signIn')}
+        </Link>
+      )}
+    </header>
+  );
+}
+
 export function AppShell() {
   return (
     <AppLocaleProvider>
@@ -24,6 +70,7 @@ export function AppShell() {
           data-testid="app-shell-host"
           style={{ maxWidth: APP_SHELL_MAX_WIDTH }}
         >
+          <AppHeader />
           <Suspense fallback={<LazyLoadingFallback asMain />}>
             <Outlet />
           </Suspense>

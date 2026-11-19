@@ -57,8 +57,8 @@ const APP_SCREENS: Array<{ path: string; heading: string | RegExp }> = [
 // STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이 더
 // 이상 같은(한국어) heading을 공유하지 않는다.
 const PUBLIC_SCREENS: Array<{ path: string; heading: RegExp }> = [
-  { path: buildLocaleHomePath('ko'), heading: /공개 웹 홈/ },
-  { path: buildLocaleHomePath('en'), heading: /Public Home/ },
+  { path: buildLocaleHomePath('ko'), heading: /더 차분한 투자 판단을 위한 기록/ },
+  { path: buildLocaleHomePath('en'), heading: /A clearer record for investment decisions/ },
   { path: buildFeaturesPath('ko'), heading: /기능 소개/ },
   { path: buildFeaturesPath('en'), heading: /Features/ },
   { path: buildLearnPath('ko', 'basics'), heading: /학습/ },
@@ -78,7 +78,9 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   test('/ redirects to the default locale public home', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(new RegExp(`${buildLocaleHomePath('ko')}$`));
-    await expect(page.getByRole('heading', { name: /공개 웹 홈/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /더 차분한 투자 판단을 위한 기록/ }),
+    ).toBeVisible();
   });
 
   for (const screen of PUBLIC_SCREENS) {
@@ -217,14 +219,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
       .locator('xpath=..');
     const recentItems = recentSection.getByRole('listitem');
     await expect(recentItems).toHaveCount(2);
-    await expect(recentItems.nth(0).getByRole('link')).toHaveAttribute(
-      'href',
-      buildAppJournalDetailPath(FIXTURE_PRIMARY_INVESTMENT_ID),
-    );
-    await expect(recentItems.nth(1).getByRole('link')).toHaveAttribute(
-      'href',
-      buildAppJournalDetailPath(FIXTURE_STUDY_ID),
-    );
+    await expect(recentSection.getByText(ko.app.home.recentRecords.sampleNotice)).toBeVisible();
+    await expect(recentItems.getByRole('link')).toHaveCount(0);
 
     await page.getByRole('link', { name: ko.app.home.recentRecords.viewAll }).click();
     await expect(page).toHaveURL(new RegExp(`${APP_ROUTE_PATHS.journalList}$`));

@@ -13,10 +13,14 @@ const PUBLIC_NOT_FOUND_KO = '공개 페이지를 찾을 수 없어요';
 test.describe('공개 웹 locale: URL이 유일한 source of truth', () => {
   test('/ko는 한국어, /en은 영어로 렌더된다', async ({ page }) => {
     await page.goto(buildLocaleHomePath('ko'));
-    await expect(page.getByRole('heading', { name: /공개 웹 홈/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /더 차분한 투자 판단을 위한 기록/ }),
+    ).toBeVisible();
 
     await page.goto(buildLocaleHomePath('en'));
-    await expect(page.getByRole('heading', { name: /Public Home/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /A clearer record for investment decisions/ }),
+    ).toBeVisible();
   });
 
   test('/fr(미지원 locale)은 redirect 없이 DEFAULT_LOCALE(ko) 문구로 PublicNotFound를 렌더한다', async ({
@@ -36,7 +40,9 @@ test.describe('공개 웹 locale: URL이 유일한 source of truth', () => {
       [APP_LOCALE_STORAGE_KEY, 'ko'],
     );
     await page.goto(buildLocaleHomePath('en'));
-    await expect(page.getByRole('heading', { name: /Public Home/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /A clearer record for investment decisions/ }),
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('en');
   });
 });
@@ -118,7 +124,9 @@ test.describe('앱(/app/*) locale: 저장·복원·잘못된 값 처리', () => 
       [APP_LOCALE_STORAGE_KEY, 'en'],
     );
     await page.goto(buildLocaleHomePath('ko'));
-    await expect(page.getByRole('heading', { name: /공개 웹 홈/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /더 차분한 투자 판단을 위한 기록/ }),
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('ko');
   });
 });

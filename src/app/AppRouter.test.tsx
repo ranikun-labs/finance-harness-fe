@@ -96,7 +96,9 @@ describe('AppRouter', () => {
   describe('root redirect', () => {
     it('redirects / to the default locale public home', () => {
       renderAt('/');
-      expect(screen.getByRole('heading', { name: /공개 웹 홈/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /더 차분한 투자 판단을 위한 기록/ }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -104,11 +106,22 @@ describe('AppRouter', () => {
     // STEP 7부터 공개 웹은 URL locale에 따라 실제로 다른 언어를 렌더한다 — ko/en이
     // 더 이상 같은(한국어) heading을 공유하지 않으므로 locale별로 기대 문구를 따로 둔다.
     it.each([
-      [buildLocaleHomePath('ko'), /공개 웹 홈/],
-      [buildLocaleHomePath('en'), /Public Home/],
+      [buildLocaleHomePath('ko'), /더 차분한 투자 판단을 위한 기록/],
+      [buildLocaleHomePath('en'), /A clearer record for investment decisions/],
     ])('renders the public home at %s', (path, heading) => {
       renderAt(path);
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    });
+
+    it.each([
+      [buildLocaleHomePath('ko'), '앱 시작하기'],
+      [buildLocaleHomePath('en'), 'Start the app'],
+    ])('links the public entry at %s to review', (path, label) => {
+      renderAt(path);
+      expect(screen.getByRole('link', { name: label })).toHaveAttribute(
+        'href',
+        APP_ROUTE_PATHS.appHome,
+      );
     });
 
     it.each([
@@ -187,7 +200,9 @@ describe('AppRouter', () => {
 
     it('renders /en (supported locale) using the en dictionary via the normal PublicLayout provider, not the fallback', () => {
       renderAt(buildLocaleHomePath('en'));
-      expect(screen.getByRole('heading', { name: /Public Home/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /A clearer record for investment decisions/ }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -509,7 +524,7 @@ describe('AppRouter', () => {
           }),
         ).toBeInTheDocument(),
       );
-      expect(screen.queryByRole('heading', { name: /공개 웹 홈/ })).toBeNull();
+      expect(screen.queryByRole('heading', { name: /더 차분한 투자 판단을 위한 기록/ })).toBeNull();
     });
 
     it('matches /app/ask as the app screen, not public', async () => {

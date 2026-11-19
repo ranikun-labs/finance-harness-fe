@@ -38,26 +38,14 @@ export function BottomNavigation() {
       className={cn(
         'adaptive-primary-navigation border-border bg-background shrink-0',
         'order-2 border-t pb-[env(safe-area-inset-bottom)]',
-        'md:order-1 md:min-h-16 md:items-center md:justify-between md:border-t-0 md:border-b md:px-6 md:py-2',
+        'md:order-1 md:min-h-16 md:items-center md:justify-end md:border-t-0 md:border-b md:px-6 md:py-2',
         'lg:h-full lg:w-56 lg:flex-col lg:items-stretch lg:justify-start lg:border-r lg:border-b-0 lg:px-4 lg:py-5',
         mobileVisible ? 'flex' : 'hidden md:flex',
       )}
       aria-label={t('nav.ariaLabel')}
       data-testid="primary-navigation"
     >
-      <div className="hidden min-w-0 items-center gap-2 md:flex lg:w-full lg:px-2">
-        <span
-          aria-hidden="true"
-          className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold"
-        >
-          ✓
-        </span>
-        <span className="text-foreground truncate text-sm font-extrabold tracking-tight">
-          {t('common.appName')}
-        </span>
-      </div>
-
-      <div className="md:bg-muted flex w-full md:w-auto md:rounded-xl md:p-1 lg:mt-7 lg:w-full lg:flex-col lg:gap-1 lg:bg-transparent lg:p-0">
+      <div className="md:bg-muted flex w-full md:w-auto md:rounded-xl md:p-1 lg:w-full lg:flex-col lg:gap-1 lg:bg-transparent lg:p-0">
         {BOTTOM_TABS.map((tab) => (
           <Link
             key={tab.id}

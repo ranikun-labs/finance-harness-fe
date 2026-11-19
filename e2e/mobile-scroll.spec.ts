@@ -342,7 +342,9 @@ test.describe('Adaptive app shell', () => {
         expect(navBox.height).toBeLessThan(100);
       } else {
         expect(navBox.width).toBe(224);
-        expect(navBox.height).toBe(contract.height);
+        const headerBox = await page.locator('[data-testid=app-shell-host] > header').boundingBox();
+        expect(headerBox).not.toBeNull();
+        expect(navBox.height).toBe(contract.height - headerBox!.height);
       }
     }
   });

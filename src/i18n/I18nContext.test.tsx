@@ -25,7 +25,7 @@ describe('useTranslation', () => {
       </I18nProvider>,
     );
     expect(screen.getByTestId('locale')).toHaveTextContent('ko');
-    expect(screen.getByTestId('title')).toHaveTextContent('공개 웹 홈');
+    expect(screen.getByTestId('title')).toHaveTextContent('더 차분한 투자 판단을 위한 기록');
   });
 
   it('resolves en messages inside an en provider', () => {
@@ -34,7 +34,9 @@ describe('useTranslation', () => {
         <Probe />
       </I18nProvider>,
     );
-    expect(screen.getByTestId('title')).toHaveTextContent('Public Home');
+    expect(screen.getByTestId('title')).toHaveTextContent(
+      'A clearer record for investment decisions',
+    );
   });
 
   it('interpolates {{param}} placeholders', () => {

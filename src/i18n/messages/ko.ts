@@ -34,6 +34,7 @@ export const ko: Messages = {
     review: '검토',
     journal: '저널',
     ariaLabel: '주요 화면 이동',
+    signIn: '로그인',
   },
   auth: {
     entry: {
@@ -65,7 +66,12 @@ export const ko: Messages = {
     },
   },
   public: {
-    home: { title: '공개 웹 홈' },
+    home: {
+      title: '더 차분한 투자 판단을 위한 기록',
+      description: '질문을 검토하고, 판단을 기록하고, 나중에 다시 살펴보세요.',
+      action: '앱 시작하기',
+      note: '투자 결정을 대신하지 않아요.',
+    },
     features: { title: '기능 소개' },
     learn: { title: '학습' },
     notFound: {
@@ -93,6 +99,7 @@ export const ko: Messages = {
       },
       question: {
         label: '내가 한 질문',
+        exampleNotice: '현재 검토 결과는 입력한 질문에 대한 실제 분석이 아닌 화면 흐름 예시입니다.',
         placeholder: '예) 보유 중인 반도체 ETF를 지금 추가 매수해도 될까?',
         helper: '질문을 그대로 남기면 확인 항목과 근거를 나눠 정리합니다.',
         submit: '검토 시작',
@@ -110,6 +117,7 @@ export const ko: Messages = {
         '검토는 매수·매도 추천이나 수익률 예측을 제공하지 않습니다. 확인하지 못한 내용은 모르는 것으로 남깁니다.',
       recentRecords: {
         heading: '최근 기록',
+        sampleNotice: '아래 기록은 내 기록이 아닌 예시입니다.',
         viewAll: '전체 기록 보기',
       },
       empty: {

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { APP_ROUTE_PATHS, buildAppJournalDetailPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -53,6 +53,7 @@ describe('HomePage / Review Start', () => {
     );
     expect(screen.getByRole('heading', { name: ko.app.home.examples.heading })).toBeInTheDocument();
     expect(screen.getByRole('note')).toHaveTextContent(ko.app.home.policyNotice);
+    expect(screen.getByText(ko.app.home.question.exampleNotice)).toBeVisible();
   });
 
   it('blocks whitespace-only review and clears the inline error when typing begins', () => {
@@ -164,15 +165,10 @@ describe('HomePage / Review Start', () => {
     expect(
       within(items[0]).getByText(ko.app.journalList.subjects.semiconductorCompanyA),
     ).toBeVisible();
-    expect(within(items[0]).getByRole('link')).toHaveAttribute(
-      'href',
-      buildAppJournalDetailPath('journal-2026-06-28-01'),
-    );
+    expect(within(items[0]).queryByRole('link')).not.toBeInTheDocument();
     expect(within(items[1]).getByText('월말 리밸런싱')).toBeVisible();
-    expect(within(items[1]).getByRole('link')).toHaveAttribute(
-      'href',
-      buildAppJournalDetailPath('journal-2026-06-27-01'),
-    );
+    expect(within(items[1]).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(section).getByText(ko.app.home.recentRecords.sampleNotice)).toBeVisible();
     expect(JOURNAL_ENTRIES.map((entry) => entry.id)).toEqual(originalIds);
   });
 
