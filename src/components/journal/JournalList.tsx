@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { EmptyState } from '@/components/common/EmptyState';
 import { JournalSummaryCard } from '@/components/journal/JournalSummaryCard';
 import { buttonVariants } from '@/components/ui/button';
-import { buildAppAskPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import type {
   JournalListErrorPhase,
@@ -82,15 +82,25 @@ function ErrorMessage({
       title={copy}
       description={description}
       action={
-        onRetry && (
-          <button
-            type="button"
-            onClick={onRetry}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-          >
-            {retryLabel}
-          </button>
-        )
+        <div className="flex flex-wrap justify-center gap-2">
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+            >
+              {retryLabel}
+            </button>
+          )}
+          {phase !== 'load-more' && (
+            <Link
+              to={APP_ROUTE_PATHS.appHome}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+            >
+              {t('app.journalList.backToReview')}
+            </Link>
+          )}
+        </div>
       }
     />
   );
@@ -113,13 +123,24 @@ export function JournalList({
   const { t } = useTranslation();
   const Heading = selectedId ? 'h2' : 'h1';
   const isInitialLoading = status === 'loading';
-  const hasInitialError = status === 'error' && entries.length === 0;
+  const hasInitialError = status === 'error' && errorPhase !== 'load-more';
+  const hasPendingEmptyPage = entries.length === 0 && nextCursor !== null;
 
   return (
     <div className="flex min-h-full flex-col gap-4 p-4">
-      <Heading className="text-foreground text-2xl font-extrabold tracking-tight">
-        {t('app.journalList.title')}
-      </Heading>
+      <div className="flex items-center justify-between gap-3">
+        <Heading className="text-foreground text-2xl font-extrabold tracking-tight">
+          {t('app.journalList.title')}
+        </Heading>
+        {status !== 'empty' || nextCursor !== null ? (
+          <Link
+            to={APP_ROUTE_PATHS.journalNew}
+            className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
+          >
+            {t('app.journalList.newRecord')}
+          </Link>
+        ) : null}
+      </div>
 
       {isInitialLoading ? (
         <StatusMessage
@@ -128,13 +149,13 @@ export function JournalList({
         />
       ) : hasInitialError && error ? (
         <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
-      ) : status === 'empty' ? (
+      ) : status === 'empty' && !hasPendingEmptyPage ? (
         <EmptyState
           title={t('app.journalList.emptyAll.title')}
           description={t('app.journalList.emptyAll.description')}
           action={
             <div className="flex flex-col items-center gap-3">
-              <Link to={buildAppAskPath()} className={cn(buttonVariants({ size: 'lg' }))}>
+              <Link to={APP_ROUTE_PATHS.journalNew} className={cn(buttonVariants({ size: 'lg' }))}>
                 {t('app.journalList.emptyAll.cta')}
               </Link>
               <p className="text-muted-foreground max-w-[260px] text-center text-xs leading-relaxed">
@@ -154,6 +175,11 @@ export function JournalList({
         />
       ) : (
         <>
+          {hasPendingEmptyPage && status === 'empty' && (
+            <p className="text-muted-foreground text-sm" role="status">
+              {t('app.journalList.emptyPage')}
+            </p>
+          )}
           <div className="flex flex-col gap-3">
             {entries.map((entry) => (
               <JournalSummaryCard
@@ -173,7 +199,8 @@ export function JournalList({
               title={t('app.journalList.loadingMore')}
               description={t('app.journalList.loading.description')}
             />
-          ) : nextCursor !== null && onLoadMore ? (
+          ) : status === 'error' && errorPhase === 'load-more' ? null : nextCursor !== null &&
+            onLoadMore ? (
             <button
               type="button"
               onClick={onLoadMore}

@@ -268,6 +268,9 @@ export const en: Messages = {
       },
     },
     journalList: {
+      backToReview: 'Back to review',
+      newRecord: 'New record',
+      emptyPage: 'There are no records on this page. Load more to continue.',
       title: 'Journal',
       loading: {
         title: 'Loading your journal',
@@ -302,7 +305,7 @@ export const en: Messages = {
       emptyAll: {
         title: 'No records yet',
         description: 'Turn a question into a checklist and save your first record.',
-        cta: 'Go ask a question',
+        cta: 'Create your first record',
         hint: 'One question becomes a checklist, and a checklist becomes your own record.',
       },
       emptyFilter: {
@@ -333,6 +336,9 @@ export const en: Messages = {
       },
     },
     journalNew: {
+      cancelDirectEntry: 'Cancel',
+      backToJournal: 'Back to journal',
+      backToJournalDirtyConfirm: 'Your unsaved work will be lost. Return to the journal?',
       investment: 'Decision record',
       study: 'Learning note',
       entryChoice: {

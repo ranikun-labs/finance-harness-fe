@@ -2,6 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
+import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { JournalList } from '@/components/journal/JournalList';
 import type { JournalListStatus } from '@/features/journal-read/model/journalListState';
 import type { JournalListItemViewModel } from '@/features/journal-read/model/journalReadViewModel';
@@ -60,10 +61,13 @@ describe('JournalList', () => {
     expect(screen.getByRole('heading', { level: 2, name: '저널' })).toBeInTheDocument();
   });
 
-  it('shows the empty-all message and an Ask CTA link', () => {
+  it('shows the empty-all message and a first-record link', () => {
     renderList([], { status: 'empty' });
     expect(screen.getByText('아직 저장된 기록이 없어요')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /질문하러 가기/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '첫 기록 남기기' })).toHaveAttribute(
+      'href',
+      APP_ROUTE_PATHS.journalNew,
+    );
   });
 
   it('renders only investment/study summary data and no client-side type filter', () => {

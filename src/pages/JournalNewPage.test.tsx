@@ -60,6 +60,7 @@ function renderPage(
         element={<JournalNewPage createPort={createPort} />}
       />
       <Route path={APP_ROUTE_PATHS.journalDetail} element={<DetailDestination />} />
+      <Route path={APP_ROUTE_PATHS.journalList} element={<p>Journal destination</p>} />
       <Route path={APP_ROUTE_PATHS.ask} element={<ReviewDestination />} />
       <Route
         path={AUTH_ROUTE_PATHS.entry}
@@ -700,6 +701,28 @@ describe('JournalNewPage', () => {
     confirmSpy.mockRestore();
   });
 
+  it('returns from entry choice to the journal list', () => {
+    renderPage(APP_ROUTE_PATHS.journalNew);
+    fireEvent.click(screen.getByRole('link', { name: '저널로 돌아가기' }));
+    expect(screen.getByText('Journal destination')).toBeInTheDocument();
+  });
+
+  it('confirms before leaving a dirty direct-entry form for the journal', () => {
+    const confirmSpy = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    renderPage(buildAppJournalNewPath('study'));
+    fireEvent.change(screen.getByLabelText('무엇을 배웠나요?'), { target: { value: '내용' } });
+    const back = screen.getByRole('button', { name: '취소' });
+    fireEvent.click(back);
+    expect(screen.getByLabelText('무엇을 배웠나요?')).toHaveValue('내용');
+    fireEvent.click(back);
+    expect(screen.getByText('Journal destination')).toBeInTheDocument();
+    expect(confirmSpy).toHaveBeenCalledWith(ko.app.journalNew.backToJournalDirtyConfirm);
+    confirmSpy.mockRestore();
+  });
+
   it('keeps the current form on cancel and opens entry choice on confirm', () => {
     const confirmSpy = vi
       .spyOn(window, 'confirm')
@@ -1002,6 +1025,7 @@ describe('JournalNewPage', () => {
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
+    expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: ko.app.journalNew.investment })).toBeInTheDocument();

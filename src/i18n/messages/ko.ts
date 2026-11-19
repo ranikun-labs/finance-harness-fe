@@ -262,6 +262,9 @@ export const ko: Messages = {
       },
     },
     journalList: {
+      backToReview: '검토로 돌아가기',
+      newRecord: '새 기록',
+      emptyPage: '이 페이지에 표시할 기록이 없어요. 더 불러와 확인해 주세요.',
       title: '저널',
       loading: {
         title: '저널을 불러오는 중이에요',
@@ -296,7 +299,7 @@ export const ko: Messages = {
       emptyAll: {
         title: '아직 저장된 기록이 없어요',
         description: '질문을 체크리스트로 바꾸고 첫 기록을 남겨보세요.',
-        cta: '질문하러 가기',
+        cta: '첫 기록 남기기',
         hint: '질문 하나가 체크리스트가 되고, 체크리스트가 나만의 기록이 돼요.',
       },
       emptyFilter: {
@@ -327,6 +330,9 @@ export const ko: Messages = {
       },
     },
     journalNew: {
+      cancelDirectEntry: '취소',
+      backToJournal: '저널로 돌아가기',
+      backToJournalDirtyConfirm: '작성 중인 내용이 사라집니다. 저널로 돌아갈까요?',
       investment: '판단 기록',
       study: '학습 노트',
       entryChoice: {

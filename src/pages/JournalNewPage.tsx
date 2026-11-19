@@ -109,10 +109,20 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
   const directEntryState = (type: AuthResumeIntent['recordType']) =>
     authPresentationState === 'authenticated' ? undefined : directEntryAuthState(type);
 
+  const backToJournalLink = (
+    <Link
+      to={APP_ROUTE_PATHS.journalList}
+      className="text-primary focus-visible:ring-ring/50 inline-flex min-h-11 items-center self-start rounded-md text-sm font-semibold underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:outline-none"
+    >
+      <span aria-hidden="true">←</span> {t('app.journalNew.backToJournal')}
+    </Link>
+  );
+
   if (!resolution.ok && resolution.reason === 'missing') {
     return (
       <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
         <header className="flex flex-col gap-1.5">
+          {backToJournalLink}
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
             {t('app.journalNew.entryChoice.heading')}
           </h1>
@@ -151,6 +161,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
   if (!resolution.ok) {
     return (
       <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
+        {backToJournalLink}
         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-5">
           <div className="flex flex-col gap-1.5">
             <h1 className="text-foreground text-lg font-semibold">
@@ -185,6 +196,12 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
     if (submitState.status === 'submitting') return;
     if (!dirty || window.confirm(t('app.journalNew.typeChange.dirtyConfirm'))) {
       navigate(APP_ROUTE_PATHS.journalNew);
+    }
+  };
+  const returnToJournal = () => {
+    if (submitState.status === 'submitting') return;
+    if (!dirty || window.confirm(t('app.journalNew.backToJournalDirtyConfirm'))) {
+      navigate(APP_ROUTE_PATHS.journalList, { replace: true });
     }
   };
   const returnToReview = () => {
@@ -269,6 +286,16 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
   return (
     <section className="flex min-h-full flex-col">
       <header className="p-4 pb-0">
+        {!reviewHandoff && (
+          <button
+            type="button"
+            onClick={returnToJournal}
+            disabled={submitState.status === 'submitting'}
+            className="text-primary focus-visible:ring-ring/50 mb-2 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:outline-none"
+          >
+            <span aria-hidden="true">←</span> {t('app.journalNew.cancelDirectEntry')}
+          </button>
+        )}
         <h1
           ref={headingRef}
           tabIndex={locationState?.authResumeNotice ? -1 : undefined}

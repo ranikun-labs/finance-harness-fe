@@ -195,6 +195,9 @@ export interface Messages {
       navigation: { studyNote: string; investmentRecord: string; askAgain: string };
     };
     journalList: {
+      backToReview: string;
+      newRecord: string;
+      emptyPage: string;
       title: string;
       loading: { title: string; description: string };
       error: { title: string; description: string; retry: string };
@@ -222,6 +225,9 @@ export interface Messages {
     journalNew: {
       investment: string;
       study: string;
+      backToJournal: string;
+      cancelDirectEntry: string;
+      backToJournalDirtyConfirm: string;
       entryChoice: {
         heading: string;
         prompt: string;

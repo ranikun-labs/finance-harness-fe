@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
+import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -84,6 +85,54 @@ describe('JournalListPage', () => {
     await waitFor(() =>
       expect(screen.getByText(ko.app.journalList.emptyAll.title)).toBeInTheDocument(),
     );
-    expect(screen.getByRole('link', { name: /질문하러 가기/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '첫 기록 남기기' })).toHaveAttribute(
+      'href',
+      APP_ROUTE_PATHS.journalNew,
+    );
+    expect(
+      screen.queryByRole('link', { name: ko.app.journalList.newRecord }),
+    ).not.toBeInTheDocument();
   });
+  it('keeps a nonterminal empty page distinct and retries a failed continuation', async () => {
+    const list = vi
+      .fn<JournalReadPort['list']>()
+      .mockResolvedValueOnce({ ok: true, data: { items: [], nextCursor: 'next' } })
+      .mockResolvedValueOnce({ ok: false, error: { code: 'read_failed' } })
+      .mockResolvedValueOnce({ ok: true, data: LIST_DATA });
+    renderPage('ko', { list, detail: vi.fn() });
+
+    await screen.findByText(ko.app.journalList.emptyPage);
+    expect(screen.queryByText(ko.app.journalList.emptyAll.title)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: ko.app.journalList.newRecord })).toHaveAttribute(
+      'href',
+      APP_ROUTE_PATHS.journalNew,
+    );
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.loadMore }));
+    await screen.findByText(ko.app.journalList.loadMoreError.title);
+    expect(
+      screen.queryByRole('button', { name: ko.app.journalList.loadMore }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.loadMoreError.retry }));
+    await screen.findByText('ETF');
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: 'next' }));
+  });
+  it.each([401, 403, 500])(
+    'shows read failure for HTTP %i rather than an empty journal, and retries',
+    async (status) => {
+      const list = vi
+        .fn<JournalReadPort['list']>()
+        .mockResolvedValueOnce({ ok: false, error: { code: 'read_failed', status } })
+        .mockResolvedValueOnce({ ok: true, data: LIST_DATA });
+      renderPage('ko', { list, detail: vi.fn() });
+      await screen.findByText(ko.app.journalList.error.title);
+      expect(screen.queryByText(ko.app.journalList.emptyAll.title)).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: ko.app.journalList.backToReview })).toHaveAttribute(
+        'href',
+        APP_ROUTE_PATHS.appHome,
+      );
+      fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.error.retry }));
+      await screen.findByText('ETF');
+      expect(list).toHaveBeenCalledTimes(2);
+    },
+  );
 });
