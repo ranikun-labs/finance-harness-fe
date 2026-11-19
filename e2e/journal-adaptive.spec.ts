@@ -175,6 +175,46 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     }
   });
 
+  test('keeps the desktop selection pane neutral on list failure and restores it after retry', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'desktop workspace contract');
+    await page.setViewportSize({ width: 1360, height: 880 });
+    let attempts = 0;
+    await page.route('**/finance/journals?*', async (route) => {
+      attempts += 1;
+      if (attempts === 1) {
+        await route.fulfill({ status: 503, json: {} });
+      } else {
+        await route.fulfill({
+          status: 200,
+          json: {
+            items: [
+              {
+                journalId: PRIMARY_ID,
+                type: 'investment',
+                occurredAt: '2026-08-12T14:30:15.123',
+                timeZone: 'Asia/Seoul',
+                assetName: 'ETF',
+                action: 'interest',
+              },
+            ],
+            nextCursor: null,
+          },
+        });
+      }
+    });
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const prompt = page.getByRole('heading', {
+      name: ko.app.journalWorkspace.detailPrompt.heading,
+    });
+    await expect(page.getByText(ko.app.journalList.error.title)).toBeVisible();
+    await expect(prompt).toHaveCount(0);
+    await page.getByRole('button', { name: ko.app.journalList.error.retry }).click();
+    await expect(page.getByText('ETF', { exact: true })).toBeVisible();
+    await expect(prompt).toBeVisible();
+  });
+
   test('keeps Journal New a single route surface and carries the Review context seam', async ({
     page,
   }, testInfo) => {

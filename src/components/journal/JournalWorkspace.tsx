@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useState } from 'react';
 import { matchPath, Outlet, useLocation } from 'react-router';
 
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
@@ -10,7 +11,14 @@ import { JournalListPage } from '@/pages/JournalListPage';
  * still owns the actual Detail element, so direct links and refreshes remain safe.
  */
 export function JournalWorkspace() {
-  const { pathname } = useLocation();
+  const { pathname, key } = useLocation();
+  const [selectionState, setSelectionState] = useState({ key, available: false });
+  const setHasSelectableRecords = useCallback(
+    (available: boolean) => setSelectionState({ key, available }),
+    [key],
+  );
+  const outletContext = useMemo(() => ({ setHasSelectableRecords }), [setHasSelectableRecords]);
+  const hasSelectableRecords = selectionState.key === key && selectionState.available;
   const { t } = useTranslation();
   const routeKind = getAppJournalRouteKind(pathname);
   const isDetailRoute = routeKind === 'detail';
@@ -28,7 +36,11 @@ export function JournalWorkspace() {
         className="journal-workspace-list-pane min-w-0"
         aria-label={t('app.journalWorkspace.listPaneLabel')}
       >
-        {isDetailRoute ? <JournalListPage selectedId={selectedId} /> : <Outlet />}
+        {isDetailRoute ? (
+          <JournalListPage selectedId={selectedId} />
+        ) : (
+          <Outlet context={outletContext} />
+        )}
       </aside>
 
       <section
@@ -37,7 +49,7 @@ export function JournalWorkspace() {
       >
         {isDetailRoute ? (
           <Outlet />
-        ) : (
+        ) : hasSelectableRecords ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-3 p-8 text-center">
             <h2 className="text-foreground text-lg font-bold">
               {t('app.journalWorkspace.detailPrompt.heading')}
@@ -46,7 +58,7 @@ export function JournalWorkspace() {
               {t('app.journalWorkspace.detailPrompt.description')}
             </p>
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );

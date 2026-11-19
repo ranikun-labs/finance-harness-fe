@@ -660,6 +660,43 @@ describe('AppRouter', () => {
       });
     });
 
+    it('hides the selection prompt when loading fails, then shows it after a successful retry', async () => {
+      let failInitial!: (result: Awaited<ReturnType<JournalReadPort['list']>>) => void;
+      const initial = new Promise<Awaited<ReturnType<JournalReadPort['list']>>>((resolve) => {
+        failInitial = resolve;
+      });
+      const list = vi
+        .fn<JournalReadPort['list']>()
+        .mockReturnValueOnce(initial)
+        .mockImplementationOnce(TEST_JOURNAL_READ_PORT.list);
+      renderAt(APP_ROUTE_PATHS.journalList, undefined, {
+        list,
+        detail: TEST_JOURNAL_READ_PORT.detail,
+      });
+      const prompt = () =>
+        screen.queryByRole('heading', { name: ko.app.journalWorkspace.detailPrompt.heading });
+      await screen.findByText(ko.app.journalList.loading.title);
+      expect(prompt()).toBeNull();
+      failInitial({ ok: false, error: { code: 'read_failed' } });
+      await screen.findByText(ko.app.journalList.error.title);
+      expect(prompt()).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.error.retry }));
+      await screen.findByText('ETF');
+      await waitFor(() => expect(prompt()).toBeInTheDocument());
+    });
+
+    it('does not ask the user to select a record from an empty list', async () => {
+      const port: JournalReadPort = {
+        list: async () => ({ ok: true, data: { items: [], nextCursor: null } }),
+        detail: TEST_JOURNAL_READ_PORT.detail,
+      };
+      renderAt(APP_ROUTE_PATHS.journalList, undefined, port);
+      await screen.findByText(ko.app.journalList.emptyAll.title);
+      expect(
+        screen.queryByRole('heading', { name: ko.app.journalWorkspace.detailPrompt.heading }),
+      ).toBeNull();
+    });
+
     it('keeps the direct detail route selected and renders server-owned detail data', async () => {
       renderAt(buildAppJournalDetailPath(TEST_JOURNAL_ID));
 
