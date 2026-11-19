@@ -125,6 +125,35 @@ describe('AppRouter', () => {
     });
 
     it.each([
+      [
+        buildLocaleHomePath('ko'),
+        '예시 · 이렇게 기록할 수 있어요',
+        '질문: 이 기업을 더 알아볼까?',
+        '확인: 실적과 위험 요인을 살펴보기',
+        '판단 기록: 추가 확인이 필요함',
+      ],
+      [
+        buildLocaleHomePath('en'),
+        'Illustrative example',
+        'Question: Should I learn more about this company?',
+        'Check: Review its results and risks',
+        'Decision record: Look into the uncertainties first',
+      ],
+    ])(
+      'shows a labeled illustrative sequence at %s',
+      (path, heading, question, check, judgment) => {
+        renderAt(path);
+        expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+        const list = screen.getByRole('list');
+        expect(
+          within(list)
+            .getAllByRole('listitem')
+            .map((item) => item.textContent),
+        ).toEqual([question, check, judgment]);
+      },
+    );
+
+    it.each([
       [buildFeaturesPath('ko'), /기능 소개/],
       [buildFeaturesPath('en'), /Features/],
     ])('renders features at %s', (path, heading) => {

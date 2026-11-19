@@ -2,6 +2,7 @@ import { ArrowRight, CircleCheckBig } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 
@@ -28,6 +29,17 @@ export function PublicHomePage() {
           {t('public.home.action')} <ArrowRight aria-hidden="true" />
         </Link>
         <p className="text-muted-foreground mt-4 text-sm">{t('public.home.note')}</p>
+        <Card className="mt-10 rounded-2xl p-5 sm:p-6">
+          <h2 className="text-foreground text-sm font-bold">{t('public.home.example.heading')}</h2>
+          <ol
+            role="list"
+            className="text-muted-foreground mt-4 flex flex-col gap-3 text-sm leading-6 break-keep"
+          >
+            <li>{t('public.home.example.question')}</li>
+            <li>{t('public.home.example.check')}</li>
+            <li>{t('public.home.example.judgment')}</li>
+          </ol>
+        </Card>
       </div>
     </section>
   );

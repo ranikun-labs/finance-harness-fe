@@ -68,6 +68,12 @@ export const en: Messages = {
       description: 'Review your questions, record your thinking, and return to it later.',
       action: 'Start the app',
       note: 'Your decisions remain your own.',
+      example: {
+        heading: 'Illustrative example',
+        question: 'Question: Should I learn more about this company?',
+        check: 'Check: Review its results and risks',
+        judgment: 'Decision record: Look into the uncertainties first',
+      },
     },
     features: { title: 'Features' },
     learn: { title: 'Learn' },

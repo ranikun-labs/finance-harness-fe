@@ -71,6 +71,12 @@ export const ko: Messages = {
       description: '질문을 검토하고, 판단을 기록하고, 나중에 다시 살펴보세요.',
       action: '앱 시작하기',
       note: '투자 결정을 대신하지 않아요.',
+      example: {
+        heading: '예시 · 이렇게 기록할 수 있어요',
+        question: '질문: 이 기업을 더 알아볼까?',
+        check: '확인: 실적과 위험 요인을 살펴보기',
+        judgment: '판단 기록: 추가 확인이 필요함',
+      },
     },
     features: { title: '기능 소개' },
     learn: { title: '학습' },

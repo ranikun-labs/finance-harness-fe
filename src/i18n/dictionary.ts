@@ -73,7 +73,13 @@ export interface Messages {
     };
   };
   public: {
-    home: { title: string; description: string; action: string; note: string };
+    home: {
+      title: string;
+      description: string;
+      action: string;
+      note: string;
+      example: { heading: string; question: string; check: string; judgment: string };
+    };
     features: { title: string };
     learn: { title: string };
     notFound: { heading: string; description: string; backHome: string };
