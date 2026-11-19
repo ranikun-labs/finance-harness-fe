@@ -13,6 +13,7 @@ import type { FinanceReferenceCredentials } from '@/features/auth/financeReferen
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
+import { resolveTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
 
 type AuthPhase = 'idle' | 'loading' | 'failure' | 'unavailable';
 
@@ -57,7 +58,8 @@ export function AuthEntryPage({
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const locationState = readLocationState(location.state);
+  const locationState =
+    resolveTransient<AuthEntryLocationState>(location.state) ?? readLocationState(location.state);
   const intent = locationState.authResumeIntent;
   const [phase, setPhase] = useState<AuthPhase>('idle');
   const [userId, setUserId] = useState('');
@@ -74,7 +76,7 @@ export function AuthEntryPage({
   );
 
   const cancelTarget = intent?.reviewHandoff
-    ? intent.returnTarget
+    ? safeReviewReturn(intent.returnTarget)
     : (fallbackCancelTarget ?? locationState.fallbackCancelTarget ?? APP_ROUTE_PATHS.journalNew);
   const cancelLabel = (
     intent?.reviewHandoff
@@ -107,7 +109,7 @@ export function AuthEntryPage({
         }
         navigate(targetRoute, {
           replace: true,
-          state: destinationState(intent),
+          state: transientState(destinationState(intent)),
         });
       })
       .catch(() => {
@@ -131,7 +133,7 @@ export function AuthEntryPage({
       .login(credentials, controller.signal)
       .then(() => {
         if (attempt !== attemptRef.current) return;
-        navigate(targetRoute, { replace: true, state: destinationState(intent) });
+        navigate(targetRoute, { replace: true, state: transientState(destinationState(intent)) });
       })
       .catch(() => {
         if (attempt === attemptRef.current && !controller.signal.aborted) setPhase('failure');

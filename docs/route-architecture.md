@@ -39,7 +39,7 @@ STEP 5는 **`BrowserRouter` 기반 SPA를 유지**한다. Pre-render 라이브�
   ※ 미지원 locale(/fr 등)도 PublicLayout에서 PublicNotFoundPage로 처리(redirect 아님)
 
 /app                      → HomePage              (검토 시작 owner, index)
-/app/ask                  → AskPage               (내부 검토 결과, ?q=)
+/app/ask                  → AskPage               (내부 검토 결과, ?ref=<opaque-ref>)
 /app/journal              → JournalListPage       (저널 Primary Surface)
 /app/onboarding           → OnboardingPage        (하단 탭 X)
 /app/journal/new          → JournalNewPage        (Phone 하단 탭 X; Tablet 이상 primary nav, ?type=investment|study)
@@ -93,7 +93,9 @@ Shared Identity protocol, callback/session/token, Gateway contract를 소유하�
 - 앱 프리픽스는 `APP_BASE`(`/app`) 한 곳에서만 정의. 앱 경로는 이를 조합해 파생.
 - Path builder: 공개(`buildLocaleHomePath`/`buildFeaturesPath`/`buildLearnPath`),
   앱(`buildAppAskPath`/`buildAppJournalNewPath`/`buildAppJournalDetailPath`/
-  `buildAppJournalReviewPath`). 쿼리(`?q=`, `?type=`)·id 인코딩 계약 보존.
+  `buildAppJournalReviewPath`). 검토 질문 원문은 URL에 두지 않고 현재 탭의 메모리에 보관하며
+  `?ref=`에는 불투명 참조만 둔다. 새로고침으로 메모리가 사라지면 검토를 다시 시작한다.
+  기록 유형 `?type=` 및 id 인코딩 계약은 유지한다.
 - 중첩 라우트 상대경로는 `toRelativeUnder(base, absolute)`로 파생(문자열 중복 방지).
 
 ### 3.5 레이아웃·NotFound 경계
@@ -274,7 +276,8 @@ RPL-68은 STEP 5·6의 URL 소유권, BrowserRouter, Pre-render, SPA fallback을
 앱 presentation contract만 갱신한다.
 
 - `/app`은 검토 시작의 canonical owner다. Home dashboard route가 아니다.
-- `/app/ask`는 deep link와 query 계약을 유지하는 내부 검토 결과 route다.
+- `/app/ask`는 탭 메모리의 질문을 `?ref=`로 참조하는 내부 검토 결과 route다. 참조만으로
+  다른 탭이나 새로고침 후 원래 질문을 복원하지 않으며 다시 시작한다.
 - Primary IA는 검토/저널 두 개이며 `BOTTOM_TABS`도 이 두 destination만 가진다.
 - Phone은 단일 column과 검토/저널 Bottom Navigation을 사용한다. 내부 결과·작성·상세·
   복기에서는 context navigation을 사용하며 Bottom Navigation은 숨긴다.

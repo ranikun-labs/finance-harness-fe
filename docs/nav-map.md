@@ -22,7 +22,7 @@ navigation은 current contract가 아니다.
 | 화면 | 경로 | 역할 |
 | --- | --- | --- |
 | 검토 시작 | `/app` | 판단 전 질문을 시작하는 Primary Surface |
-| 검토 결과 | `/app/ask?q={query}` | 구조화된 검토 결과의 내부 route |
+| 검토 결과 | `/app/ask?ref={opaque-ref}` | 질문은 현재 탭의 메모리에만 보관하는 내부 route. 새로고침 후에는 다시 시작 |
 | 인증 진입 | `/auth` | App Bottom Navigation 없는 provider-neutral public Auth Entry. OAuth-first Product UX를 표현하지만 Shared Identity protocol/callback/session/Gateway는 소유하지 않음 |
 | 온보딩 | `/app/onboarding` | 첫 진입 안내 |
 | 저널 목록/빈 상태 | `/app/journal` | 판단·학습 기록 목록 |

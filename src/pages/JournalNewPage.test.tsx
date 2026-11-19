@@ -1,3 +1,4 @@
+import { resolveTransient } from '@/lib/transientNavigation';
 import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router';
@@ -27,8 +28,11 @@ import { JournalNewPage } from '@/pages/JournalNewPage';
 
 function DetailDestination() {
   const location = useLocation();
-  const context = (location.state as { decisionContext?: DecisionContextSnapshot } | null)
-    ?.decisionContext;
+  const context = (
+    (resolveTransient(location.state) ?? location.state) as {
+      decisionContext?: DecisionContextSnapshot;
+    } | null
+  )?.decisionContext;
 
   return (
     <>
@@ -324,7 +328,7 @@ describe('JournalNewPage', () => {
     expect(confirmSpy).toHaveBeenCalledTimes(2);
     const reviewDestination = screen.getByTestId('review-destination').textContent ?? '';
     const search = new URLSearchParams(reviewDestination.replace(/^review:/, ''));
-    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('q')).toBeNull();
     expect(search.get('fixture')).toBe('partial');
     confirmSpy.mockRestore();
   });
@@ -343,7 +347,7 @@ describe('JournalNewPage', () => {
     const search = new URLSearchParams(
       (screen.getByTestId('review-destination').textContent ?? '').replace(/^review:/, ''),
     );
-    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('q')).toBeNull();
     expect(search.get('fixture')).toBeNull();
   });
 
@@ -361,7 +365,7 @@ describe('JournalNewPage', () => {
     const search = new URLSearchParams(
       (screen.getByTestId('review-destination').textContent ?? '').replace(/^review:/, ''),
     );
-    expect(search.get('q')).toBe(reviewHandoff.originalQuestion);
+    expect(search.get('q')).toBeNull();
     expect(search.get('fixture')).toBe('partial');
   });
 

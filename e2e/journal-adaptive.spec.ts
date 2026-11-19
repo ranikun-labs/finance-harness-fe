@@ -1,3 +1,4 @@
+import { startReview } from './review-test-flow';
 import { expect, test, type Page } from '@playwright/test';
 
 import {
@@ -40,7 +41,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await page.setViewportSize({ width: 393, height: 852 });
     const question = '검토에서 기록으로 이어가기';
 
-    await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}`);
+    await startReview(page, question);
     await expect(page.getByRole('heading', { name: ko.app.ask.handoff.heading })).toBeVisible();
     await expect(
       page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
@@ -63,9 +64,17 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'handoff flow runs on Chromium');
     await page.setViewportSize({ width: 393, height: 852 });
     const question = '부분 검토를 다시 확인하기';
-    const reviewUrl = `${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent(question)}&fixture=partial`;
-
-    await page.goto(reviewUrl);
+    await startReview(page, question);
+    await page.evaluate(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('fixture', 'partial');
+      window.history.replaceState(window.history.state, '', url);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await expect(
+      page.getByRole('heading', { name: ko.app.ask.structured.partialTitle }),
+    ).toBeVisible();
+    const reviewUrl = new URL(page.url()).pathname + new URL(page.url()).search;
     await page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }).click();
     await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
     await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
@@ -220,7 +229,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
   }, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
     await page.setViewportSize({ width: 393, height: 852 });
-    await page.goto(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent('context handoff')}`);
+    await startReview(page, 'context handoff');
     await page.getByRole('link', { name: ko.app.ask.handoff.investment.title }).click();
     await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
     await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();

@@ -11,6 +11,7 @@ import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
+import { readTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
 import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
 import { createReviewJournalHandoff, getReviewFixture, localize } from '@/mocks/reviewResult';
 
@@ -166,6 +167,7 @@ function StructuredReviewResult({
   returnTarget: string;
 }) {
   const { locale, t } = useTranslation();
+  const navigate = useNavigate();
   const { state: authPresentationState } = useAuthPresentation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
@@ -453,7 +455,20 @@ function StructuredReviewResult({
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
             )}
             to={investmentDestination}
-            state={investmentDestinationState}
+            onClick={(event) => {
+              if (
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              )
+                return;
+              event.preventDefault();
+              navigate(investmentDestination, {
+                state: transientState(investmentDestinationState),
+              });
+            }}
           >
             <span className="text-base font-semibold">{t('app.ask.handoff.investment.title')}</span>
             <span className="text-muted-foreground text-sm leading-5">
@@ -466,7 +481,18 @@ function StructuredReviewResult({
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
             )}
             to={studyDestination}
-            state={studyDestinationState}
+            onClick={(event) => {
+              if (
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              )
+                return;
+              event.preventDefault();
+              navigate(studyDestination, { state: transientState(studyDestinationState) });
+            }}
           >
             <span className="text-base font-semibold">{t('app.ask.handoff.study.title')}</span>
             <span className="text-primary-foreground/80 text-sm leading-5">
@@ -484,9 +510,13 @@ export function AskPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const question = (searchParams.get('q') ?? '').trim();
+  const storedQuestion = readTransient<unknown>(searchParams.get('ref'));
+  const question = typeof storedQuestion === 'string' ? storedQuestion.trim() : '';
   const requestedFixture = searchParams.get('fixture');
-  const returnTarget = `${location.pathname}${location.search}${location.hash}`;
+  const returnTarget = safeReviewReturn(`${location.pathname}${location.search}${location.hash}`);
+  useEffect(() => {
+    if (searchParams.has('q')) navigate(returnTarget, { replace: true });
+  }, [navigate, returnTarget, searchParams]);
   const locationState = location.state as ReviewLocationState | null;
   const [phase, setPhase] = useState<ReviewPhase>(() => {
     if (requestedFixture === 'error') return 'error';
@@ -509,7 +539,7 @@ export function AskPage() {
   }
 
   function editQuestion() {
-    navigate(APP_ROUTE_PATHS.appHome, { state: { prefill: question } });
+    navigate(APP_ROUTE_PATHS.appHome, { state: transientState({ prefill: question }) });
   }
 
   return (

@@ -2,7 +2,11 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS, buildAppAskPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
+import { holdTransient, resolveTransient } from '@/lib/transientNavigation';
+
+const buildAppAskPath = (question: string) =>
+  `${APP_ROUTE_PATHS.ask}?ref=${holdTransient(question)}`;
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -12,7 +16,7 @@ import { AskPage } from '@/pages/AskPage';
 function DecisionContextStateProbe() {
   const location = useLocation();
   const context = (
-    location.state as {
+    (resolveTransient(location.state) ?? location.state) as {
       authResumeIntent?: { decisionContext?: { checklist?: unknown[] } };
     } | null
   )?.authResumeIntent?.decisionContext;
@@ -180,7 +184,7 @@ describe('AskPage / Structured Review Result', () => {
 
   it('separates Review Error from Partial Result and retries to success', () => {
     vi.useFakeTimers();
-    renderPage(`${APP_ROUTE_PATHS.ask}?q=${encodeURIComponent('오류를 다시 시도')}&fixture=error`);
+    renderPage(`${buildAppAskPath('오류를 다시 시도')}&fixture=error`);
 
     expect(screen.getByRole('alert')).toHaveTextContent(ko.app.ask.error.description);
     expect(screen.getByText('오류를 다시 시도')).toBeInTheDocument();

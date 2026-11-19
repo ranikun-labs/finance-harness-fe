@@ -129,9 +129,8 @@ describe('HomePage / Review Start', () => {
     question.focus();
     fireEvent.keyDown(question, { key: 'Enter', ...modifiers });
 
-    expect(screen.getByTestId('location')).toHaveTextContent(
-      `${APP_ROUTE_PATHS.ask}?q=%EC%8B%A4%EC%A0%81+%EC%A0%84%EB%A7%9D%EC%9D%84+%ED%99%95%EC%9D%B8%ED%95%98%EA%B3%A0+%EC%8B%B6%EC%96%B4%EC%9A%94`,
-    );
+    expect(screen.getByTestId('location').textContent).toMatch(/^\/app\/ask\?ref=/);
+    expect(screen.getByTestId('location').textContent).not.toContain('q=');
     expect(screen.getByTestId('location-state')).toHaveTextContent('loading');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

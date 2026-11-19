@@ -6,7 +6,8 @@ import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { JournalRecordCard } from '@/components/journal/JournalRecordCard';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { APP_ROUTE_PATHS, buildAppAskPath } from '@/constants/routes';
+import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { holdTransient, resolveTransient } from '@/lib/transientNavigation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
 import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
@@ -21,7 +22,9 @@ export function HomePage() {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const locationState = location.state as ReviewStartLocationState | null;
+  const locationState =
+    resolveTransient<ReviewStartLocationState>(location.state) ??
+    (location.state as ReviewStartLocationState | null);
   const [question, setQuestion] = useState(locationState?.prefill ?? '');
   const [hasValidationError, setHasValidationError] = useState(false);
   const recentEntries = [...JOURNAL_ENTRIES]
@@ -36,7 +39,10 @@ export function HomePage() {
     }
 
     setHasValidationError(false);
-    navigate(buildAppAskPath(trimmedQuestion), { state: { reviewFlow: 'loading' } });
+    const ref = holdTransient(trimmedQuestion);
+    navigate(`${APP_ROUTE_PATHS.ask}?ref=${encodeURIComponent(ref)}`, {
+      state: { reviewFlow: 'loading' },
+    });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -63,7 +69,7 @@ export function HomePage() {
           <span aria-hidden="true">✦ </span>
           {t('app.home.hero.eyebrow')}
         </p>
-        <h1 className="text-foreground min-w-0 text-3xl leading-tight font-bold tracking-tight break-keep sm:text-4xl">
+        <h1 className="text-foreground min-w-0 text-3xl leading-tight font-bold tracking-tight [overflow-wrap:anywhere] break-keep sm:text-4xl">
           {t('app.home.hero.heading')}
         </h1>
         <p className="text-muted-foreground min-w-0 text-base leading-7 break-keep">

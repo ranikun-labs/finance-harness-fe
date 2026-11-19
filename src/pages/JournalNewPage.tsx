@@ -1,3 +1,4 @@
+import { resolveTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
@@ -54,7 +55,9 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
   const { t } = useTranslation();
   const { state: authPresentationState } = useAuthPresentation();
   const resolution = resolveJournalType(searchParams);
-  const locationState = location.state as JournalNewLocationState | null;
+  const locationState =
+    resolveTransient<JournalNewLocationState>(location.state) ??
+    (location.state as JournalNewLocationState | null);
   const reviewHandoff = locationState?.reviewHandoff;
   const incomingDecisionContext =
     reviewHandoff?.kind === 'investment' ? locationState?.decisionContext : undefined;
@@ -210,7 +213,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
       if (navigationType === 'PUSH') {
         navigate(-1);
       } else {
-        navigate(reviewHandoff.returnTarget, { replace: true });
+        navigate(safeReviewReturn(reviewHandoff.returnTarget), { replace: true });
       }
     }
   };
@@ -252,7 +255,9 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
             : undefined;
         navigate(buildAppJournalDetailPath(journalId), {
           replace: true,
-          state: savedDecisionContext ? { decisionContext: savedDecisionContext } : undefined,
+          state: savedDecisionContext
+            ? transientState({ decisionContext: savedDecisionContext })
+            : undefined,
         });
       })
       .catch((error: unknown) => {

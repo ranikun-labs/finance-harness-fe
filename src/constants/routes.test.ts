@@ -152,8 +152,8 @@ describe('app Journal route classification', () => {
 });
 
 describe('app path builders', () => {
-  it('builds the ask path with a query', () => {
-    expect(buildAppAskPath('삼성전자')).toBe('/app/ask?q=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90');
+  it('never includes a legacy question in the ask URL', () => {
+    expect(buildAppAskPath('삼성전자')).toBe(APP_ROUTE_PATHS.ask);
   });
 
   it('falls back to the base ask path without a query', () => {

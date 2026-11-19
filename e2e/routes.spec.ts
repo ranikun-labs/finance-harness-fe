@@ -1,3 +1,4 @@
+import { startReview } from './review-test-flow';
 import { expect, test, type Page } from '@playwright/test';
 
 import { BOTTOM_TABS } from '@/constants/navigation';
@@ -166,7 +167,8 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
 
     const askUrl = new URL(page.url());
     expect(askUrl.pathname).toBe(APP_ROUTE_PATHS.ask);
-    expect(askUrl.searchParams.get('q')).toBe(question);
+    expect(askUrl.searchParams.get('q')).toBeNull();
+    expect(askUrl.searchParams.get('ref')).toBeTruthy();
     await expect(
       page.getByRole('heading', {
         level: 1,
@@ -608,7 +610,7 @@ test.describe('Ask empty and result states', () => {
 
   test('renders an encoded question with structured fixture provenance', async ({ page }) => {
     const question = '실적 전망 & 산업 흐름은 어떻게 확인할까?';
-    await page.goto(buildAppAskPath(question));
+    await startReview(page, question);
 
     await expect(page.getByText(question)).toBeVisible();
     await expect(page.getByRole('note')).toHaveText(ko.app.ask.structured.provenance);
@@ -631,7 +633,7 @@ test.describe('Ask empty and result states', () => {
     ];
 
     for (const item of cases) {
-      await page.goto(buildAppAskPath(question));
+      await startReview(page, question);
       await page.getByRole('link', { name: item.label }).click();
       await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
       await page.getByRole('button', { name: ko.auth.entry.providerAction }).click();
@@ -643,7 +645,7 @@ test.describe('Ask empty and result states', () => {
   });
 
   test('keeps Review Result in Review IA without a phone bottom navigation', async ({ page }) => {
-    await page.goto(buildAppAskPath('활성 탭 확인'));
+    await startReview(page, '활성 탭 확인');
 
     const navigation = page.getByRole('navigation', { name: ko.nav.ariaLabel });
     if (page.viewportSize()!.width < 768) {
@@ -664,7 +666,7 @@ test.describe('Ask empty and result states', () => {
       await dialog.dismiss();
     });
 
-    await page.goto(buildAppAskPath(question));
+    await startReview(page, question);
 
     await expect(page.getByText(question)).toBeVisible();
     await expect(page.locator('main script')).toHaveCount(0);
@@ -699,7 +701,7 @@ test.describe('Ask English locale', () => {
     await expect(page.getByText(en.app.ask.empty.description)).toBeVisible();
 
     const question = 'How should I review the business assumptions?';
-    await page.goto(buildAppAskPath(question));
+    await startReview(page, question);
     await expect(page.getByText(question)).toBeVisible();
     await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
     await expect(

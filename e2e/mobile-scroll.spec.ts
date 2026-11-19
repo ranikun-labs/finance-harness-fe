@@ -1,3 +1,4 @@
+import { startReview } from './review-test-flow';
 import { expect, test } from '@playwright/test';
 
 import {
@@ -25,7 +26,7 @@ test.describe('480×812 통합 뷰포트', () => {
     const paths = [
       APP_ROUTE_PATHS.appHome,
       APP_ROUTE_PATHS.onboarding,
-      buildAppAskPath('480px 통합 확인 질문'),
+      buildAppAskPath(),
       APP_ROUTE_PATHS.journalList,
       buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000'),
       buildAppJournalReviewPath('journal-2026-06-28-01'),
@@ -40,6 +41,15 @@ test.describe('480×812 통합 뷰포트', () => {
       '/fr',
       '/app/unknown',
     ];
+
+    await startReview(page, '480px 통합 확인 질문');
+    await expect(page.getByText('480px 통합 확인 질문')).toBeVisible();
+    await expect(page.locator('h1')).toHaveCount(1);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
 
     for (const path of paths) {
       await page.goto(path);
@@ -165,11 +175,14 @@ test.describe('모바일 세로 스크롤 계약', () => {
   test('Ask Result는 main만 스크롤하고 phone primary navigation을 노출하지 않는다', async ({
     page,
   }) => {
-    await page.goto(buildAppAskPath('모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문'));
+    await startReview(page, '모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문');
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
     ).toBeVisible();
 
+    await expect(
+      page.getByRole('heading', { name: ko.app.ask.structured.resultTitle, exact: true }),
+    ).toBeVisible();
     const viewportHeight = page.viewportSize()!.height;
     const scrollContract = await page.evaluate(() => {
       const main = document.querySelector('main')!;
@@ -210,7 +223,7 @@ test.describe('모바일 세로 스크롤 계약', () => {
     { label: '긴 무공백', question: 'A'.repeat(320) },
   ]) {
     test(`Ask Result의 ${label} 질문은 수평 overflow 없이 wrap된다`, async ({ page }) => {
-      await page.goto(buildAppAskPath(question));
+      await startReview(page, question);
       const questionText = page.getByText(question.trim());
       await expect(questionText).toBeVisible();
 
@@ -396,7 +409,7 @@ test.describe('Adaptive app shell', () => {
       { width: 1360, height: 880 },
     ]) {
       await page.setViewportSize(viewport);
-      await page.goto(buildAppAskPath('adaptive readable result width'));
+      await startReview(page, 'adaptive readable result width');
 
       const hostBox = (await page.getByTestId('app-shell-host').boundingBox())!;
       const contentBox = (await page.getByTestId('adaptive-content-host').boundingBox())!;
@@ -415,7 +428,7 @@ test.describe('Ask 영어 모바일 레이아웃', () => {
   });
 
   test('영어 CTA와 fixture가 375px에서 수평 overflow를 만들지 않는다', async ({ page }) => {
-    await page.goto(buildAppAskPath('How should I review this question?'));
+    await startReview(page, 'How should I review this question?');
 
     await expect(page.getByRole('note')).toHaveText(en.app.ask.structured.provenance);
     await expect(

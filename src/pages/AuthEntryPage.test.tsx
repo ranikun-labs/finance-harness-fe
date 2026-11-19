@@ -112,7 +112,9 @@ describe('AuthEntryPage presentation seam', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.cancel }));
 
-    expect(screen.getByTestId('review-return')).toHaveTextContent(intent.returnTarget);
+    expect(screen.getByTestId('review-return')).toHaveTextContent(
+      '/app/ask?fixture=partial#result',
+    );
   });
 
   it('uses Journal Entry Choice as the no-intent cancel destination', () => {

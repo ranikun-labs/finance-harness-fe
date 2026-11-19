@@ -187,10 +187,9 @@ export function buildLocalePeerPath(pathname: string, targetLocale: Locale): str
 }
 
 // ── 웹앱 path builder (기존 쿼리·인코딩 계약 보존) ─────────────────
-export function buildAppAskPath(query?: string): string {
-  if (!query) return APP_ROUTE_PATHS.ask;
-  const params = new URLSearchParams({ q: query });
-  return `${APP_ROUTE_PATHS.ask}?${params.toString()}`;
+export function buildAppAskPath(_legacyQuery?: string): string {
+  void _legacyQuery;
+  return APP_ROUTE_PATHS.ask;
 }
 
 export function buildAppJournalNewPath(type: JournalEntryType): string {

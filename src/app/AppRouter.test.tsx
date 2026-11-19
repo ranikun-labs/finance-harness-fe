@@ -1,3 +1,4 @@
+import { holdTransient } from '@/lib/transientNavigation';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -416,7 +417,10 @@ describe('AppRouter', () => {
 
     it.each([
       [APP_ROUTE_PATHS.appHome, ko.app.home.hero.heading],
-      [buildAppAskPath('게스트 검토 결과'), ko.app.ask.structured.resultTitle],
+      [
+        `${buildAppAskPath()}?ref=${holdTransient('게스트 검토 결과')}`,
+        ko.app.ask.structured.resultTitle,
+      ],
     ])('keeps the guest Review surface public at %s', async (path, heading) => {
       renderAt(path, { state: 'guest' });
 
