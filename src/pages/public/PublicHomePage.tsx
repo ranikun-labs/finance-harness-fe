@@ -9,9 +9,9 @@ export function PublicHomePage() {
   const { t } = useTranslation();
 
   return (
-    <section className="mx-auto flex min-h-[70vh] w-full max-w-5xl flex-col justify-center px-6 py-16 sm:px-10">
+    <section className="mx-auto flex min-h-[70vh] w-full max-w-5xl flex-col justify-center px-6 py-16 sm:px-10 sm:py-24">
       <div className="max-w-2xl">
-        <span className="text-primary mb-6 inline-flex items-center gap-2 text-sm font-bold">
+        <span className="text-primary border-primary/20 bg-primary/5 mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold">
           <CircleCheckBig aria-hidden="true" className="size-5" />
           {t('common.appName')}
         </span>
@@ -23,7 +23,7 @@ export function PublicHomePage() {
         </p>
         <Link
           to={APP_ROUTE_PATHS.appHome}
-          className={buttonVariants({ size: 'lg', className: 'mt-8' })}
+          className={buttonVariants({ size: 'lg', className: 'mt-8 min-h-14' })}
         >
           {t('public.home.action')} <ArrowRight aria-hidden="true" />
         </Link>

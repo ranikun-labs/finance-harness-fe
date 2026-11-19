@@ -34,7 +34,10 @@ function StatusMessage({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 py-10 text-center" role="status">
+    <div
+      className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
+      role="status"
+    >
       <p className="text-foreground text-base font-semibold">{title}</p>
       <p className="text-muted-foreground text-sm">{description}</p>
       {action}
@@ -127,16 +130,13 @@ export function JournalList({
   const hasPendingEmptyPage = entries.length === 0 && nextCursor !== null;
 
   return (
-    <div className="flex min-h-full flex-col gap-4 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <Heading className="text-foreground text-2xl font-extrabold tracking-tight">
+    <div className="flex min-h-full flex-col gap-6 px-5 py-8 sm:px-8 sm:py-10">
+      <div className="border-border flex flex-wrap items-center justify-between gap-4 border-b pb-5">
+        <Heading className="text-foreground text-3xl leading-tight font-bold tracking-tight">
           {t('app.journalList.title')}
         </Heading>
         {status !== 'empty' || nextCursor !== null ? (
-          <Link
-            to={APP_ROUTE_PATHS.journalNew}
-            className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
-          >
+          <Link to={APP_ROUTE_PATHS.journalNew} className={cn(buttonVariants(), 'min-h-11')}>
             {t('app.journalList.newRecord')}
           </Link>
         ) : null}
@@ -180,7 +180,7 @@ export function JournalList({
               {t('app.journalList.emptyPage')}
             </p>
           )}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {entries.map((entry) => (
               <JournalSummaryCard
                 key={entry.journalId}

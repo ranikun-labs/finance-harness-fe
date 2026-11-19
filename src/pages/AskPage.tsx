@@ -57,7 +57,7 @@ function LoadingReview({ question }: { question: string }) {
         >
           {t('app.ask.structured.questionLabel')}
         </h2>
-        <Card className="border-l-primary border-l-4 p-4">
+        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
           <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
         </Card>
       </section>
@@ -128,7 +128,7 @@ function ReviewError({
         >
           {t('app.ask.structured.questionLabel')}
         </h2>
-        <Card className="border-l-primary border-l-4 p-4">
+        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
           <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
         </Card>
       </section>
@@ -232,7 +232,7 @@ function StructuredReviewResult({
           <p className="text-primary text-xs font-bold tracking-wider uppercase">
             {t('app.ask.header.title')}
           </p>
-          <h1 className="min-w-0 text-2xl leading-tight font-extrabold tracking-tight">
+          <h1 className="min-w-0 text-2xl leading-tight font-extrabold tracking-tight break-keep sm:text-3xl">
             {t('app.ask.structured.resultTitle')}
           </h1>
         </div>
@@ -246,7 +246,7 @@ function StructuredReviewResult({
         >
           {t('app.ask.structured.questionLabel')}
         </h2>
-        <Card className="border-l-primary border-l-4 p-4">
+        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
           <p className="min-w-0 text-xl leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
         </Card>
       </section>

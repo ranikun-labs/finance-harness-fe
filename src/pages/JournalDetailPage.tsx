@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 
 function DetailHeader({ title, backLabel }: { title: string; backLabel: string }) {
   return (
-    <header className="relative flex min-h-11 items-center justify-center">
+    <header className="border-border relative flex min-h-14 items-center justify-center border-b pb-2">
       <Link
         aria-label={backLabel}
         className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"
@@ -43,7 +43,10 @@ function DetailStatus({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 px-6 py-10 text-center" role="status">
+    <div
+      className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
+      role="status"
+    >
       <p className="text-foreground text-base font-semibold">{title}</p>
       <p className="text-muted-foreground text-sm">{description}</p>
       {action}
@@ -55,7 +58,10 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
   const { t } = useTranslation();
   if (error.code === 'journal_not_found') {
     return (
-      <div className="flex flex-col items-center gap-3 px-6 py-10 text-center" role="status">
+      <div
+        className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
+        role="status"
+      >
         <p className="text-muted-foreground text-sm">
           {t('app.journalDetail.notFound.description')}
         </p>
@@ -108,7 +114,7 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
 function JournalMetadata({ detail }: { detail: JournalDetailViewModel }) {
   const { t, locale } = useTranslation();
   return (
-    <Card className="p-5">
+    <Card className="rounded-2xl p-5 shadow-sm sm:p-6">
       <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 text-sm">
         <dt className="text-muted-foreground">{t('app.journalDetail.metadata.recordType')}</dt>
         <dd className="justify-self-end">
@@ -220,7 +226,7 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
       <section className="space-y-3" aria-labelledby="journal-detail-title">
         <h2
           id="journal-detail-title"
-          className="min-w-0 text-xl font-extrabold tracking-tight [overflow-wrap:anywhere]"
+          className="min-w-0 text-2xl leading-tight font-bold tracking-tight [overflow-wrap:anywhere]"
         >
           {title}
         </h2>
@@ -263,7 +269,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
       : t('app.journalDetail.headerTitle');
 
   return (
-    <div className="flex min-h-full flex-col gap-5 p-4">
+    <div className="flex min-h-full flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <DetailHeader title={headerTitle} backLabel={t('app.journalDetail.backLabel')} />
       {state.status === 'loading' && (
         <DetailStatus

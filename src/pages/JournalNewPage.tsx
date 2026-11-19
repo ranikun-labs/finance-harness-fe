@@ -120,17 +120,17 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
 
   if (!resolution.ok && resolution.reason === 'missing') {
     return (
-      <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
+      <section className="flex min-h-full flex-col gap-6 px-4 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8">
         <header className="flex flex-col gap-1.5">
           {backToJournalLink}
-          <h1 className="text-foreground text-2xl font-bold tracking-tight">
+          <h1 className="text-foreground text-2xl leading-tight font-bold tracking-tight break-keep sm:text-3xl">
             {t('app.journalNew.entryChoice.heading')}
           </h1>
           <p className="text-muted-foreground text-sm">{t('app.journalNew.entryChoice.prompt')}</p>
         </header>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <Link
-            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-36 flex-col gap-2 rounded-2xl border p-6 text-left shadow-sm transition-colors outline-none focus-visible:ring-3"
             to={directEntryTarget('investment')}
             state={directEntryState('investment')}
           >
@@ -142,7 +142,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
             </span>
           </Link>
           <Link
-            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-11 flex-col gap-1 rounded-xl border p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            className="border-border bg-card text-foreground hover:border-primary/50 focus-visible:ring-ring/50 flex min-h-36 flex-col gap-2 rounded-2xl border p-6 text-left shadow-sm transition-colors outline-none focus-visible:ring-3"
             to={directEntryTarget('study')}
             state={directEntryState('study')}
           >
@@ -160,7 +160,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
 
   if (!resolution.ok) {
     return (
-      <section className="flex min-h-full flex-col gap-4 p-4 pb-[env(safe-area-inset-bottom)]">
+      <section className="flex min-h-full flex-col gap-6 px-4 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8">
         {backToJournalLink}
         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-5">
           <div className="flex flex-col gap-1.5">
@@ -285,7 +285,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
         };
   return (
     <section className="flex min-h-full flex-col">
-      <header className="p-4 pb-0">
+      <header className="px-4 pt-6 sm:px-6 sm:pt-8">
         {!reviewHandoff && (
           <button
             type="button"
@@ -299,7 +299,7 @@ export function JournalNewPage({ createPort, createMode = 'test' }: Props) {
         <h1
           ref={headingRef}
           tabIndex={locationState?.authResumeNotice ? -1 : undefined}
-          className="text-foreground text-lg font-semibold outline-none"
+          className="text-foreground text-2xl leading-tight font-bold tracking-tight outline-none"
         >
           {typeCopy.title}
         </h1>

@@ -57,27 +57,27 @@ export function HomePage() {
   }
 
   return (
-    <div className="flex min-h-full min-w-0 flex-col gap-6 px-4 pt-5 pb-6">
-      <header className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-h-full min-w-0 flex-col gap-8 px-5 pt-8 pb-10 sm:px-8 sm:pt-10">
+      <header className="flex max-w-2xl min-w-0 flex-col gap-4">
         <p className="text-primary text-xs font-bold tracking-wider uppercase">
           <span aria-hidden="true">✦ </span>
           {t('app.home.hero.eyebrow')}
         </p>
-        <h1 className="text-foreground min-w-0 text-3xl leading-tight font-extrabold tracking-tight [overflow-wrap:anywhere]">
+        <h1 className="text-foreground min-w-0 text-3xl leading-tight font-bold tracking-tight break-keep sm:text-4xl">
           {t('app.home.hero.heading')}
         </h1>
-        <p className="text-muted-foreground min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">
+        <p className="text-muted-foreground min-w-0 text-base leading-7 break-keep">
           {t('app.home.hero.description')}
         </p>
       </header>
 
-      <Card className="border-primary/20 from-primary/10 via-card to-card min-w-0 rounded-3xl bg-gradient-to-br p-5 shadow-md">
-        <form className="flex min-w-0 flex-col gap-3" onSubmit={handleSubmit} noValidate>
-          <p className="text-muted-foreground text-sm leading-5">
+      <Card className="border-border bg-card min-w-0 rounded-2xl p-5 shadow-sm sm:p-7">
+        <form className="flex min-w-0 flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <p className="text-muted-foreground text-sm leading-5 break-keep">
             {t('app.home.question.exampleNotice')}
           </p>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="review-question" className="text-base font-bold">
+            <label htmlFor="review-question" className="text-lg font-bold">
               {t('app.home.question.label')}
             </label>
             <textarea
@@ -92,9 +92,12 @@ export function HomePage() {
               aria-describedby={
                 hasValidationError ? 'review-question-error' : 'review-question-help'
               }
-              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-32 w-full resize-y rounded-xl border px-4 py-3 text-base leading-6 outline-none focus-visible:ring-3"
+              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-32 w-full resize-y rounded-xl border px-4 py-3 text-base leading-6 [overflow-wrap:anywhere] break-keep outline-none focus-visible:ring-3"
             />
-            <p id="review-question-help" className="text-muted-foreground text-sm leading-5">
+            <p
+              id="review-question-help"
+              className="text-muted-foreground text-sm leading-5 break-keep"
+            >
               {t('app.home.question.helper')}
             </p>
             {hasValidationError && (
@@ -121,13 +124,13 @@ export function HomePage() {
         >
           {t('app.home.examples.heading')}
         </h2>
-        <div className="flex min-w-0 flex-col gap-2">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-3">
           {EXAMPLE_KEYS.map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => startReview(t(`app.home.examples.items.${key}`))}
-              className="border-border bg-card text-foreground hover:bg-accent focus-visible:border-ring focus-visible:ring-ring/50 min-h-11 w-full rounded-xl border px-4 py-3 text-left text-sm leading-5 transition-colors outline-none focus-visible:ring-3"
+              className="border-border bg-card text-foreground hover:bg-accent focus-visible:border-ring focus-visible:ring-ring/50 min-h-20 w-full rounded-xl border px-4 py-3 text-left text-sm leading-6 break-keep transition-colors outline-none focus-visible:ring-3"
             >
               {t(`app.home.examples.items.${key}`)}
             </button>
