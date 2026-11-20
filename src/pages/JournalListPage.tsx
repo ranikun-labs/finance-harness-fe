@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useOutletContext } from 'react-router';
 
 import { DeletedJournalList } from '@/features/journal-delete/JournalLifecycleControls';
@@ -20,12 +19,6 @@ export function JournalListPage({ selectedId, readPort }: JournalListPageProps) 
   const contextPort = useJournalReadPort();
   const { state, retry, loadMore } = useJournalList({ port: readPort ?? contextPort });
 
-  const hasSelectableRecords =
-    state.items.length > 0 && !(state.status === 'error' && state.errorPhase === 'initial');
-  useEffect(() => {
-    setHasSelectableRecords?.(hasSelectableRecords);
-  }, [setHasSelectableRecords, hasSelectableRecords]);
-
   return (
     <>
       <DeletedJournalList />
@@ -38,6 +31,7 @@ export function JournalListPage({ selectedId, readPort }: JournalListPageProps) 
         errorPhase={state.errorPhase}
         onRetry={retry}
         onLoadMore={loadMore}
+        onSelectableRecordsChange={setHasSelectableRecords}
       />
     </>
   );

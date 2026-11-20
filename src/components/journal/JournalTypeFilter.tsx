@@ -23,7 +23,11 @@ export function JournalTypeFilter({ value, onChange }: JournalTypeFilterProps) {
   const { t } = useTranslation();
 
   return (
-    <div role="group" aria-label={t('app.journalList.filters.groupLabel')} className="flex gap-2">
+    <div
+      role="group"
+      aria-label={t('app.journalList.filters.groupLabel')}
+      className="flex flex-wrap gap-2"
+    >
       {FILTER_OPTIONS.map((option) => {
         const isActive = value === option;
         return (
@@ -33,7 +37,7 @@ export function JournalTypeFilter({ value, onChange }: JournalTypeFilterProps) {
             aria-pressed={isActive}
             onClick={() => onChange(option)}
             className={cn(
-              'flex h-11 shrink-0 items-center rounded-[11px] px-4 text-sm font-bold whitespace-nowrap transition-colors',
+              'focus-visible:ring-ring flex h-11 shrink-0 items-center rounded-[11px] px-4 text-sm font-bold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2',
               isActive
                 ? 'bg-foreground text-background'
                 : 'bg-card text-muted-foreground border-border border',

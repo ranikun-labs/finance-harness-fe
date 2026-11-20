@@ -146,7 +146,7 @@ describe('edit and review boundary integration', () => {
                 path="/review/:id"
                 element={
                   <JournalRevisionReviewBoundary>
-                    <div>Bound result</div>
+                    {({ state }) => (state.status === 'success' ? <div>Bound result</div> : null)}
                   </JournalRevisionReviewBoundary>
                 }
               />

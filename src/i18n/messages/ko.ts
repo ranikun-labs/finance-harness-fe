@@ -278,6 +278,8 @@ export const ko: Messages = {
       backToReview: '검토로 돌아가기',
       newRecord: '새 기록',
       emptyPage: '이 페이지에 표시할 기록이 없어요. 더 불러와 확인해 주세요.',
+      filteredPagePending: '불러온 기록에 이 유형이 없어요. 더 불러와 확인해 주세요.',
+      filteredPageScope: '불러온 기록에서 찾았어요. 더 불러오면 결과가 추가될 수 있어요.',
       title: '저널',
       loading: {
         title: '저널을 불러오는 중이에요',
@@ -564,6 +566,8 @@ export const ko: Messages = {
       },
     },
     journalReview: {
+      exampleOnly: '예시 복기예요. 여기서 작성한 내용은 저널에 저장되지 않아요.',
+      saveUnavailable: '실제 기록의 복기 저장은 아직 준비 중이에요. 기록 상세로 돌아갈 수 있어요.',
       title: '복기 — {{id}}',
       headerTitle: '기록 복기',
       backLabel: '기록 상세로 돌아가기',

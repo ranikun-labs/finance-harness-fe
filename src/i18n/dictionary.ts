@@ -207,6 +207,8 @@ export interface Messages {
       backToReview: string;
       newRecord: string;
       emptyPage: string;
+      filteredPagePending: string;
+      filteredPageScope: string;
       title: string;
       loading: { title: string; description: string };
       error: { title: string; description: string; retry: string };
@@ -379,6 +381,8 @@ export interface Messages {
       notFound: { heading: string; description: string; listAction: string };
     };
     journalReview: {
+      saveUnavailable: string;
+      exampleOnly: string;
       /** 기존 skeleton 및 route 제목 호환용. 실제 화면 h1은 `headerTitle`을 사용한다. */
       title: string;
       headerTitle: string;

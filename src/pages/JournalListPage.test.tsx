@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -71,7 +71,11 @@ describe('JournalListPage', () => {
       ).toBeInTheDocument(),
     );
     expect(screen.getByText('ETF')).toBeInTheDocument();
-    expect(screen.getByText(en.recordTags.entryType.investment)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('link', { name: /ETF/ })).getByText(
+        en.recordTags.entryType.investment,
+      ),
+    ).toBeInTheDocument();
   });
 
   it('renders server empty and retryable transport errors distinctly', async () => {

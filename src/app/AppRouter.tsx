@@ -1,4 +1,3 @@
-import { JournalRevisionReviewBoundary } from '@/features/journal-edit/JournalRevisionReviewBoundary';
 import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
@@ -302,9 +301,7 @@ export function AppRouter({
                     fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
                     fallbackCancelLabel="auth.entry.cancelReviewStart"
                   >
-                    <JournalRevisionReviewBoundary>
-                      <LazyJournalReviewPage />
-                    </JournalRevisionReviewBoundary>
+                    <LazyJournalReviewPage />
                   </AuthRequiredSurface>
                 }
               />

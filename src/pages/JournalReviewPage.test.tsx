@@ -7,6 +7,7 @@ import {
   buildAppJournalDetailPath,
   buildAppJournalReviewPath,
 } from '@/constants/routes';
+import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -20,20 +21,62 @@ const STUDY_ID = 'journal-2026-06-27-01';
 
 function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: RetrospectiveSavePort) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <I18nProvider locale={locale}>
-        <Routes>
-          <Route
-            path={APP_ROUTE_PATHS.journalReview}
-            element={<JournalReviewPage savePort={savePort} />}
-          />
-        </Routes>
-      </I18nProvider>
-    </MemoryRouter>,
+    <JournalReadPortProvider
+      port={{
+        list: vi.fn(),
+        detail: vi.fn().mockResolvedValue({ ok: false, error: { code: 'journal_not_found' } }),
+      }}
+    >
+      <MemoryRouter initialEntries={[path]}>
+        <I18nProvider locale={locale}>
+          <Routes>
+            <Route
+              path={APP_ROUTE_PATHS.journalReview}
+              element={<JournalReviewPage savePort={savePort} />}
+            />
+          </Routes>
+        </I18nProvider>
+      </MemoryRouter>
+    </JournalReadPortProvider>,
   );
 }
 
 describe('JournalReviewPage', () => {
+  it('reads a saved record from the configured port and does not offer mock persistence', async () => {
+    const id = '550e8400-e29b-41d4-a716-446655440000';
+    const detail = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        journalId: id,
+        type: 'investment',
+        assetName: '실제 기록 대상',
+        action: 'interest',
+        reasoning: '원래 기록의 판단 이유',
+        emotion: null,
+        occurredAt: '2026-08-12T14:30:15.123',
+        timeZone: 'Asia/Seoul',
+        createdAt: '2026-08-12T05:31:02.123Z',
+        updatedAt: '2026-08-12T05:31:02.123Z',
+      },
+    });
+    render(
+      <JournalReadPortProvider port={{ list: vi.fn(), detail }}>
+        <MemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
+          <I18nProvider locale="ko">
+            <Routes>
+              <Route path={APP_ROUTE_PATHS.journalReview} element={<JournalReviewPage />} />
+            </Routes>
+          </I18nProvider>
+        </MemoryRouter>
+      </JournalReadPortProvider>,
+    );
+    expect(await screen.findByText('실제 기록 대상')).toBeInTheDocument();
+    expect(screen.getByText('원래 기록의 판단 이유')).toBeInTheDocument();
+    expect(screen.getByText(ko.app.journalReview.saveUnavailable)).toBeInTheDocument();
+    expect(screen.queryByTestId('retrospective-editor')).not.toBeInTheDocument();
+    expect(detail).toHaveBeenCalledWith(id, expect.any(AbortSignal));
+  });
+
   it('preserves the existing parameterized title contract', () => {
     expect(ko.app.journalReview.title).toBe('복기 — {{id}}');
     expect(en.app.journalReview.title).toBe('Review — {{id}}');
@@ -136,12 +179,12 @@ describe('JournalReviewPage', () => {
     expect(screen.getByText(ko.app.journalList.subjects.semiconductorCompanyA)).toBeInTheDocument();
   });
 
-  it('renders a local Not Found for an unknown id with only journal-list destinations', () => {
+  it('renders Not Found from the read port for an unknown id', async () => {
     const unknownId = 'private-unknown-record-id';
     renderPage(buildAppJournalReviewPath(unknownId));
 
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.journalReview.notFound.heading }),
+      await screen.findByRole('heading', { level: 1, name: ko.app.journalReview.notFound.heading }),
     ).toBeInTheDocument();
     expect(screen.queryByText(unknownId)).not.toBeInTheDocument();
     expect(
@@ -153,12 +196,12 @@ describe('JournalReviewPage', () => {
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 
-  it('renders a local Not Found for a malformed encoded id without throwing', () => {
+  it('renders Not Found for a malformed encoded id without throwing', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
       expect(() => renderPage(`${APP_ROUTE_PATHS.journalList}/%E0%A4%A/review`)).not.toThrow();
       expect(
-        screen.getByRole('heading', {
+        await screen.findByRole('heading', {
           level: 1,
           name: ko.app.journalReview.notFound.heading,
         }),

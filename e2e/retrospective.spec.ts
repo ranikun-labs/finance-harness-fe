@@ -46,6 +46,45 @@ async function expectReviewNavigation(page: Page, width: number) {
   }
 }
 
+test('opens a server-supplied original from journal detail and after reload', async ({ page }) => {
+  const journalId = '19408084-cd43-4edd-aebc-9578935dc2ea';
+  const summary = {
+    journalId,
+    type: 'investment',
+    occurredAt: '2026-08-12T14:30:15.123',
+    timeZone: 'Asia/Seoul',
+    assetName: '서버에서 읽은 원본 기록',
+    action: 'interest',
+  };
+  const detail = {
+    ...summary,
+    createdAt: '2026-08-12T05:31:02.123Z',
+    updatedAt: '2026-08-12T05:31:02.123Z',
+    reasoning: '순서를 지켜서 원본을 확인했어요.',
+    emotion: null,
+    revision: 1,
+  };
+  await page.route('**/finance/journals?*', (route) =>
+    route.fulfill({ json: { items: [summary], nextCursor: null } }),
+  );
+  let detailRequests = 0;
+  await page.route(`**/finance/journals/${journalId}`, (route) => {
+    detailRequests += 1;
+    return route.fulfill({ json: detail });
+  });
+  await page.goto(buildAppJournalDetailPath(journalId));
+  await page.getByRole('link', { name: ko.app.journalDetail.navigation.review }).click();
+  await expect(page.getByRole('heading', { name: detail.assetName })).toBeVisible();
+  await expect(page.getByText(detail.reasoning)).toBeVisible();
+  await expect(page.getByText(ko.app.journalReview.saveUnavailable)).toBeVisible();
+  await expect(page.getByTestId('retrospective-editor')).toHaveCount(0);
+  expect(detailRequests).toBe(2);
+
+  await page.reload();
+  await expect(page.getByText(detail.reasoning)).toBeVisible();
+  expect(detailRequests).toBe(3);
+});
+
 test.describe('Retrospective adaptive presentation', () => {
   test('keeps Original Journal and Retrospective single-column on Phone and Tablet Portrait', async ({
     page,
