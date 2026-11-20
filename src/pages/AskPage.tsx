@@ -201,8 +201,6 @@ function StructuredReviewResult({
     recordType: 'study',
     returnTarget,
     reviewHandoff: studyHandoff,
-    decisionContext,
-    decisionContextEnabled: true,
   } satisfies AuthResumeIntent;
   const investmentDestination =
     authPresentationState === 'authenticated'
@@ -228,11 +226,9 @@ function StructuredReviewResult({
   const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
 
   function toggleChecklistItem(id: string) {
-    setCheckedItems((current) => {
-      const next = { ...current, [id]: !current[id] };
-      writeReviewChecks(reviewRef, next);
-      return next;
-    });
+    const next = { ...checkedItems, [id]: !checkedItems[id] };
+    writeReviewChecks(reviewRef, next);
+    setCheckedItems(next);
   }
 
   return (

@@ -268,6 +268,12 @@ describe('AskPage / Structured Review Result', () => {
     expect(screen.getByTestId('decision-context-state')).toHaveTextContent('4');
   });
 
+  it('does not include a decision context in the study authentication intent', () => {
+    renderPage(buildAppAskPath('study context'));
+    fireEvent.click(screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }));
+    expect(screen.getByTestId('decision-context-state')).toBeEmptyDOMElement();
+  });
+
   it('renders the structured result in English', () => {
     renderPage(buildAppAskPath('English result'), 'en');
 
