@@ -64,7 +64,9 @@ describe('opt-in Journal Create route integration (mocked HTTP)', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole('heading', { name: ko.auth.entry.heading })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: ko.auth.entry.investmentHeading }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ko.app.journalNew.form.checkEntries })).toBeNull();
     expect(screen.queryByRole('button', { name: ko.app.journalNew.form.submitSave })).toBeNull();
     expect(screen.queryByText(ko.app.journalNew.form.saveFlowNotice)).toBeNull();

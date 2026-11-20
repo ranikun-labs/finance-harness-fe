@@ -387,7 +387,7 @@ describe('AppRouter', () => {
 
       await waitFor(() =>
         expect(
-          screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+          screen.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
         ).toBeInTheDocument(),
       );
       expect(screen.getByRole('button', { name: ko.auth.entry.cancelEntry })).toBeInTheDocument();
@@ -411,7 +411,11 @@ describe('AppRouter', () => {
       async (type) => {
         renderAt(buildAppJournalNewPath(type));
         await waitFor(() =>
-          expect(screen.getByRole('heading', { name: ko.auth.entry.heading })).toBeInTheDocument(),
+          expect(
+            screen.getByRole('heading', {
+              name: type === 'study' ? ko.auth.entry.studyHeading : ko.auth.entry.investmentHeading,
+            }),
+          ).toBeInTheDocument(),
         );
         expect(
           screen.queryByRole('heading', {
@@ -477,7 +481,15 @@ describe('AppRouter', () => {
 
         await waitFor(() =>
           expect(
-            screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+            screen.getByRole('heading', {
+              level: 1,
+              name:
+                recordType === 'study'
+                  ? ko.auth.entry.studyHeading
+                  : recordType === 'investment'
+                    ? ko.auth.entry.investmentHeading
+                    : ko.auth.entry.heading,
+            }),
           ).toBeInTheDocument(),
         );
         if (recordType) {
