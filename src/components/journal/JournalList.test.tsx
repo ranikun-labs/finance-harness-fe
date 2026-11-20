@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -70,14 +70,39 @@ describe('JournalList', () => {
     );
   });
 
-  it('renders only investment/study summary data and no client-side type filter', () => {
+  it('filters loaded investment and study records without claiming a total', () => {
     renderList([INVESTMENT_ENTRY, STUDY_ENTRY]);
     expect(screen.getByText('ETF')).toBeInTheDocument();
     expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
-    expect(screen.getByText('판단 기록')).toBeInTheDocument();
-    expect(screen.getByText('학습 노트')).toBeInTheDocument();
-    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    const investment = screen.getByRole('button', { name: '판단 기록' });
+    const study = screen.getByRole('button', { name: '학습 노트' });
+    fireEvent.click(study);
+    expect(study).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('ETF')).not.toBeInTheDocument();
+    expect(screen.getByText('월말 리밸런싱')).toBeInTheDocument();
+    fireEvent.click(investment);
+    expect(screen.getByText('ETF')).toBeInTheDocument();
+    expect(screen.queryByText('월말 리밸런싱')).not.toBeInTheDocument();
     expect(screen.queryByText('2개의 기록')).not.toBeInTheDocument();
+  });
+
+  it('distinguishes a filtered page from a terminal empty result', () => {
+    const onLoadMore = vi.fn();
+    renderList([INVESTMENT_ENTRY], { nextCursor: 'opaque-next', onLoadMore });
+    fireEvent.click(screen.getByRole('button', { name: '학습 노트' }));
+    expect(
+      screen.getByText('불러온 기록에 이 유형이 없어요. 더 불러와 확인해 주세요.'),
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: '전체 보기' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '더 불러오기' }));
+    expect(onLoadMore).toHaveBeenCalledOnce();
+    cleanup();
+
+    renderList([INVESTMENT_ENTRY]);
+    fireEvent.click(screen.getByRole('button', { name: '학습 노트' }));
+    expect(screen.getByText('해당 유형의 기록이 아직 없어요')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: '전체 보기' }));
+    expect(screen.getByText('ETF')).toBeVisible();
   });
 
   it('renders loading, initial error, and retry states', () => {

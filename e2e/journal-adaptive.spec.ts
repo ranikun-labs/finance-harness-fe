@@ -50,7 +50,9 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expect(page.getByRole('button', { name: ko.auth.entry.providerAction })).toHaveCount(0);
     await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
     await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
-    await expect(page.getByRole('heading', { name: ko.auth.entry.investmentHeading })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: ko.auth.entry.investmentHeading }),
+    ).toBeVisible();
   });
 
   test('Review handoff returns to the exact partial variant without a Journal history loop', async ({
@@ -179,6 +181,67 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     }
   });
 
+  test('filters the loaded journal records without dropping subsequent pages', async ({ page }) => {
+    const studyId = '7d444840-9dc0-11d1-b245-5ffdce74fad2';
+    await page.route('**/finance/journals?*', (route) => {
+      const cursor = new URL(route.request().url()).searchParams.get('cursor');
+      return route.fulfill({
+        json: cursor
+          ? {
+              items: [
+                {
+                  journalId: studyId,
+                  type: 'study',
+                  occurredAt: '2026-08-10T09:00:00.000',
+                  timeZone: 'Asia/Seoul',
+                  title: '후속 페이지 학습 노트',
+                },
+              ],
+              nextCursor: null,
+            }
+          : {
+              items: [
+                {
+                  journalId: PRIMARY_ID,
+                  type: 'investment',
+                  occurredAt: '2026-08-12T14:30:15.123',
+                  timeZone: 'Asia/Seoul',
+                  assetName: 'ETF',
+                  action: 'interest',
+                },
+              ],
+              nextCursor: 'next-page',
+            },
+      });
+    });
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const filters = page.getByRole('group', { name: ko.app.journalList.filters.groupLabel });
+    await filters.getByRole('button', { name: ko.app.journalList.filters.study }).click();
+    await expect(page.getByText(ko.app.journalList.filteredPagePending)).toBeVisible();
+    await expect(page.getByText(ko.app.journalList.emptyFilter.title)).toHaveCount(0);
+    await page.getByRole('button', { name: ko.app.journalList.loadMore }).click();
+    await expect(page.getByText('후속 페이지 학습 노트')).toBeVisible();
+    await expect(page.getByText('ETF')).toHaveCount(0);
+    await filters.getByRole('button', { name: ko.app.journalList.filters.all }).click();
+    await expect(page.getByText('ETF')).toBeVisible();
+  });
+
+  test('offers sign-in for an unauthorized journal and returns to the list on cancel', async ({
+    page,
+  }) => {
+    await page.route('**/finance/journals?*', (route) => route.fulfill({ status: 401, json: {} }));
+    await page.goto(APP_ROUTE_PATHS.journalList);
+
+    await expect(page.getByText(ko.app.journalList.signInRequired.title)).toBeVisible();
+    await expect(page.getByText(ko.app.journalList.emptyAll.title)).toHaveCount(0);
+    await page.getByRole('link', { name: ko.app.journalList.signInRequired.action }).click();
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await expect(page.getByText(ko.auth.entry.unavailable, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: ko.app.journalNew.backToJournal }).click();
+    await expect(page).toHaveURL(APP_ROUTE_PATHS.journalList);
+    await expect(page.getByText(ko.app.journalList.signInRequired.title)).toBeVisible();
+  });
+
   test('keeps the desktop selection pane neutral on list failure and restores it after retry', async ({
     page,
   }, testInfo) => {
@@ -271,7 +334,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
 
       await expect(page.getByTestId('auth-entry')).toBeVisible();
       await expect(
-        page.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
+        page.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
       ).toBeVisible();
       await expect(page.getByRole('navigation')).toHaveCount(0);
       await expectSingleMain(page);

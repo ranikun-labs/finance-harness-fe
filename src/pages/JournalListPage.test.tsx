@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+afterEach(() => vi.unstubAllEnvs());
+
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -51,6 +53,66 @@ function successfulPort(): JournalReadPort {
 }
 
 describe('JournalListPage', () => {
+  it('reloads filtered pages and clears the cursor when server filtering is enabled', async () => {
+    vi.stubEnv('VITE_FINANCE_JOURNAL_SERVER_FILTER_ENABLED', 'true');
+    const list = vi
+      .fn<JournalReadPort['list']>()
+      .mockResolvedValueOnce({ ok: true, data: { ...LIST_DATA, nextCursor: 'old-cursor' } })
+      .mockResolvedValueOnce({ ok: true, data: { items: [], nextCursor: null } })
+      .mockResolvedValueOnce({ ok: true, data: LIST_DATA });
+    renderPage('ko', { list, detail: vi.fn() });
+    await screen.findByText('ETF');
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.filters.study }));
+    await waitFor(() =>
+      expect(list).toHaveBeenCalledWith(expect.objectContaining({ type: 'study' })),
+    );
+    expect(list.mock.calls[1]?.[0]).not.toHaveProperty('cursor');
+    expect(await screen.findByText(ko.app.journalList.emptyFilter.title)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: ko.app.journalList.emptyFilter.resetAction }),
+    );
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(3));
+    expect(list.mock.calls[2]?.[0]).not.toHaveProperty('type');
+  });
+
+  it('keeps keyboard focus on the selected filter after a server reload', async () => {
+    vi.stubEnv('VITE_FINANCE_JOURNAL_SERVER_FILTER_ENABLED', 'true');
+    const list = vi.fn<JournalReadPort['list']>().mockResolvedValue({
+      ok: true,
+      data: LIST_DATA,
+    });
+    renderPage('ko', { list, detail: vi.fn() });
+    await screen.findByText('ETF');
+    const study = screen.getByRole('button', { name: ko.app.journalList.filters.study });
+    study.focus();
+    fireEvent.click(study);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole('button', { name: ko.app.journalList.filters.study })).toHaveFocus();
+  });
+
+  it('aborts a stale filtered request and preserves the newer result', async () => {
+    vi.stubEnv('VITE_FINANCE_JOURNAL_SERVER_FILTER_ENABLED', 'true');
+    let resolveStudy!: (value: Awaited<ReturnType<JournalReadPort['list']>>) => void;
+    const study = new Promise<Awaited<ReturnType<JournalReadPort['list']>>>((resolve) => {
+      resolveStudy = resolve;
+    });
+    const list = vi
+      .fn<JournalReadPort['list']>()
+      .mockResolvedValueOnce({ ok: true, data: LIST_DATA })
+      .mockReturnValueOnce(study)
+      .mockResolvedValueOnce({ ok: true, data: LIST_DATA });
+    renderPage('ko', { list, detail: vi.fn() });
+    await screen.findByText('ETF');
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.filters.study }));
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    const signal = list.mock.calls[1]?.[0]?.signal;
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalList.filters.all }));
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(3));
+    expect(signal?.aborted).toBe(true);
+    resolveStudy({ ok: true, data: { items: [], nextCursor: null } });
+    expect(await screen.findByText('ETF')).toBeInTheDocument();
+  });
+
   it('renders the ko heading and canonical summary data after the initial load', async () => {
     const readPort = successfulPort();
     renderPage('ko', readPort);
@@ -71,7 +133,11 @@ describe('JournalListPage', () => {
       ).toBeInTheDocument(),
     );
     expect(screen.getByText('ETF')).toBeInTheDocument();
-    expect(screen.getByText(en.recordTags.entryType.investment)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('link', { name: /ETF/ })).getByText(
+        en.recordTags.entryType.investment,
+      ),
+    ).toBeInTheDocument();
   });
 
   it('renders server empty and retryable transport errors distinctly', async () => {
@@ -116,7 +182,21 @@ describe('JournalListPage', () => {
     await screen.findByText('ETF');
     expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: 'next' }));
   });
-  it.each([401, 403, 500])(
+  it('offers sign-in when the initial list returns HTTP 401', async () => {
+    const list = vi.fn<JournalReadPort['list']>().mockResolvedValue({
+      ok: false,
+      error: { code: 'read_failed', status: 401 },
+    });
+    renderPage('ko', { list, detail: vi.fn() });
+
+    expect(
+      await screen.findByRole('link', { name: ko.app.journalList.signInRequired.action }),
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
+    expect(screen.queryByRole('button', { name: ko.app.journalList.error.retry })).toBeNull();
+    expect(screen.queryByText(ko.app.journalList.emptyAll.title)).toBeNull();
+  });
+
+  it.each([403, 500])(
     'shows read failure for HTTP %i rather than an empty journal, and retries',
     async (status) => {
       const list = vi

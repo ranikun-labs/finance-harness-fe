@@ -1,9 +1,15 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { JournalSummaryCard } from '@/components/journal/JournalSummaryCard';
+import {
+  JournalTypeFilter,
+  type JournalTypeFilterValue,
+} from '@/components/journal/JournalTypeFilter';
 import { buttonVariants } from '@/components/ui/button';
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
+import type { AuthEntryLocationState } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import type {
   JournalListErrorPhase,
@@ -15,6 +21,10 @@ import { cn } from '@/lib/utils';
 
 interface JournalListProps {
   entries: JournalListItemViewModel[];
+  filter?: JournalTypeFilterValue;
+  onFilterChange?: (filter: JournalTypeFilterValue) => void;
+  serverFilter?: boolean;
+  restoreFilterFocus?: (button: HTMLButtonElement) => void;
   selectedId?: string;
   status?: JournalListStatus;
   nextCursor?: string | null;
@@ -22,6 +32,7 @@ interface JournalListProps {
   errorPhase?: JournalListErrorPhase | null;
   onRetry?: () => void;
   onLoadMore?: () => void;
+  onSelectableRecordsChange?: (available: boolean) => void;
 }
 
 function StatusMessage({
@@ -55,6 +66,29 @@ function ErrorMessage({
   onRetry?: () => void;
 }) {
   const { t } = useTranslation();
+  if (phase !== 'load-more' && error.status === 401) {
+    const state: AuthEntryLocationState = {
+      resumeJournalList: true,
+      fallbackCancelTarget: APP_ROUTE_PATHS.journalList,
+      fallbackCancelLabel: 'app.journalNew.backToJournal',
+    };
+    return (
+      <StatusMessage
+        title={t('app.journalList.signInRequired.title')}
+        description={t('app.journalList.signInRequired.description')}
+        action={
+          <Link
+            to={AUTH_ROUTE_PATHS.entry}
+            state={state}
+            className={cn(buttonVariants({ size: 'sm' }), 'min-h-11')}
+          >
+            {t('app.journalList.signInRequired.action')}
+          </Link>
+        }
+      />
+    );
+  }
+
   const copy =
     phase === 'load-more'
       ? t('app.journalList.loadMoreError.title')
@@ -128,12 +162,28 @@ export function JournalList({
   errorPhase = null,
   onRetry,
   onLoadMore,
+  onSelectableRecordsChange,
+  filter: controlledFilter,
+  onFilterChange,
+  serverFilter = false,
+  restoreFilterFocus,
 }: JournalListProps) {
   const { t } = useTranslation();
+  const [localFilter, setLocalFilter] = useState<JournalTypeFilterValue>('all');
+  const filter = controlledFilter ?? localFilter;
+  const setFilter = onFilterChange ?? setLocalFilter;
   const Heading = selectedId ? 'h2' : 'h1';
   const isInitialLoading = status === 'loading';
   const hasInitialError = status === 'error' && errorPhase !== 'load-more';
   const hasPendingEmptyPage = entries.length === 0 && nextCursor !== null;
+  const visibleEntries =
+    filter === 'all' ? entries : entries.filter((entry) => entry.type === filter);
+  const hasSelectableRecords = !hasInitialError && visibleEntries.length > 0;
+  const hasNoFilteredMatch = filter !== 'all' && visibleEntries.length === 0;
+
+  useEffect(() => {
+    onSelectableRecordsChange?.(hasSelectableRecords);
+  }, [hasSelectableRecords, onSelectableRecordsChange]);
 
   return (
     <div className="flex min-h-full flex-col gap-6 px-5 py-8 sm:px-8 sm:py-10">
@@ -154,6 +204,10 @@ export function JournalList({
         ) : null}
       </div>
 
+      {serverFilter && (
+        <JournalTypeFilter value={filter} onChange={setFilter} restoreFocus={restoreFilterFocus} />
+      )}
+
       {isInitialLoading ? (
         <StatusMessage
           title={t('app.journalList.loading.title')}
@@ -161,7 +215,7 @@ export function JournalList({
         />
       ) : hasInitialError && error ? (
         <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
-      ) : status === 'empty' && !hasPendingEmptyPage ? (
+      ) : status === 'empty' && !hasPendingEmptyPage && filter === 'all' ? (
         <EmptyState
           title={t('app.journalList.emptyAll.title')}
           description={t('app.journalList.emptyAll.description')}
@@ -173,27 +227,55 @@ export function JournalList({
               <p className="text-muted-foreground max-w-[260px] text-center text-xs leading-relaxed">
                 {t('app.journalList.emptyAll.hint')}
               </p>
-              {nextCursor !== null && onLoadMore && (
-                <button
-                  type="button"
-                  onClick={onLoadMore}
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-                >
-                  {t('app.journalList.loadMore')}
-                </button>
-              )}
+              <Link
+                to={APP_ROUTE_PATHS.appHome}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+              >
+                {t('app.journalList.backToReview')}
+              </Link>
             </div>
           }
         />
       ) : (
         <>
-          {hasPendingEmptyPage && status === 'empty' && (
+          {!serverFilter && <JournalTypeFilter value={filter} onChange={setFilter} />}
+          {!serverFilter &&
+            filter !== 'all' &&
+            nextCursor !== null &&
+            visibleEntries.length > 0 && (
+              <p className="text-muted-foreground text-sm">
+                {t('app.journalList.filteredPageScope')}
+              </p>
+            )}
+          {hasNoFilteredMatch &&
+            status !== 'loading-more' &&
+            status !== 'error' &&
+            (nextCursor !== null ? (
+              <p className="text-muted-foreground text-sm" role="status">
+                {t('app.journalList.filteredPagePending')}
+              </p>
+            ) : (
+              <EmptyState
+                title={t('app.journalList.emptyFilter.title')}
+                description={t('app.journalList.emptyFilter.description')}
+                action={
+                  <button
+                    type="button"
+                    className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+                    onClick={() => setFilter('all')}
+                  >
+                    {t('app.journalList.emptyFilter.resetAction')}
+                  </button>
+                }
+              />
+            ))}
+          {filter === 'all' && hasPendingEmptyPage && status === 'empty' && (
             <p className="text-muted-foreground text-sm" role="status">
               {t('app.journalList.emptyPage')}
             </p>
           )}
           <div className="flex flex-col gap-4">
-            {entries.map((entry) => (
+            {visibleEntries.map((entry) => (
               <JournalSummaryCard
                 key={entry.journalId}
                 entry={entry}
@@ -220,7 +302,7 @@ export function JournalList({
             >
               {t('app.journalList.loadMore')}
             </button>
-          ) : (
+          ) : hasNoFilteredMatch ? null : (
             <p className="text-muted-foreground pt-2 pb-1 text-center text-xs">
               {t('app.journalList.endOfList')}
             </p>

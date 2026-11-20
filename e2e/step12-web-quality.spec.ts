@@ -128,9 +128,8 @@ test.describe('STEP 12 PERF-02 route chunk/resource audit', () => {
     expect(appOnlyScripts.length).toBeGreaterThan(0);
     expect(appOnlyScripts.some((url) => /journal|review/i.test(url))).toBe(true);
 
-    const detailLink = page
-      .locator('.journal-workspace-list-pane a[href^="/app/journal/"]')
-      .first();
+    const detailPath = buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000');
+    const detailLink = page.locator(`a[href="${detailPath}"]`);
     await expect(detailLink).toBeVisible();
     await detailLink.click();
     await expect(page).toHaveURL(/\/app\/journal\/[^/]+$/);

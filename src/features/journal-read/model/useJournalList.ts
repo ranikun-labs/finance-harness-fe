@@ -14,6 +14,7 @@ export const JOURNAL_LIST_DEFAULT_LIMIT = 20;
 export interface UseJournalListOptions {
   port: JournalReadPort;
   limit?: number;
+  type?: 'investment' | 'study';
 }
 
 export interface UseJournalListResult {
@@ -25,6 +26,7 @@ export interface UseJournalListResult {
 export function useJournalList({
   port,
   limit = JOURNAL_LIST_DEFAULT_LIMIT,
+  type,
 }: UseJournalListOptions) {
   const [state, setState] = useState<JournalListState>(initialJournalListState);
   const stateRef = useRef(state);
@@ -45,7 +47,7 @@ export function useJournalList({
     setState((current) => journalListReducer(current, { type: 'loadStarted' }));
 
     void Promise.resolve()
-      .then(() => port.list({ limit, signal: controller.signal }))
+      .then(() => port.list({ limit, ...(type ? { type } : {}), signal: controller.signal }))
       .then((result) => {
         if (controller.signal.aborted || requestId !== requestIdRef.current) return;
         if (result.ok === false) {
@@ -70,7 +72,7 @@ export function useJournalList({
           }),
         );
       });
-  }, [limit, port]);
+  }, [limit, port, type]);
 
   const loadMore = useCallback(() => {
     const current = stateRef.current;
@@ -92,7 +94,9 @@ export function useJournalList({
     setState((latest) => journalListReducer(latest, { type: 'loadMoreStarted' }));
 
     void Promise.resolve()
-      .then(() => port.list({ limit, cursor, signal: controller.signal }))
+      .then(() =>
+        port.list({ limit, cursor, ...(type ? { type } : {}), signal: controller.signal }),
+      )
       .then((result) => {
         if (controller.signal.aborted || requestId !== requestIdRef.current) return;
         moreRequestRef.current = false;
@@ -119,7 +123,7 @@ export function useJournalList({
           }),
         );
       });
-  }, [limit, port]);
+  }, [limit, port, type]);
 
   const retry = useCallback(() => {
     if (stateRef.current.errorPhase === 'load-more') {

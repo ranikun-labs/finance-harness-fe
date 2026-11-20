@@ -42,6 +42,25 @@ function renderAuth(intent?: AuthResumeIntent, driver?: AuthPresentationDriver) 
   );
 }
 
+it('returns to the journal list after successful sign-in from the list', async () => {
+  const driver: AuthPresentationDriver = { resolve: vi.fn().mockResolvedValue('authenticated') };
+  render(
+    <MemoryRouter
+      initialEntries={[{ pathname: AUTH_ROUTE_PATHS.entry, state: { resumeJournalList: true } }]}
+    >
+      <I18nProvider locale="ko">
+        <Routes>
+          <Route path={AUTH_ROUTE_PATHS.entry} element={<AuthEntryPage driver={driver} />} />
+          <Route path={APP_ROUTE_PATHS.journalList} element={<ReviewDestination />} />
+        </Routes>
+      </I18nProvider>
+    </MemoryRouter>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+  expect(await screen.findByTestId('review-return')).toHaveTextContent(APP_ROUTE_PATHS.journalList);
+});
+
 function createReviewIntent(kind: 'investment' | 'study' = 'investment'): AuthResumeIntent {
   const reviewHandoff: ReviewJournalHandoff =
     kind === 'investment'

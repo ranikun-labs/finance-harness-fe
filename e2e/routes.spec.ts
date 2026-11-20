@@ -303,10 +303,10 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     page,
   }) => {
     await page.goto(APP_ROUTE_PATHS.journalList);
-    const cards = page.locator('.journal-workspace-list-pane a[href^="/app/journal/"]');
-    await expect(cards.first()).toBeVisible();
+    const card = page.locator(`a[href="${buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID)}"]`);
+    await expect(card).toBeVisible();
 
-    await cards.first().click();
+    await card.click();
     await expect(page).toHaveURL(
       new RegExp(`${buildAppJournalDetailPath(RAW_PRIMARY_INVESTMENT_ID)}$`),
     );

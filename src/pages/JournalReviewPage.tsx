@@ -10,7 +10,10 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { APP_ROUTE_PATHS, buildAppJournalDetailPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
-import { formatLocalizedDate } from '@/lib/date';
+import { SavedRetrospectives } from '@/features/retrospective/SavedRetrospectives';
+import { JournalRevisionReviewBoundary } from '@/features/journal-edit/JournalRevisionReviewBoundary';
+import type { UseJournalDetailResult } from '@/features/journal-read/model/useJournalDetail';
+import { formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import {
   createLocalRetrospectiveSavePort,
@@ -423,7 +426,7 @@ export interface JournalReviewPageProps {
   savePort?: RetrospectiveSavePort;
 }
 
-export function JournalReviewPage({ savePort }: JournalReviewPageProps) {
+function ExampleJournalReviewPage({ savePort }: JournalReviewPageProps) {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
@@ -514,6 +517,7 @@ export function JournalReviewPage({ savePort }: JournalReviewPageProps) {
           backLabel={t('app.journalReview.backLabel')}
           backTo={detailPath}
         />
+        <p className="text-muted-foreground mt-3 text-sm">{t('app.journalReview.exampleOnly')}</p>
       </div>
 
       <div className="retrospective-workspace" data-testid="retrospective-workspace">
@@ -661,5 +665,134 @@ export function JournalReviewPage({ savePort }: JournalReviewPageProps) {
         </section>
       </div>
     </div>
+  );
+}
+
+function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
+  const { id } = useParams<{ id: string }>();
+  const { t, locale } = useTranslation();
+  const detail = state.data;
+
+  return (
+    <div className="retrospective-route flex min-h-full w-full min-w-0 flex-col">
+      <div className="px-5 pt-4">
+        <ReviewHeader
+          title={
+            state.error?.code === 'journal_not_found'
+              ? t('app.journalReview.notFound.heading')
+              : t('app.journalReview.headerTitle')
+          }
+          backLabel={
+            state.status === 'success'
+              ? t('app.journalReview.backLabel')
+              : t('app.journalReview.notFound.listAction')
+          }
+          backTo={
+            state.status === 'success' && id
+              ? buildAppJournalDetailPath(id)
+              : APP_ROUTE_PATHS.journalList
+          }
+        />
+      </div>
+      {state.status === 'loading' && (
+        <p role="status" className="px-5 py-6">
+          {t('app.journalDetail.loading.title')}
+        </p>
+      )}
+      {state.status === 'error' && (
+        <div role="alert" className="space-y-3 px-5 py-6">
+          <p>
+            {state.error?.code === 'journal_not_found'
+              ? t('app.journalReview.notFound.description')
+              : t('app.journalDetail.error.title')}
+          </p>
+          {state.error?.code !== 'journal_not_found' && (
+            <button type="button" className={buttonVariants()} onClick={retry}>
+              {t('app.journalDetail.error.retry')}
+            </button>
+          )}
+          <Link className={buttonVariants({ variant: 'outline' })} to={APP_ROUTE_PATHS.journalList}>
+            {t('app.journalReview.notFound.listAction')}
+          </Link>
+        </div>
+      )}
+      {state.status === 'success' && detail && (
+        <div className="retrospective-workspace">
+          <section
+            className="retrospective-original-pane min-w-0 space-y-4 px-5 py-5"
+            aria-labelledby="saved-retro-original"
+          >
+            <h2 id="saved-retro-original" className="text-lg font-bold">
+              {t('app.journalReview.retrospective.originalHeading')}
+            </h2>
+            <Card className="space-y-4 p-5">
+              <h3 className="text-xl font-bold [overflow-wrap:anywhere]">
+                {detail.type === 'investment' ? detail.assetName : detail.title}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)} ·{' '}
+                {detail.timeZone}
+              </p>
+              {detail.type === 'investment' ? (
+                <>
+                  <RecordTagBadge kind="action" value={detail.action} />
+                  <p className="break-words whitespace-pre-wrap">{detail.reasoning}</p>
+                </>
+              ) : (
+                <>
+                  <p className="break-words whitespace-pre-wrap">{detail.keyContent}</p>
+                  <ul className="list-inside list-disc">
+                    {detail.openQuestions.map((question, index) => (
+                      <li key={index}>{question}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </Card>
+          </section>
+          <section
+            className="retrospective-editor-pane min-w-0 space-y-4 px-5 py-5"
+            aria-labelledby="saved-retro-unavailable"
+          >
+            <h2 id="saved-retro-unavailable" className="text-lg font-bold">
+              {t('app.journalReview.retrospective.editorHeading')}
+            </h2>
+            {import.meta.env.VITE_FINANCE_RETROSPECTIVE_ENABLED === 'true' &&
+            detail.revision !== undefined ? (
+              <SavedRetrospectives
+                key={`${detail.journalId}:${detail.revision}`}
+                journalId={detail.journalId}
+                revision={detail.revision}
+              />
+            ) : (
+              <p
+                role="status"
+                className="border-border bg-muted rounded-xl border p-4 text-sm leading-6"
+              >
+                {t('app.journalReview.saveUnavailable')}
+              </p>
+            )}
+            <Link
+              className={buttonVariants({ variant: 'outline' })}
+              to={buildAppJournalDetailPath(detail.journalId)}
+            >
+              {t('app.journalReview.backLabel')}
+            </Link>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function JournalReviewPage(props: JournalReviewPageProps) {
+  const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  return !searchParams.has('sourceRevision') && JOURNAL_ENTRIES.some((item) => item.id === id) ? (
+    <ExampleJournalReviewPage {...props} />
+  ) : (
+    <JournalRevisionReviewBoundary key={id}>
+      {(read) => <SavedJournalReviewPage {...read} />}
+    </JournalRevisionReviewBoundary>
   );
 }

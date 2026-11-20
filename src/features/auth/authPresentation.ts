@@ -35,6 +35,8 @@ export interface AuthPresentationDriver {
 
 export interface AuthEntryLocationState {
   authResumeIntent?: AuthResumeIntent;
+  /** Resume the fixed journal list route after authentication. */
+  resumeJournalList?: true;
   /** Safe FE-local fallback used when an auth-required route has no resume intent. */
   fallbackCancelTarget?: string;
   fallbackCancelLabel?: string;

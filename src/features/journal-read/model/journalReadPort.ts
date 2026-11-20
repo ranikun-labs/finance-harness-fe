@@ -11,6 +11,7 @@ export type JournalReadResult<T> = { ok: true; data: T } | { ok: false; error: J
 
 export interface JournalListRequest {
   limit?: number;
+  type?: 'investment' | 'study';
   /** Opaque continuation token. The read flow must not inspect or transform it. */
   cursor?: string;
   signal?: AbortSignal;

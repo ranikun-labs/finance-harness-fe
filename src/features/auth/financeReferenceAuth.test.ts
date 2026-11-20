@@ -103,6 +103,37 @@ describe('Finance reference auth', () => {
     auth.dispose();
   });
 
+  it('authorizes only exact retrospective collection and detail methods using the active reference session', async () => {
+    const fetchMock = vi.fn<FinanceReferenceFetch>();
+    fetchMock.mockResolvedValueOnce(loginResponse());
+    fetchMock.mockResolvedValue(new Response('{}', { status: 200 }));
+    const auth = new FinanceReferenceAuthSession(true, fetchMock);
+    await auth.login({ userId: 'selected-fixture', password: 'fixture-password' });
+    const id = '550e8400-e29b-41d4-a716-446655440000';
+    const path = `/finance/journals/${id}/retrospectives`;
+    await auth.fetch(path);
+    await auth.fetch(path, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': 'same-key' },
+      body: '{}',
+    });
+    await auth.fetch(`${path}/${id}`);
+    expect(new Headers(fetchMock.mock.calls[2][1]?.headers).get('Authorization')).toBe(
+      'Bearer fixture-access-token',
+    );
+    expect(new Headers(fetchMock.mock.calls[2][1]?.headers).get('Idempotency-Key')).toBe(
+      'same-key',
+    );
+    await expect(auth.fetch(path, { method: 'DELETE' })).rejects.toMatchObject({
+      code: 'external_request',
+    });
+    await expect(auth.fetch(`${path}/${id.toUpperCase()}`)).rejects.toMatchObject({
+      code: 'external_request',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    auth.dispose();
+  });
+
   it('blocks external and guest Journal requests without sending them', async () => {
     const fetchMock = vi.fn<FinanceReferenceFetch>();
     fetchMock.mockResolvedValueOnce(loginResponse());

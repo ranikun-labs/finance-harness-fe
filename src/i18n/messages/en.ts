@@ -276,9 +276,16 @@ export const en: Messages = {
       },
     },
     journalList: {
+      signInRequired: {
+        title: 'Sign in to view your journal',
+        description: 'You’ll return to the journal after signing in.',
+        action: 'Sign in to view records',
+      },
       backToReview: 'Back to review',
       newRecord: 'New record',
       emptyPage: 'There are no records on this page. Load more to continue.',
+      filteredPagePending: 'No loaded records match this type. Load more to continue.',
+      filteredPageScope: 'These matches are from loaded records. Load more to see other matches.',
       title: 'Journal',
       loading: {
         title: 'Loading your journal',
@@ -565,6 +572,9 @@ export const en: Messages = {
       },
     },
     journalReview: {
+      exampleOnly: 'This is a sample retrospective. Your entries are not saved to your journal.',
+      saveUnavailable:
+        'Saving a reflection for a saved record is not available yet. You can return to the record.',
       title: 'Review — {{id}}',
       headerTitle: 'Review record',
       backLabel: 'Back to record details',
