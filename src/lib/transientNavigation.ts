@@ -2,12 +2,24 @@ import { APP_ROUTE_PATHS } from '@/constants/routes';
 
 /** Navigation context exists only for the lifetime of this browser tab's JS runtime. */
 const values = new Map<string, unknown>();
+const reviewChecks = new Map<string, Record<string, boolean>>();
+
+export function readReviewChecks(ref: string): Record<string, boolean> | undefined {
+  return reviewChecks.get(ref);
+}
+
+export function writeReviewChecks(ref: string, checks: Record<string, boolean>): void {
+  if (ref && values.has(ref)) reviewChecks.set(ref, checks);
+}
 
 export function holdTransient(value: unknown): string {
   const key = crypto.randomUUID();
   if (values.size >= 100) {
     const oldest = values.keys().next().value;
-    if (oldest) values.delete(oldest);
+    if (oldest) {
+      values.delete(oldest);
+      reviewChecks.delete(oldest);
+    }
   }
   values.set(key, value);
   return key;

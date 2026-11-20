@@ -90,7 +90,13 @@ function ErrorMessage({
             <button
               type="button"
               onClick={onRetry}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+              className={cn(
+                buttonVariants({
+                  variant: phase === 'load-more' ? 'outline' : 'default',
+                  size: 'sm',
+                }),
+                'min-h-11',
+              )}
             >
               {retryLabel}
             </button>
@@ -136,7 +142,13 @@ export function JournalList({
           {t('app.journalList.title')}
         </Heading>
         {status !== 'empty' || nextCursor !== null ? (
-          <Link to={APP_ROUTE_PATHS.journalNew} className={cn(buttonVariants(), 'min-h-11')}>
+          <Link
+            to={APP_ROUTE_PATHS.journalNew}
+            className={cn(
+              buttonVariants({ variant: hasInitialError ? 'outline' : 'default' }),
+              'min-h-11',
+            )}
+          >
             {t('app.journalList.newRecord')}
           </Link>
         ) : null}

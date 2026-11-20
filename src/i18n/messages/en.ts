@@ -36,6 +36,8 @@ export const en: Messages = {
     entry: {
       eyebrow: 'Authentication',
       heading: 'Sign in to continue',
+      investmentHeading: 'Sign in to write your decision record',
+      studyHeading: 'Sign in to write your learning note',
       description:
         'If this is your first time, an account can be created as part of the same flow.',
       resumeDescription: 'You will continue to the record screen you selected.',
@@ -112,7 +114,7 @@ export const en: Messages = {
           'Review results are examples of the screen flow, not analysis of your question.',
         placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
         helper: 'Keep your question intact while the review separates checks from evidence.',
-        submit: 'Start review',
+        submit: 'Start example review',
         required: 'Enter something to review.',
       },
       examples: {
@@ -144,9 +146,9 @@ export const en: Messages = {
         backLabel: 'Back to review start',
       },
       empty: {
-        title: 'No question to review yet',
-        description: 'Ask a question to see example perspectives to check and questions to record.',
-        cta: 'Ask a question',
+        title: 'This example review can no longer be opened',
+        description: 'Example reviews cannot be restored after a refresh.',
+        cta: 'Start an example review again',
       },
       questionLabel: 'My question',
       perspectives: {
@@ -213,7 +215,7 @@ export const en: Messages = {
         edit: 'Edit question',
       },
       structured: {
-        resultTitle: 'Review result',
+        resultTitle: 'Example review result',
         fixtureLabel: 'Example data',
         questionLabel: 'My question',
         checklist: {
@@ -222,7 +224,7 @@ export const en: Messages = {
           progress: '{{checked}}/{{total}} checked',
         },
         fact: {
-          heading: 'Facts checked',
+          heading: 'Example facts',
           helper: 'Each fact keeps its source and as-of date together.',
           sourceLabel: 'Source',
           asOfLabel: 'As of',
@@ -236,8 +238,8 @@ export const en: Messages = {
           heading: 'What is still unknown',
           helper: 'Keep unverifiable, incomplete, and stale information separate from facts.',
         },
-        generatedAt: 'Generated {{timestamp}}',
-        reviewedAt: 'Reviewed {{timestamp}}',
+        generatedAt: 'Example generated {{timestamp}}',
+        reviewedAt: 'Example reviewed {{timestamp}}',
         timestampsHeading: 'Generated and reviewed at',
         provenance:
           'This result is example data for checking the screen flow. It is not analysis of your actual question or investment advice.',

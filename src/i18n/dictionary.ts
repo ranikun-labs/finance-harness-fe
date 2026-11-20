@@ -48,6 +48,8 @@ export interface Messages {
     entry: {
       eyebrow: string;
       heading: string;
+      investmentHeading: string;
+      studyHeading: string;
       description: string;
       resumeDescription: string;
       providerAction: string;

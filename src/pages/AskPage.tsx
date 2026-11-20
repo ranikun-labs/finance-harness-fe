@@ -11,7 +11,13 @@ import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
-import { readTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
+import {
+  readReviewChecks,
+  readTransient,
+  safeReviewReturn,
+  transientState,
+  writeReviewChecks,
+} from '@/lib/transientNavigation';
 import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
 import { createReviewJournalHandoff, getReviewFixture, localize } from '@/mocks/reviewResult';
 
@@ -161,17 +167,21 @@ function StructuredReviewResult({
   question,
   partial,
   returnTarget,
+  reviewRef,
 }: {
   question: string;
   partial: boolean;
   returnTarget: string;
+  reviewRef: string;
 }) {
   const { locale, t } = useTranslation();
   const navigate = useNavigate();
   const { state: authPresentationState } = useAuthPresentation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
+    () =>
+      readReviewChecks(reviewRef) ??
+      Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
   );
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
   const decisionContext = useMemo(
@@ -224,7 +234,9 @@ function StructuredReviewResult({
   const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
 
   function toggleChecklistItem(id: string) {
-    setCheckedItems((current) => ({ ...current, [id]: !current[id] }));
+    const next = { ...checkedItems, [id]: !checkedItems[id] };
+    writeReviewChecks(reviewRef, next);
+    setCheckedItems(next);
   }
 
   return (
@@ -580,7 +592,13 @@ export function AskPage() {
       ) : phase === 'error' ? (
         <ReviewError question={question} onRetry={retryReview} onEdit={editQuestion} />
       ) : (
-        <StructuredReviewResult question={question} partial={partial} returnTarget={returnTarget} />
+        <StructuredReviewResult
+          key={searchParams.get('ref')}
+          question={question}
+          partial={partial}
+          returnTarget={returnTarget}
+          reviewRef={searchParams.get('ref') ?? ''}
+        />
       )}
     </div>
   );

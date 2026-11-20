@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
@@ -44,6 +44,18 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', state?: { reviewFl
   );
 }
 
+function AuthRoundTripHarness() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  if (location.pathname === APP_ROUTE_PATHS.ask) return <AskPage />;
+  const payload = resolveTransient<{ authResumeIntent: { returnTarget: string } }>(location.state);
+  return (
+    <button onClick={() => navigate(payload!.authResumeIntent.returnTarget)}>
+      Return to result
+    </button>
+  );
+}
+
 afterEach(() => {
   vi.useRealTimers();
 });
@@ -63,6 +75,37 @@ describe('AskPage / Structured Review Result', () => {
         'href',
         APP_ROUTE_PATHS.appHome,
       );
+    },
+  );
+
+  it.each(['investment', 'study'] as const)(
+    'restores the selected check after %s authentication and starts a new review unchecked',
+    (type) => {
+      const path = buildAppAskPath('원래 질문');
+      const view = render(
+        <MemoryRouter initialEntries={[path]}>
+          <I18nProvider locale="ko">
+            <AuthRoundTripHarness />
+          </I18nProvider>
+        </MemoryRouter>,
+      );
+      const checklist = screen
+        .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
+        .closest('section')!;
+      const firstCheck = within(checklist).getAllByRole('button')[0];
+      fireEvent.click(firstCheck);
+      fireEvent.click(
+        screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff[type].title) }),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Return to result' }));
+      const restored = screen
+        .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
+        .closest('section')!;
+      expect(within(restored).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true');
+      expect(within(restored).getByText('1/4 확인')).toBeInTheDocument();
+      view.unmount();
+      renderPage(buildAppAskPath('새 질문'));
+      expect(screen.getByText('0/4 확인')).toBeInTheDocument();
     },
   );
 
@@ -235,6 +278,12 @@ describe('AskPage / Structured Review Result', () => {
     );
 
     expect(screen.getByTestId('decision-context-state')).toHaveTextContent('4');
+  });
+
+  it('does not include a decision context in the study authentication intent', () => {
+    renderPage(buildAppAskPath('study context'));
+    fireEvent.click(screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.study.title) }));
+    expect(screen.getByTestId('decision-context-state')).toBeEmptyDOMElement();
   });
 
   it('renders the structured result in English', () => {

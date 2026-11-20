@@ -40,6 +40,8 @@ export const ko: Messages = {
     entry: {
       eyebrow: '인증',
       heading: '계속하려면 로그인해 주세요',
+      investmentHeading: '판단 기록을 작성하려면 로그인해 주세요',
+      studyHeading: '학습 노트를 작성하려면 로그인해 주세요',
       description: '처음 이용하는 경우 계정이 함께 만들어집니다.',
       resumeDescription: '선택한 기록 화면으로 이어집니다.',
       providerAction: 'OAuth로 계속하기',
@@ -108,7 +110,7 @@ export const ko: Messages = {
         exampleNotice: '현재 검토 결과는 입력한 질문에 대한 실제 분석이 아닌 화면 흐름 예시입니다.',
         placeholder: '예) 보유 중인 반도체 ETF를 지금 추가 매수해도 될까?',
         helper: '질문을 그대로 남기면 확인 항목과 근거를 나눠 정리합니다.',
-        submit: '검토 시작',
+        submit: '예시 검토 시작',
         required: '검토할 내용을 입력해 주세요.',
       },
       examples: {
@@ -140,9 +142,9 @@ export const ko: Messages = {
         backLabel: '검토 시작으로 돌아가기',
       },
       empty: {
-        title: '아직 확인할 질문이 없어요',
-        description: '질문을 남기면 확인할 관점과 기록할 질문의 예시를 볼 수 있어요.',
-        cta: '질문하러 가기',
+        title: '이 예시 검토를 다시 열 수 없어요',
+        description: '예시 검토는 새로고침 후 복원되지 않아요.',
+        cta: '예시 검토 다시 시작',
       },
       questionLabel: '내 질문',
       perspectives: {
@@ -208,7 +210,7 @@ export const ko: Messages = {
         edit: '질문 수정',
       },
       structured: {
-        resultTitle: '검토 결과',
+        resultTitle: '예시 검토 결과',
         fixtureLabel: '예시 데이터',
         questionLabel: '내가 한 질문',
         checklist: {
@@ -217,7 +219,7 @@ export const ko: Messages = {
           progress: '{{checked}}/{{total}} 확인',
         },
         fact: {
-          heading: '확인된 사실',
+          heading: '사실 표시 예시',
           helper: '각 사실에는 출처와 기준일을 함께 표시합니다.',
           sourceLabel: '출처',
           asOfLabel: '기준일',
@@ -231,8 +233,8 @@ export const ko: Messages = {
           heading: '아직 모르는 것',
           helper: '확인 불가 · 정보 부족 · 최신성 부족을 분리합니다.',
         },
-        generatedAt: '생성 {{timestamp}}',
-        reviewedAt: '검토 {{timestamp}}',
+        generatedAt: '예시 생성 {{timestamp}}',
+        reviewedAt: '예시 검토 {{timestamp}}',
         timestampsHeading: '생성 및 검토 시각',
         provenance:
           '이 결과는 화면 흐름 확인을 위한 예시 데이터입니다. 실제 질문 분석이나 투자 자문 결과가 아닙니다.',

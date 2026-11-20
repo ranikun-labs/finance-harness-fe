@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import type { AuthPresentationDriver, AuthResumeIntent } from '@/features/auth/authPresentation';
 import { I18nProvider } from '@/i18n/I18nContext';
+import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT } from '@/mocks/decisionContext';
 import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
@@ -72,11 +73,34 @@ function createReviewIntent(kind: 'investment' | 'study' = 'investment'): AuthRe
 }
 
 describe('AuthEntryPage presentation seam', () => {
+  it('shows the learning note purpose in Korean', () => {
+    renderAuth(createReviewIntent('study'));
+    expect(screen.getByRole('heading', { name: ko.auth.entry.studyHeading })).toBeInTheDocument();
+  });
+
+  it('shows the record purpose in English', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: AUTH_ROUTE_PATHS.entry,
+            state: { authResumeIntent: createReviewIntent('study') },
+          },
+        ]}
+      >
+        <I18nProvider locale="en">
+          <AuthEntryPage />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: en.auth.entry.studyHeading })).toBeInTheDocument();
+  });
+
   it('is a provider-neutral public surface without a primary signup journey', () => {
     renderAuth(createReviewIntent());
 
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+      screen.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: ko.auth.entry.providerAction }),
