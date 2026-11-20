@@ -612,6 +612,7 @@ export const en: Messages = {
       },
       retrospective: {
         originalHeading: 'Original Journal',
+        originalDetails: 'View the original record',
         editorHeading: 'New retrospective',
         editorDescription:
           'Keep the original decision intact and record what you learned from today’s perspective.',

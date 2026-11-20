@@ -604,6 +604,7 @@ export const ko: Messages = {
       },
       retrospective: {
         originalHeading: '원본 저널',
+        originalDetails: '당시 기록 자세히 보기',
         editorHeading: '새 복기 기록',
         editorDescription: '원래 판단은 그대로 두고, 지금 시점의 배움을 별도 기록으로 남깁니다.',
         timestampLabel: '원본 작성 시각',

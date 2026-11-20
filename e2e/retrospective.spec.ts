@@ -75,14 +75,78 @@ test('opens a server-supplied original from journal detail and after reload', as
   await page.goto(buildAppJournalDetailPath(journalId));
   await page.getByRole('link', { name: ko.app.journalDetail.navigation.review }).click();
   await expect(page.getByRole('heading', { name: detail.assetName })).toBeVisible();
+  const original = page.locator('.retrospective-original-details');
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    await expect(original).not.toHaveAttribute('open');
+    await original.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(original).toHaveAttribute('open');
+    await page.setViewportSize({ width: 1194, height: 834 });
+    await expect(original).toHaveAttribute('open');
+    await original.locator('summary').click();
+    await expect(original).not.toHaveAttribute('open');
+    await page.setViewportSize({ width: 834, height: 1194 });
+    await expect(original).not.toHaveAttribute('open');
+  }
+  if (!(await original.evaluate((element: HTMLDetailsElement) => element.open))) {
+    await original.locator('summary').click();
+  }
   await expect(page.getByText(detail.reasoning)).toBeVisible();
   await expect(page.getByText(ko.app.journalReview.saveUnavailable)).toBeVisible();
   await expect(page.getByTestId('retrospective-editor')).toHaveCount(0);
   expect(detailRequests).toBe(2);
 
   await page.reload();
+  if (!(await original.evaluate((element: HTMLDetailsElement) => element.open))) {
+    await original.locator('summary').click();
+  }
   await expect(page.getByText(detail.reasoning)).toBeVisible();
   expect(detailRequests).toBe(3);
+});
+
+test('preserves a saved retrospective draft while opening the original across rotation', async ({
+  page,
+}) => {
+  test.skip(
+    process.env.VITE_FINANCE_RETROSPECTIVE_ENABLED !== 'true',
+    'requires the saved retrospective feature flag',
+  );
+  const journalId = '19408084-cd43-4edd-aebc-9578935dc2ea';
+  await page.route(`**/finance/journals/${journalId}`, (route) =>
+    route.fulfill({
+      json: {
+        journalId,
+        type: 'investment',
+        occurredAt: '2026-08-12T14:30:15.123',
+        timeZone: 'Asia/Seoul',
+        createdAt: '2026-08-12T05:31:02.123Z',
+        updatedAt: '2026-08-12T05:31:02.123Z',
+        assetName: '원본 기록 대상',
+        action: 'interest',
+        reasoning: '원래 판단의 이유',
+        emotion: null,
+        revision: 1,
+      },
+    }),
+  );
+  await page.route(`**/finance/journals/${journalId}/retrospectives`, (route) =>
+    route.fulfill({ json: { items: [], hasMore: false } }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(buildAppJournalReviewPath(journalId));
+  const field = page.getByLabel('복기 내용 *');
+  await field.fill('작성 중인 복기');
+  const original = page.locator('.retrospective-original-details');
+  await original.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(original).toHaveAttribute('open');
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await expect(original).toHaveAttribute('open');
+  await expect(field).toHaveValue('작성 중인 복기');
+  await original.locator('summary').click();
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await expect(original).not.toHaveAttribute('open');
+  await expect(field).toHaveValue('작성 중인 복기');
 });
 
 test.describe('Retrospective adaptive presentation', () => {

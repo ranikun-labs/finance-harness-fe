@@ -420,6 +420,7 @@ export interface Messages {
       };
       retrospective: {
         originalHeading: string;
+        originalDetails: string;
         editorHeading: string;
         editorDescription: string;
         timestampLabel: string;
