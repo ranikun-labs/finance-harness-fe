@@ -1,3 +1,4 @@
+import { LocalGeneralAnalysis } from '@/features/general-analysis/LocalGeneralAnalysis';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
@@ -571,7 +572,11 @@ export function AskPage() {
         )}
       </header>
 
-      {question === '' ? (
+      {question !== '' &&
+      import.meta.env.DEV &&
+      import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ? (
+        <LocalGeneralAnalysis key={question} question={question} />
+      ) : question === '' ? (
         <Card className="p-2">
           <EmptyState
             icon={<span className="text-primary text-2xl">?</span>}
