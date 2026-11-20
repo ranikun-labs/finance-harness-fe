@@ -188,7 +188,18 @@ export function LocalGeneralAnalysis({
           typeof result.asOf !== 'string' ||
           !Number.isFinite(Date.parse(result.asOf)) ||
           result.basicCalls !== 1 ||
-          result.supplementalCalls !== (result.nextLens === null ? 0 : 1)
+          result.supplementalCalls !== (result.nextLens === null ? 0 : 1) ||
+          (result.suggestionId != null &&
+            (typeof result.suggestionId !== 'string' ||
+              !/^[0-9a-f-]{36}$/i.test(result.suggestionId) ||
+              scenario !== 'SECTOR' ||
+              result.nextLens !== 'SECTOR' ||
+              !result.facts.some(
+                (f) =>
+                  f.id === 'supplement:SECTOR' &&
+                  f.source === 'synthetic-supplement:SECTOR:SECTOR' &&
+                  f.value === 'Invented sector concentration detail',
+              )))
         )
           throw new Error('Invalid synthetic evidence');
         setOutput(response.output);
@@ -243,6 +254,13 @@ export function LocalGeneralAnalysis({
         )
       )
         throw new Error('Invalid fixture');
+      if (
+        result.values[0].identifier !== 'SYNTHETIC-A' ||
+        result.values[0].indexContribution !== 0.6 ||
+        result.values[1].identifier !== 'SYNTHETIC-B' ||
+        result.values[1].indexContribution !== 0.4
+      )
+        throw new Error('Invalid contribution fixture');
       setContribution({ source: result.source, asOf: result.asOf, values: result.values });
     } catch {
       if (current === version.current)
@@ -342,29 +360,6 @@ export function LocalGeneralAnalysis({
               ))}
             </ul>
             <p>Interpretation: {lens.interpretation}</p>
-            {lens.nextLens === 'SECTOR' && lens.suggestionId && (
-              <button
-                type="button"
-                disabled={busy || suggestionUsed}
-                onClick={() => void openContribution()}
-              >
-                Explore invented index contributions
-              </button>
-            )}
-            {contribution && (
-              <div>
-                <p>
-                  Synthetic index contributions · {contribution.source} · as of {contribution.asOf}
-                </p>
-                <ul>
-                  {contribution.values.map((v) => (
-                    <li key={v.identifier}>
-                      {v.identifier}: {v.indexContribution}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             <p>Next lens: {lens.nextLens ?? 'None'}</p>
             <p>
               Lookup trace: basic {lens.basicCalls}; supplemental {lens.supplementalCalls}
@@ -396,6 +391,29 @@ export function LocalGeneralAnalysis({
           </ul>
           <p>{output.evidenceNote}</p>
         </article>
+      )}
+      {output && lens?.nextLens === 'SECTOR' && lens.suggestionId && (
+        <button
+          type="button"
+          disabled={busy || suggestionUsed}
+          onClick={() => void openContribution()}
+        >
+          Explore invented index contributions
+        </button>
+      )}
+      {contribution && (
+        <div>
+          <p>
+            Synthetic index contributions · {contribution.source} · as of {contribution.asOf}
+          </p>
+          <ul>
+            {contribution.values.map((v) => (
+              <li key={v.identifier}>
+                {v.identifier}: {v.indexContribution}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

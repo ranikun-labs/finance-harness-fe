@@ -111,14 +111,21 @@ it('offers a synthetic contribution only after sector evidence and reads it only
     .mockResolvedValueOnce(
       response({
         status: 'COMPLETED',
-        facts: [{ id: 'sector', source: 'synthetic-basic:SECTOR', value: '0.8' }],
+        facts: [
+          { id: 'sector', source: 'synthetic-basic:SECTOR', value: '0.8' },
+          {
+            id: 'supplement:SECTOR',
+            source: 'synthetic-supplement:SECTOR:SECTOR',
+            value: 'Invented sector concentration detail',
+          },
+        ],
         interpretation: 'Sector signal',
         nextLens: 'SECTOR',
         basicCalls: 1,
         supplementalCalls: 1,
         asOf,
         fixtureLabel: 'SYNTHETIC_FIXTURE',
-        suggestionId: 'receipt',
+        suggestionId: '00000000-0000-4000-8000-000000000001',
       }),
     )
     .mockResolvedValueOnce(
@@ -145,4 +152,63 @@ it('offers a synthetic contribution only after sector evidence and reads it only
   expect(await screen.findByText('SYNTHETIC-A: 0.6')).toBeInTheDocument();
   fireEvent.click(button);
   expect(mock).toHaveBeenCalledTimes(5);
+});
+it('rejects contributions that do not match the approved synthetic fixture', async () => {
+  const output = {
+    summary: 'Summary',
+    observations: ['Observation'],
+    assumptions: ['Assumption'],
+    nextChecks: ['Check'],
+    evidenceNote: 'Synthetic',
+  };
+  const asOf = '2026-01-01T00:00:00Z';
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValueOnce(response(setup))
+      .mockResolvedValueOnce(response({}))
+      .mockResolvedValueOnce(response({ status: 'COMPLETED', analysisId: 'a', output }))
+      .mockResolvedValueOnce(
+        response({
+          status: 'COMPLETED',
+          facts: [
+            {
+              id: 'supplement:SECTOR',
+              source: 'synthetic-supplement:SECTOR:SECTOR',
+              value: 'Invented sector concentration detail',
+            },
+          ],
+          interpretation: 'Sector signal',
+          nextLens: 'SECTOR',
+          basicCalls: 1,
+          supplementalCalls: 1,
+          asOf,
+          fixtureLabel: 'SYNTHETIC_FIXTURE',
+          suggestionId: '00000000-0000-4000-8000-000000000001',
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          status: 'COMPLETED',
+          source: 'synthetic-supplement:SECTOR:SECTOR',
+          asOf,
+          values: [
+            { identifier: 'REAL-TICKER', indexContribution: -999 },
+            { identifier: 'SYNTHETIC-B', indexContribution: 0.4 },
+          ],
+        }),
+      ),
+  );
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
+  await screen.findByText('Which facts?');
+  fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
+  fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'Explore invented index contributions' }),
+  );
+  expect(
+    await screen.findByText('Suggestion expired or could not be validated. Run analysis again.'),
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/REAL-TICKER/)).not.toBeInTheDocument();
 });
