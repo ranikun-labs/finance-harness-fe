@@ -60,3 +60,37 @@ it('hides invalid completed output', async () => {
     await screen.findByText('Analysis could not be validated. Please try again.'),
   ).toBeInTheDocument();
 });
+it('shows only validated backend evidence after analysis', async () => {
+  const output = {
+    summary: 'Summary',
+    observations: ['Observation'],
+    assumptions: ['Assumption'],
+    nextChecks: ['Check'],
+    evidenceNote: 'Synthetic',
+  };
+  const lens = {
+    status: 'COMPLETED',
+    facts: [{ id: 'sector', source: 'synthetic-basic:SECTOR', value: '0.8' }],
+    interpretation: 'Sector signal',
+    nextLens: 'SECTOR',
+    basicCalls: 1,
+    supplementalCalls: 1,
+    asOf: '2026-01-01T00:00:00Z',
+    fixtureLabel: 'SYNTHETIC_FIXTURE',
+  };
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValueOnce(response(setup))
+      .mockResolvedValueOnce(response({}))
+      .mockResolvedValueOnce(response({ status: 'COMPLETED', analysisId: 'a', output }))
+      .mockResolvedValueOnce(response(lens)),
+  );
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
+  await screen.findByText('Which facts?');
+  fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
+  fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+  expect(await screen.findByText('Lookup trace: basic 1; supplemental 1')).toBeInTheDocument();
+  expect(screen.getByText('Interpretation: Sector signal')).toBeInTheDocument();
+});

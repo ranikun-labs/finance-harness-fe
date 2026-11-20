@@ -1,4 +1,3 @@
-import { syntheticLens } from './syntheticLens';
 import { useEffect, useRef, useState } from 'react';
 
 type Setup = {
@@ -62,9 +61,16 @@ export function LocalGeneralAnalysis({
   question: string;
   onEdit: () => void;
 }) {
-  const [sector, setSector] = useState('0.8');
-  const [macro, setMacro] = useState('0.4');
-  const [lens, setLens] = useState<ReturnType<typeof syntheticLens>>();
+  const [scenario, setScenario] = useState('SECTOR');
+  const [lens, setLens] = useState<{
+    facts: { id: string; source: string; value: string }[];
+    interpretation: string;
+    nextLens: string | null;
+    basicCalls: number;
+    supplementalCalls: number;
+    asOf: string;
+    fixtureLabel: string;
+  }>();
   const [setup, setSetup] = useState<Setup>();
   const [checked, setChecked] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
@@ -78,6 +84,7 @@ export function LocalGeneralAnalysis({
     active.current?.abort();
     active.current = null;
     setOutput(undefined);
+    setLens(undefined);
     setBusy(false);
     setMessage('Review the checklist before continuing.');
   }
@@ -133,14 +140,47 @@ export function LocalGeneralAnalysis({
         'POST',
         { checklistId: setup.checklistId },
         controller.signal,
-      )) as { status?: unknown; output?: unknown };
+      )) as { status?: unknown; output?: unknown; analysisId?: unknown };
       if (current !== version.current) return;
       if (response?.status === 'BLOCKED')
         setMessage(
           'This request cannot be analyzed. Consider asking about general checks instead.',
         );
-      else if (response?.status === 'COMPLETED' && isOutput(response.output)) {
+      else if (
+        response?.status === 'COMPLETED' &&
+        isOutput(response.output) &&
+        typeof response.analysisId === 'string'
+      ) {
+        const result = (await request(
+          `${base}/synthetic-lens`,
+          'POST',
+          { checklistId: setup.checklistId, analysisId: response.analysisId, scenario },
+          controller.signal,
+        )) as typeof lens & { status?: unknown };
+        if (current !== version.current) return;
+        if (
+          !result ||
+          result.status !== 'COMPLETED' ||
+          !Array.isArray(result.facts) ||
+          !result.facts.length ||
+          !result.facts.every(
+            (f) =>
+              f &&
+              typeof f.id === 'string' &&
+              typeof f.source === 'string' &&
+              typeof f.value === 'string',
+          ) ||
+          typeof result.interpretation !== 'string' ||
+          ![null, 'SECTOR', 'MACRO'].includes(result.nextLens) ||
+          result.fixtureLabel !== 'SYNTHETIC_FIXTURE' ||
+          typeof result.asOf !== 'string' ||
+          !Number.isFinite(Date.parse(result.asOf)) ||
+          result.basicCalls !== 1 ||
+          result.supplementalCalls !== (result.nextLens === null ? 0 : 1)
+        )
+          throw new Error('Invalid synthetic evidence');
         setOutput(response.output);
+        setLens(result);
         setMessage('Completed');
       } else setMessage('Analysis could not be validated. Please try again.');
     } catch {
@@ -212,46 +252,39 @@ export function LocalGeneralAnalysis({
       )}
       <section aria-label="Synthetic lens">
         <h2>Synthetic market lens</h2>
-        <p>Invented signals; not market observations.</p>
+        <p>Invented signals and evidence; not market observations.</p>
         <label>
-          Sector signal{' '}
-          <input
-            type="number"
-            min="0"
-            max="1"
-            step="any"
-            value={sector}
-            onChange={(e) => setSector(e.target.value)}
-          />
+          Scenario{' '}
+          <select
+            value={scenario}
+            onChange={(e) => {
+              invalidate();
+              setScenario(e.target.value);
+            }}
+          >
+            <option value="SECTOR">Sector concentration</option>
+            <option value="MACRO">Broad macro</option>
+            <option value="WEAK">Weak signals</option>
+          </select>
         </label>
-        <label>
-          Macro signal{' '}
-          <input
-            type="number"
-            min="0"
-            max="1"
-            step="any"
-            value={macro}
-            onChange={(e) => setMacro(e.target.value)}
-          />
-        </label>
-        <button
-          onClick={() => {
-            try {
-              if (!sector || !macro) throw new Error();
-              setLens(syntheticLens(Number(sector), Number(macro)));
-            } catch {
-              setLens(undefined);
-            }
-          }}
-        >
-          Evaluate synthetic signals
-        </button>
         {lens && (
           <div>
-            <p>Facts: {lens.facts.join('; ')}</p>
+            <h3>Evidence (synthetic facts)</h3>
+            <p>
+              {lens.fixtureLabel} · as of {lens.asOf}
+            </p>
+            <ul>
+              {lens.facts.map((f) => (
+                <li key={f.id}>
+                  {f.id}: {f.value} ({f.source})
+                </li>
+              ))}
+            </ul>
             <p>Interpretation: {lens.interpretation}</p>
-            <p>Next lens: {lens.next ?? 'None'}</p>
+            <p>Next lens: {lens.nextLens ?? 'None'}</p>
+            <p>
+              Lookup trace: basic {lens.basicCalls}; supplemental {lens.supplementalCalls}
+            </p>
           </div>
         )}
       </section>
