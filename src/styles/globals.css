@@ -216,6 +216,14 @@
     display: block;
   }
 
+  .journal-workspace.is-list-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .journal-workspace.is-list-only .journal-workspace-detail-pane {
+    display: none;
+  }
+
   .journal-workspace-list-pane {
     border-right: 1px solid var(--border);
   }

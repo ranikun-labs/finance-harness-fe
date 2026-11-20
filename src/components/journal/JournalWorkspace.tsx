@@ -29,7 +29,7 @@ export function JournalWorkspace() {
 
   return (
     <div
-      className={cn('journal-workspace', isDetailRoute && 'is-detail-route')}
+      className={cn('journal-workspace', isDetailRoute && 'is-detail-route', !isDetailRoute && !hasSelectableRecords && 'is-list-only')}
       data-testid="journal-workspace"
     >
       <aside
