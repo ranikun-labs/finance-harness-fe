@@ -672,6 +672,25 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useTranslation();
   const detail = state.data;
+  const originalTouched = useRef(false);
+  const [originalOpen, setOriginalOpen] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 1024px) and (orientation: landscape), (min-width: 1280px)')
+          .matches
+      : true,
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia(
+      '(min-width: 1024px) and (orientation: landscape), (min-width: 1280px)',
+    );
+    const onChange = (event: MediaQueryListEvent) => {
+      if (!originalTouched.current) setOriginalOpen(event.matches);
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
 
   return (
     <div className="retrospective-route flex min-h-full w-full min-w-0 flex-col">
@@ -736,17 +755,41 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
               {detail.type === 'investment' ? (
                 <>
                   <RecordTagBadge kind="action" value={detail.action} />
-                  <p className="break-words whitespace-pre-wrap">{detail.reasoning}</p>
+                  <details
+                    className="retrospective-original-details"
+                    open={originalOpen}
+                    onToggle={(event) => setOriginalOpen(event.currentTarget.open)}
+                  >
+                    <summary
+                      onClick={() => {
+                        originalTouched.current = true;
+                      }}
+                    >
+                      {t('app.journalReview.retrospective.originalDetails')}
+                    </summary>
+                    <p className="break-words whitespace-pre-wrap">{detail.reasoning}</p>
+                  </details>
                 </>
               ) : (
-                <>
+                <details
+                  className="retrospective-original-details"
+                  open={originalOpen}
+                  onToggle={(event) => setOriginalOpen(event.currentTarget.open)}
+                >
+                  <summary
+                    onClick={() => {
+                      originalTouched.current = true;
+                    }}
+                  >
+                    {t('app.journalReview.retrospective.originalDetails')}
+                  </summary>
                   <p className="break-words whitespace-pre-wrap">{detail.keyContent}</p>
                   <ul className="list-inside list-disc">
                     {detail.openQuestions.map((question, index) => (
                       <li key={index}>{question}</li>
                     ))}
                   </ul>
-                </>
+                </details>
               )}
             </Card>
           </section>

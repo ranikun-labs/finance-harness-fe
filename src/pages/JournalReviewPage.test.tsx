@@ -8,6 +8,7 @@ import {
   buildAppJournalReviewPath,
 } from '@/constants/routes';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
+import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -42,6 +43,57 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: Retrosp
 }
 
 describe('JournalReviewPage', () => {
+  it('keeps a saved retrospective draft when the original record is collapsed and reopened', async () => {
+    vi.stubEnv('VITE_FINANCE_RETROSPECTIVE_ENABLED', 'true');
+    try {
+      const id = '550e8400-e29b-41d4-a716-446655440000';
+      const detail = vi.fn().mockResolvedValue({
+        ok: true,
+        data: {
+          journalId: id,
+          revision: 3,
+          type: 'investment',
+          assetName: '기록 대상',
+          action: 'interest',
+          reasoning: '원래 판단의 이유',
+          emotion: null,
+          occurredAt: '2026-08-12T14:30:15.123',
+          timeZone: 'Asia/Seoul',
+          createdAt: '2026-08-12T05:31:02.123Z',
+          updatedAt: '2026-08-12T05:31:02.123Z',
+        },
+      });
+      const fetchImpl = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ items: [], hasMore: false }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+      render(
+        <JournalEditFetchContext.Provider value={fetchImpl}>
+          <JournalReadPortProvider port={{ list: vi.fn(), detail }}>
+            <MemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
+              <I18nProvider locale="ko">
+                <Routes>
+                  <Route path={APP_ROUTE_PATHS.journalReview} element={<JournalReviewPage />} />
+                </Routes>
+              </I18nProvider>
+            </MemoryRouter>
+          </JournalReadPortProvider>
+        </JournalEditFetchContext.Provider>,
+      );
+      const field = await screen.findByLabelText('복기 내용 *');
+      fireEvent.change(field, { target: { value: '새 복기 초안' } });
+      const disclosure = screen.getByText('당시 기록 자세히 보기');
+      fireEvent.click(disclosure);
+      fireEvent.click(disclosure);
+      expect(field).toHaveValue('새 복기 초안');
+      expect(screen.getByText('원래 판단의 이유')).toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('reads a saved record from the configured port and does not offer mock persistence', async () => {
     const id = '550e8400-e29b-41d4-a716-446655440000';
     const detail = vi.fn().mockResolvedValue({
