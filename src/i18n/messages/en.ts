@@ -112,7 +112,7 @@ export const en: Messages = {
           'Review results are examples of the screen flow, not analysis of your question.',
         placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
         helper: 'Keep your question intact while the review separates checks from evidence.',
-        submit: 'Start review',
+        submit: 'Start example review',
         required: 'Enter something to review.',
       },
       examples: {
@@ -213,7 +213,7 @@ export const en: Messages = {
         edit: 'Edit question',
       },
       structured: {
-        resultTitle: 'Review result',
+        resultTitle: 'Example review result',
         fixtureLabel: 'Example data',
         questionLabel: 'My question',
         checklist: {
