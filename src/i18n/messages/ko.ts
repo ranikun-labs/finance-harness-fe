@@ -101,7 +101,7 @@ export const ko: Messages = {
         eyebrow: '검토',
         heading: '지금 판단하려는 것을 검토해 보세요',
         description:
-          '사겠다/팔겠다는 답을 드리지 않습니다. 확인해야 할 것, 근거 있는 사실, 아직 모르는 것을 정리해 드립니다.',
+          '예시를 통해 투자 판단 전에 확인할 항목과 근거를 어떤 순서로 살펴보는지 알아보세요.',
         action: '검토 시작',
         ariaLabel: '검토 시작',
       },
@@ -109,7 +109,7 @@ export const ko: Messages = {
         label: '내가 한 질문',
         exampleNotice: '현재 검토 결과는 입력한 질문에 대한 실제 분석이 아닌 화면 흐름 예시입니다.',
         placeholder: '예) 보유 중인 반도체 ETF를 지금 추가 매수해도 될까?',
-        helper: '질문을 그대로 남기면 확인 항목과 근거를 나눠 정리합니다.',
+        helper: '입력한 질문은 예시 결과 상단에 표시돼요.',
         submit: '예시 검토 시작',
         required: '검토할 내용을 입력해 주세요.',
       },
