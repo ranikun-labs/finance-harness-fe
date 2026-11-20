@@ -289,7 +289,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
 
       await expect(page.getByTestId('auth-entry')).toBeVisible();
       await expect(
-        page.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
+        page.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
       ).toBeVisible();
       await expect(page.getByRole('navigation')).toHaveCount(0);
       await expectSingleMain(page);
