@@ -90,7 +90,13 @@ function ErrorMessage({
             <button
               type="button"
               onClick={onRetry}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+              className={cn(
+                buttonVariants({
+                  variant: phase === 'load-more' ? 'outline' : 'default',
+                  size: 'sm',
+                }),
+                'min-h-11',
+              )}
             >
               {retryLabel}
             </button>
