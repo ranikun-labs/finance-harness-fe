@@ -18,7 +18,17 @@ jobs:
         with:
           node-version-file: .node-version
       - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm install --frozen-lockfile
-      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run verify
-      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright install --with-deps chromium
-      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright test e2e/retrospective.spec.ts
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run format:check
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run lint
+        if: always()
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run typecheck
+        if: always()
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm test
+        if: always()
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run build
+        if: always()
+      - if: always()
+        run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright install --with-deps chromium
+      - if: always()
+        run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright test e2e/retrospective.spec.ts
 
