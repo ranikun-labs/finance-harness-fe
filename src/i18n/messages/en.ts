@@ -36,6 +36,8 @@ export const en: Messages = {
     entry: {
       eyebrow: 'Authentication',
       heading: 'Sign in to continue',
+      investmentHeading: 'Sign in to write your decision record',
+      studyHeading: 'Sign in to write your learning note',
       description:
         'If this is your first time, an account can be created as part of the same flow.',
       resumeDescription: 'You will continue to the record screen you selected.',

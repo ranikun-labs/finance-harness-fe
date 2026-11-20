@@ -169,7 +169,11 @@ export function AuthEntryPage({
               {t('auth.entry.eyebrow')}
             </p>
             <h1 className="text-foreground text-2xl leading-tight font-extrabold tracking-tight sm:text-3xl">
-              {t('auth.entry.heading')}
+              {intent?.recordType === 'investment'
+                ? t('auth.entry.investmentHeading')
+                : intent?.recordType === 'study'
+                  ? t('auth.entry.studyHeading')
+                  : t('auth.entry.heading')}
             </h1>
             {!authUnavailable && (
               <p className="text-muted-foreground text-sm leading-6">

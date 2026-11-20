@@ -76,7 +76,7 @@ describe('AuthEntryPage presentation seam', () => {
     renderAuth(createReviewIntent());
 
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+      screen.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: ko.auth.entry.providerAction }),

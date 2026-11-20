@@ -40,6 +40,8 @@ export const ko: Messages = {
     entry: {
       eyebrow: '인증',
       heading: '계속하려면 로그인해 주세요',
+      investmentHeading: '판단 기록을 작성하려면 로그인해 주세요',
+      studyHeading: '학습 노트를 작성하려면 로그인해 주세요',
       description: '처음 이용하는 경우 계정이 함께 만들어집니다.',
       resumeDescription: '선택한 기록 화면으로 이어집니다.',
       providerAction: 'OAuth로 계속하기',
