@@ -575,7 +575,7 @@ export function AskPage() {
       {question !== '' &&
       import.meta.env.DEV &&
       import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ? (
-        <LocalGeneralAnalysis key={question} question={question} />
+        <LocalGeneralAnalysis key={question} question={question} onEdit={editQuestion} />
       ) : question === '' ? (
         <Card className="p-2">
           <EmptyState

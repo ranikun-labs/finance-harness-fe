@@ -21,7 +21,7 @@ it('requires confirmation and hides a response that arrives after confirmation i
         }),
     );
   vi.stubGlobal('fetch', fetchMock);
-  render(<LocalGeneralAnalysis question="Explain risk" />);
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
   await screen.findByText('Which facts?');
   expect(screen.getByRole('button', { name: 'Analyze' })).toBeDisabled();
   fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
@@ -52,7 +52,7 @@ it('hides invalid completed output', async () => {
       .mockResolvedValueOnce(response({}))
       .mockResolvedValueOnce(response({ status: 'COMPLETED', output: {} })),
   );
-  render(<LocalGeneralAnalysis question="Explain risk" />);
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
   await screen.findByText('Which facts?');
   fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
   fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));

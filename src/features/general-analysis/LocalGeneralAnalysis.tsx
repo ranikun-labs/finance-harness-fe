@@ -20,7 +20,7 @@ async function request(
   body: object,
   signal: AbortSignal,
 ): Promise<unknown> {
-  const response = await fetch(`/finance/general-analysis${path}`, {
+  const response = await fetch(`/finance/local-fake-analysis${path}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -55,7 +55,13 @@ function isOutput(value: unknown): value is Output {
     )
   );
 }
-export function LocalGeneralAnalysis({ question }: { question: string }) {
+export function LocalGeneralAnalysis({
+  question,
+  onEdit,
+}: {
+  question: string;
+  onEdit: () => void;
+}) {
   const [sector, setSector] = useState('0.8');
   const [macro, setMacro] = useState('0.4');
   const [lens, setLens] = useState<ReturnType<typeof syntheticLens>>();
@@ -154,6 +160,9 @@ export function LocalGeneralAnalysis({ question }: { question: string }) {
         Local demonstration using a deterministic fake analysis. No external market data.
       </p>
       <h1 className="text-xl font-bold">{question}</h1>
+      <button type="button" onClick={onEdit}>
+        Edit question
+      </button>
       <p role="status">{message}</p>
       {setup && (
         <>
