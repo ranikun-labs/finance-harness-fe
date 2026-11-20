@@ -1,0 +1,24 @@
+name: Verify exact Finance FE candidate
+on:
+  push:
+    branches: [codex/verify-finance-fe-196d006]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 196d006a80fb536b62b4d8ae0994d8c3ef83d1f4
+          persist-credentials: false
+      - run: test "$(git rev-parse HEAD)" = "196d006a80fb536b62b4d8ae0994d8c3ef83d1f4"
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm install --frozen-lockfile
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm run verify
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright install --with-deps chromium
+      - run: npm exec --yes --package=pnpm@11.15.1 -- pnpm exec playwright test e2e/retrospective.spec.ts
+
