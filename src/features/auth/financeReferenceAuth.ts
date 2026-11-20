@@ -276,6 +276,14 @@ export function createFinanceReferenceJournalFetch(
       /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(delete|restore)$/.test(
         target.pathname,
       );
+    const isRetrospectiveCollection =
+      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/retrospectives$/.test(
+        target.pathname,
+      );
+    const isRetrospectiveDetail =
+      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/retrospectives\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
+        target.pathname,
+      );
     const protectedPath = isJournalBase || target.pathname.startsWith(`${JOURNAL_PATH}/`);
     if (!protectedPath) {
       return fetchImpl(input, { ...init, credentials: 'omit' });
@@ -284,7 +292,9 @@ export function createFinanceReferenceJournalFetch(
       !(isJournalBase && (method === 'GET' || method === 'POST')) &&
       !(isJournalDetail && (method === 'GET' || method === 'PATCH')) &&
       !(isDeletedList && method === 'GET') &&
-      !(isLifecycle && method === 'POST')
+      !(isLifecycle && method === 'POST') &&
+      !(isRetrospectiveCollection && (method === 'GET' || method === 'POST')) &&
+      !(isRetrospectiveDetail && method === 'GET')
     ) {
       throw new FinanceReferenceAuthError('external_request');
     }

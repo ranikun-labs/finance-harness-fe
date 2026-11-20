@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import type { JournalEntryType } from '@/constants/routes';
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
@@ -8,6 +10,7 @@ export type JournalTypeFilterValue = 'all' | JournalEntryType;
 interface JournalTypeFilterProps {
   value: JournalTypeFilterValue;
   onChange: (value: JournalTypeFilterValue) => void;
+  restoreFocus?: (button: HTMLButtonElement) => void;
 }
 
 const FILTER_OPTIONS: JournalTypeFilterValue[] = ['all', 'investment', 'study'];
@@ -19,8 +22,12 @@ const FILTER_LABEL_KEY: Record<JournalTypeFilterValue, MessageKey> = {
 };
 
 /** all/investment/study 화면 local filter state UI. 선택 상태는 호출부(JournalList)가 소유한다. */
-export function JournalTypeFilter({ value, onChange }: JournalTypeFilterProps) {
+export function JournalTypeFilter({ value, onChange, restoreFocus }: JournalTypeFilterProps) {
   const { t } = useTranslation();
+  const activeButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (activeButton.current) restoreFocus?.(activeButton.current);
+  }, [restoreFocus]);
 
   return (
     <div
@@ -34,6 +41,8 @@ export function JournalTypeFilter({ value, onChange }: JournalTypeFilterProps) {
           <button
             key={option}
             type="button"
+            data-journal-filter={option}
+            ref={isActive ? activeButton : undefined}
             aria-pressed={isActive}
             onClick={() => onChange(option)}
             className={cn(

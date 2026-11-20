@@ -64,6 +64,15 @@ describe('HttpJournalReadPort', () => {
     expect(call[1]?.headers).not.toHaveProperty('Authorization');
   });
 
+  it('includes the selected record type on paginated requests', async () => {
+    const fetchMock = vi.fn<JournalReadFetch>();
+    fetchMock.mockResolvedValue(responseWithJson(200, { items: [], nextCursor: null }));
+    await createPort(fetchMock).list({ type: 'study', cursor: 'opaque' });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      '/finance/journals?limit=20&cursor=opaque&type=study',
+    );
+  });
+
   it('passes an opaque cursor through URL encoding without decoding or inspecting it', async () => {
     const fetchMock = vi.fn<JournalReadFetch>();
     fetchMock.mockResolvedValue(responseWithJson(200, { items: [], nextCursor: null }));

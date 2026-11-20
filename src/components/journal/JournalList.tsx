@@ -21,6 +21,10 @@ import { cn } from '@/lib/utils';
 
 interface JournalListProps {
   entries: JournalListItemViewModel[];
+  filter?: JournalTypeFilterValue;
+  onFilterChange?: (filter: JournalTypeFilterValue) => void;
+  serverFilter?: boolean;
+  restoreFilterFocus?: (button: HTMLButtonElement) => void;
   selectedId?: string;
   status?: JournalListStatus;
   nextCursor?: string | null;
@@ -159,9 +163,15 @@ export function JournalList({
   onRetry,
   onLoadMore,
   onSelectableRecordsChange,
+  filter: controlledFilter,
+  onFilterChange,
+  serverFilter = false,
+  restoreFilterFocus,
 }: JournalListProps) {
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<JournalTypeFilterValue>('all');
+  const [localFilter, setLocalFilter] = useState<JournalTypeFilterValue>('all');
+  const filter = controlledFilter ?? localFilter;
+  const setFilter = onFilterChange ?? setLocalFilter;
   const Heading = selectedId ? 'h2' : 'h1';
   const isInitialLoading = status === 'loading';
   const hasInitialError = status === 'error' && errorPhase !== 'load-more';
@@ -194,6 +204,10 @@ export function JournalList({
         ) : null}
       </div>
 
+      {serverFilter && (
+        <JournalTypeFilter value={filter} onChange={setFilter} restoreFocus={restoreFilterFocus} />
+      )}
+
       {isInitialLoading ? (
         <StatusMessage
           title={t('app.journalList.loading.title')}
@@ -201,7 +215,7 @@ export function JournalList({
         />
       ) : hasInitialError && error ? (
         <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
-      ) : status === 'empty' && !hasPendingEmptyPage ? (
+      ) : status === 'empty' && !hasPendingEmptyPage && filter === 'all' ? (
         <EmptyState
           title={t('app.journalList.emptyAll.title')}
           description={t('app.journalList.emptyAll.description')}
@@ -224,12 +238,15 @@ export function JournalList({
         />
       ) : (
         <>
-          <JournalTypeFilter value={filter} onChange={setFilter} />
-          {filter !== 'all' && nextCursor !== null && visibleEntries.length > 0 && (
-            <p className="text-muted-foreground text-sm">
-              {t('app.journalList.filteredPageScope')}
-            </p>
-          )}
+          {!serverFilter && <JournalTypeFilter value={filter} onChange={setFilter} />}
+          {!serverFilter &&
+            filter !== 'all' &&
+            nextCursor !== null &&
+            visibleEntries.length > 0 && (
+              <p className="text-muted-foreground text-sm">
+                {t('app.journalList.filteredPageScope')}
+              </p>
+            )}
           {hasNoFilteredMatch &&
             status !== 'loading-more' &&
             status !== 'error' &&

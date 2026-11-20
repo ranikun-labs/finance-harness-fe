@@ -10,6 +10,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { APP_ROUTE_PATHS, buildAppJournalDetailPath } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
+import { SavedRetrospectives } from '@/features/retrospective/SavedRetrospectives';
 import { JournalRevisionReviewBoundary } from '@/features/journal-edit/JournalRevisionReviewBoundary';
 import type { UseJournalDetailResult } from '@/features/journal-read/model/useJournalDetail';
 import { formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
@@ -756,12 +757,21 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
             <h2 id="saved-retro-unavailable" className="text-lg font-bold">
               {t('app.journalReview.retrospective.editorHeading')}
             </h2>
-            <p
-              role="status"
-              className="border-border bg-muted rounded-xl border p-4 text-sm leading-6"
-            >
-              {t('app.journalReview.saveUnavailable')}
-            </p>
+            {import.meta.env.VITE_FINANCE_RETROSPECTIVE_ENABLED === 'true' &&
+            detail.revision !== undefined ? (
+              <SavedRetrospectives
+                key={`${detail.journalId}:${detail.revision}`}
+                journalId={detail.journalId}
+                revision={detail.revision}
+              />
+            ) : (
+              <p
+                role="status"
+                className="border-border bg-muted rounded-xl border p-4 text-sm leading-6"
+              >
+                {t('app.journalReview.saveUnavailable')}
+              </p>
+            )}
             <Link
               className={buttonVariants({ variant: 'outline' })}
               to={buildAppJournalDetailPath(detail.journalId)}

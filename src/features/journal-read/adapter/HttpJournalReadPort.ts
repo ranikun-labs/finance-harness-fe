@@ -34,6 +34,7 @@ export class HttpJournalReadPort implements JournalReadPort {
     const params = new URLSearchParams();
     params.set('limit', String(validation.limit));
     if (request.cursor !== undefined) params.set('cursor', request.cursor);
+    if (request.type !== undefined) params.set('type', request.type);
 
     const result = await this.get(`/finance/journals?${params.toString()}`, request.signal);
     if (result.ok === false) return result;
@@ -109,6 +110,8 @@ export class HttpJournalReadPort implements JournalReadPort {
 function validateListRequest(
   request: JournalListRequest,
 ): { ok: true; limit: number } | { ok: false; error: JournalReadError } {
+  if (request.type !== undefined && request.type !== 'investment' && request.type !== 'study')
+    return invalidRequest();
   const limit = request.limit ?? DEFAULT_LIMIT;
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) return invalidRequest();
   if (
