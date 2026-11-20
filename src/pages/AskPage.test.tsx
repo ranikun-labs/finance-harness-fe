@@ -49,7 +49,11 @@ function AuthRoundTripHarness() {
   const navigate = useNavigate();
   if (location.pathname === APP_ROUTE_PATHS.ask) return <AskPage />;
   const payload = resolveTransient<{ authResumeIntent: { returnTarget: string } }>(location.state);
-  return <button onClick={() => navigate(payload!.authResumeIntent.returnTarget)}>Return to result</button>;
+  return (
+    <button onClick={() => navigate(payload!.authResumeIntent.returnTarget)}>
+      Return to result
+    </button>
+  );
 }
 
 afterEach(() => {
@@ -80,15 +84,23 @@ describe('AskPage / Structured Review Result', () => {
       const path = buildAppAskPath('원래 질문');
       const view = render(
         <MemoryRouter initialEntries={[path]}>
-          <I18nProvider locale="ko"><AuthRoundTripHarness /></I18nProvider>
+          <I18nProvider locale="ko">
+            <AuthRoundTripHarness />
+          </I18nProvider>
         </MemoryRouter>,
       );
-      const checklist = screen.getByRole('heading', { name: ko.app.ask.structured.checklist.heading }).closest('section')!;
+      const checklist = screen
+        .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
+        .closest('section')!;
       const firstCheck = within(checklist).getAllByRole('button')[0];
       fireEvent.click(firstCheck);
-      fireEvent.click(screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff[type].title) }));
+      fireEvent.click(
+        screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff[type].title) }),
+      );
       fireEvent.click(screen.getByRole('button', { name: 'Return to result' }));
-      const restored = screen.getByRole('heading', { name: ko.app.ask.structured.checklist.heading }).closest('section')!;
+      const restored = screen
+        .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
+        .closest('section')!;
       expect(within(restored).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true');
       expect(within(restored).getByText('1/4 확인')).toBeInTheDocument();
       view.unmount();

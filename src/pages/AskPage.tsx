@@ -11,7 +11,13 @@ import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
-import { readReviewChecks, readTransient, safeReviewReturn, transientState, writeReviewChecks } from '@/lib/transientNavigation';
+import {
+  readReviewChecks,
+  readTransient,
+  safeReviewReturn,
+  transientState,
+  writeReviewChecks,
+} from '@/lib/transientNavigation';
 import { createDecisionContextSnapshot } from '@/mocks/decisionContext';
 import { createReviewJournalHandoff, getReviewFixture, localize } from '@/mocks/reviewResult';
 
@@ -172,8 +178,10 @@ function StructuredReviewResult({
   const navigate = useNavigate();
   const { state: authPresentationState } = useAuthPresentation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
-    readReviewChecks(reviewRef) ?? Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
+    () =>
+      readReviewChecks(reviewRef) ??
+      Object.fromEntries(fixture.checklist.map((item) => [item.id, item.checked])),
   );
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
   const decisionContext = useMemo(
@@ -584,7 +592,13 @@ export function AskPage() {
       ) : phase === 'error' ? (
         <ReviewError question={question} onRetry={retryReview} onEdit={editQuestion} />
       ) : (
-        <StructuredReviewResult key={searchParams.get('ref')} question={question} partial={partial} returnTarget={returnTarget} reviewRef={searchParams.get('ref') ?? ''} />
+        <StructuredReviewResult
+          key={searchParams.get('ref')}
+          question={question}
+          partial={partial}
+          returnTarget={returnTarget}
+          reviewRef={searchParams.get('ref') ?? ''}
+        />
       )}
     </div>
   );
