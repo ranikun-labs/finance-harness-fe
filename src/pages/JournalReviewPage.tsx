@@ -673,27 +673,33 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const detail = state.data;
 
   return (
-    <div className="flex min-h-full w-full min-w-0 flex-col gap-6 px-5 py-6">
-      <ReviewHeader
-        title={
-          state.error?.code === 'journal_not_found'
-            ? t('app.journalReview.notFound.heading')
-            : t('app.journalReview.headerTitle')
-        }
-        backLabel={
-          state.status === 'success'
-            ? t('app.journalReview.backLabel')
-            : t('app.journalReview.notFound.listAction')
-        }
-        backTo={
-          state.status === 'success' && id
-            ? buildAppJournalDetailPath(id)
-            : APP_ROUTE_PATHS.journalList
-        }
-      />
-      {state.status === 'loading' && <p role="status">{t('app.journalDetail.loading.title')}</p>}
+    <div className="retrospective-route flex min-h-full w-full min-w-0 flex-col">
+      <div className="px-5 pt-4">
+        <ReviewHeader
+          title={
+            state.error?.code === 'journal_not_found'
+              ? t('app.journalReview.notFound.heading')
+              : t('app.journalReview.headerTitle')
+          }
+          backLabel={
+            state.status === 'success'
+              ? t('app.journalReview.backLabel')
+              : t('app.journalReview.notFound.listAction')
+          }
+          backTo={
+            state.status === 'success' && id
+              ? buildAppJournalDetailPath(id)
+              : APP_ROUTE_PATHS.journalList
+          }
+        />
+      </div>
+      {state.status === 'loading' && (
+        <p role="status" className="px-5 py-6">
+          {t('app.journalDetail.loading.title')}
+        </p>
+      )}
       {state.status === 'error' && (
-        <div role="alert" className="space-y-3">
+        <div role="alert" className="space-y-3 px-5 py-6">
           <p>
             {state.error?.code === 'journal_not_found'
               ? t('app.journalReview.notFound.description')
@@ -712,7 +718,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
       {state.status === 'success' && detail && (
         <div className="retrospective-workspace">
           <section
-            className="retrospective-original-pane min-w-0 space-y-4"
+            className="retrospective-original-pane min-w-0 space-y-4 px-5 py-5"
             aria-labelledby="saved-retro-original"
           >
             <h2 id="saved-retro-original" className="text-lg font-bold">
@@ -744,7 +750,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
             </Card>
           </section>
           <section
-            className="retrospective-editor-pane min-w-0 space-y-4"
+            className="retrospective-editor-pane min-w-0 space-y-4 px-5 py-5"
             aria-labelledby="saved-retro-unavailable"
           >
             <h2 id="saved-retro-unavailable" className="text-lg font-bold">
