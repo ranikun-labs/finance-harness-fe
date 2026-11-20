@@ -70,7 +70,16 @@ export function LocalGeneralAnalysis({
     supplementalCalls: number;
     asOf: string;
     fixtureLabel: string;
+    suggestionId: string | null;
+    analysisId: string;
   }>();
+  const [contribution, setContribution] = useState<{
+    source: string;
+    asOf: string;
+    values: { identifier: string; indexContribution: number }[];
+  }>();
+  const [suggestionUsed, setSuggestionUsed] = useState(false);
+  const suggestionLock = useRef(false);
   const [setup, setSetup] = useState<Setup>();
   const [checked, setChecked] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
@@ -85,6 +94,9 @@ export function LocalGeneralAnalysis({
     active.current = null;
     setOutput(undefined);
     setLens(undefined);
+    setContribution(undefined);
+    setSuggestionUsed(false);
+    suggestionLock.current = false;
     setBusy(false);
     setMessage('Review the checklist before continuing.');
   }
@@ -180,12 +192,61 @@ export function LocalGeneralAnalysis({
         )
           throw new Error('Invalid synthetic evidence');
         setOutput(response.output);
-        setLens(result);
+        setLens({ ...result, analysisId: response.analysisId });
         setMessage('Completed');
       } else setMessage('Analysis could not be validated. Please try again.');
     } catch {
       if (current === version.current)
         setMessage('Analysis failed or timed out. Your question and checklist are preserved.');
+    } finally {
+      clearTimeout(timeout);
+      if (current === version.current) {
+        active.current = null;
+        setBusy(false);
+      }
+    }
+  }
+  async function openContribution() {
+    if (!setup || !lens?.suggestionId || suggestionLock.current || busy) return;
+    suggestionLock.current = true;
+    setSuggestionUsed(true);
+    setBusy(true);
+    const current = version.current;
+    const controller = new AbortController();
+    active.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    try {
+      const result = (await request(
+        `/questions/${encodeURIComponent(setup.questionId)}/synthetic-contribution`,
+        'POST',
+        {
+          checklistId: setup.checklistId,
+          analysisId: lens.analysisId,
+          suggestionId: lens.suggestionId,
+        },
+        controller.signal,
+      )) as {
+        status?: string;
+        source?: string;
+        asOf?: string;
+        values?: { identifier: string; indexContribution: number }[];
+      };
+      if (current !== version.current) return;
+      if (
+        result.status !== 'COMPLETED' ||
+        result.source !== 'synthetic-supplement:SECTOR:SECTOR' ||
+        result.asOf !== lens.asOf ||
+        !Array.isArray(result.values) ||
+        result.values.length !== 2 ||
+        !result.values.every(
+          (v) => typeof v.identifier === 'string' && Number.isFinite(v.indexContribution),
+        )
+      )
+        throw new Error('Invalid fixture');
+      setContribution({ source: result.source, asOf: result.asOf, values: result.values });
+    } catch {
+      if (current === version.current)
+        setMessage('Suggestion expired or could not be validated. Run analysis again.');
     } finally {
       clearTimeout(timeout);
       if (current === version.current) {
@@ -281,6 +342,29 @@ export function LocalGeneralAnalysis({
               ))}
             </ul>
             <p>Interpretation: {lens.interpretation}</p>
+            {lens.nextLens === 'SECTOR' && lens.suggestionId && (
+              <button
+                type="button"
+                disabled={busy || suggestionUsed}
+                onClick={() => void openContribution()}
+              >
+                Explore invented index contributions
+              </button>
+            )}
+            {contribution && (
+              <div>
+                <p>
+                  Synthetic index contributions · {contribution.source} · as of {contribution.asOf}
+                </p>
+                <ul>
+                  {contribution.values.map((v) => (
+                    <li key={v.identifier}>
+                      {v.identifier}: {v.indexContribution}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <p>Next lens: {lens.nextLens ?? 'None'}</p>
             <p>
               Lookup trace: basic {lens.basicCalls}; supplemental {lens.supplementalCalls}
