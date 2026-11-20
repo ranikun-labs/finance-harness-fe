@@ -50,7 +50,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expect(page.getByRole('button', { name: ko.auth.entry.providerAction })).toHaveCount(0);
     await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
     await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
-    await expect(page.getByRole('heading', { name: ko.auth.entry.heading })).toBeVisible();
+    await expect(page.getByRole('heading', { name: ko.auth.entry.investmentHeading })).toBeVisible();
   });
 
   test('Review handoff returns to the exact partial variant without a Journal history loop', async ({
@@ -271,7 +271,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
 
       await expect(page.getByTestId('auth-entry')).toBeVisible();
       await expect(
-        page.getByRole('heading', { level: 1, name: ko.auth.entry.heading }),
+        page.getByRole('heading', { level: 1, name: ko.auth.entry.investmentHeading }),
       ).toBeVisible();
       await expect(page.getByRole('navigation')).toHaveCount(0);
       await expectSingleMain(page);
