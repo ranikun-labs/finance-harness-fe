@@ -140,9 +140,9 @@ export const ko: Messages = {
         backLabel: '검토 시작으로 돌아가기',
       },
       empty: {
-        title: '아직 확인할 질문이 없어요',
-        description: '질문을 남기면 확인할 관점과 기록할 질문의 예시를 볼 수 있어요.',
-        cta: '질문하러 가기',
+        title: '이 예시 검토를 다시 열 수 없어요',
+        description: '예시 검토는 새로고침 후 복원되지 않아요.',
+        cta: '예시 검토 다시 시작',
       },
       questionLabel: '내 질문',
       perspectives: {

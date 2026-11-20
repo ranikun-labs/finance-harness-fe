@@ -144,9 +144,9 @@ export const en: Messages = {
         backLabel: 'Back to review start',
       },
       empty: {
-        title: 'No question to review yet',
-        description: 'Ask a question to see example perspectives to check and questions to record.',
-        cta: 'Ask a question',
+        title: 'This example review can no longer be opened',
+        description: 'Example reviews cannot be restored after a refresh.',
+        cta: 'Start an example review again',
       },
       questionLabel: 'My question',
       perspectives: {
@@ -222,7 +222,7 @@ export const en: Messages = {
           progress: '{{checked}}/{{total}} checked',
         },
         fact: {
-          heading: 'Facts checked',
+          heading: 'Example facts',
           helper: 'Each fact keeps its source and as-of date together.',
           sourceLabel: 'Source',
           asOfLabel: 'As of',
@@ -236,8 +236,8 @@ export const en: Messages = {
           heading: 'What is still unknown',
           helper: 'Keep unverifiable, incomplete, and stale information separate from facts.',
         },
-        generatedAt: 'Generated {{timestamp}}',
-        reviewedAt: 'Reviewed {{timestamp}}',
+        generatedAt: 'Example generated {{timestamp}}',
+        reviewedAt: 'Example reviewed {{timestamp}}',
         timestampsHeading: 'Generated and reviewed at',
         provenance:
           'This result is example data for checking the screen flow. It is not analysis of your actual question or investment advice.',
