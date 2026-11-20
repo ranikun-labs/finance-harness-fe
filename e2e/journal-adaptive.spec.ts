@@ -50,7 +50,9 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expect(page.getByRole('button', { name: ko.auth.entry.providerAction })).toHaveCount(0);
     await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
     await expect(page.getByRole('status')).toContainText(ko.auth.entry.unavailable);
-    await expect(page.getByRole('heading', { name: ko.auth.entry.investmentHeading })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: ko.auth.entry.investmentHeading }),
+    ).toBeVisible();
   });
 
   test('Review handoff returns to the exact partial variant without a Journal history loop', async ({
@@ -177,6 +179,22 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       await expectSingleMain(page);
       await expectNoHorizontalOverflow(page);
     }
+  });
+
+  test('offers sign-in for an unauthorized journal and returns to the list on cancel', async ({
+    page,
+  }) => {
+    await page.route('**/finance/journals?*', (route) => route.fulfill({ status: 401, json: {} }));
+    await page.goto(APP_ROUTE_PATHS.journalList);
+
+    await expect(page.getByText(ko.app.journalList.signInRequired.title)).toBeVisible();
+    await expect(page.getByText(ko.app.journalList.emptyAll.title)).toHaveCount(0);
+    await page.getByRole('link', { name: ko.app.journalList.signInRequired.action }).click();
+    await expect(page).toHaveURL(AUTH_ROUTE_PATHS.entry);
+    await expect(page.getByText(ko.auth.entry.unavailable, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: ko.app.journalNew.backToJournal }).click();
+    await expect(page).toHaveURL(APP_ROUTE_PATHS.journalList);
+    await expect(page.getByText(ko.app.journalList.signInRequired.title)).toBeVisible();
   });
 
   test('keeps the desktop selection pane neutral on list failure and restores it after retry', async ({

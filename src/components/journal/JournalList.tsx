@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 import { EmptyState } from '@/components/common/EmptyState';
 import { JournalSummaryCard } from '@/components/journal/JournalSummaryCard';
 import { buttonVariants } from '@/components/ui/button';
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
+import type { AuthEntryLocationState } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
 import type {
   JournalListErrorPhase,
@@ -55,6 +56,29 @@ function ErrorMessage({
   onRetry?: () => void;
 }) {
   const { t } = useTranslation();
+  if (phase !== 'load-more' && error.status === 401) {
+    const state: AuthEntryLocationState = {
+      resumeJournalList: true,
+      fallbackCancelTarget: APP_ROUTE_PATHS.journalList,
+      fallbackCancelLabel: 'app.journalNew.backToJournal',
+    };
+    return (
+      <StatusMessage
+        title={t('app.journalList.signInRequired.title')}
+        description={t('app.journalList.signInRequired.description')}
+        action={
+          <Link
+            to={AUTH_ROUTE_PATHS.entry}
+            state={state}
+            className={cn(buttonVariants({ size: 'sm' }), 'min-h-11')}
+          >
+            {t('app.journalList.signInRequired.action')}
+          </Link>
+        }
+      />
+    );
+  }
+
   const copy =
     phase === 'load-more'
       ? t('app.journalList.loadMoreError.title')

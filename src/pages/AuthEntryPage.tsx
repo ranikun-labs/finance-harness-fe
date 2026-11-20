@@ -83,7 +83,10 @@ export function AuthEntryPage({
       ? 'auth.entry.cancel'
       : (fallbackCancelLabel ?? locationState.fallbackCancelLabel ?? 'auth.entry.cancelEntry')
   ) as MessageKey;
-  const targetRoute = intent?.targetRoute ?? APP_ROUTE_PATHS.appHome;
+  const resumeJournalList = locationState.resumeJournalList === true;
+  const targetRoute =
+    intent?.targetRoute ??
+    (resumeJournalList ? APP_ROUTE_PATHS.journalList : APP_ROUTE_PATHS.appHome);
   const authUnavailable = !driver && !financeReferenceAuth?.enabled;
 
   function cancel() {
@@ -104,7 +107,7 @@ export function AuthEntryPage({
       .resolve()
       .then((state) => {
         if (attempt !== attemptRef.current) return;
-        if (state !== 'authenticated' || !intent) {
+        if (state !== 'authenticated' || (!intent && !resumeJournalList)) {
           setPhase('failure');
           return;
         }

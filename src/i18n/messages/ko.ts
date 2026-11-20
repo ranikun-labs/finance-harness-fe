@@ -270,6 +270,11 @@ export const ko: Messages = {
       },
     },
     journalList: {
+      signInRequired: {
+        title: '내 기록을 보려면 로그인해 주세요',
+        description: '로그인이 완료되면 저널 목록으로 돌아와요.',
+        action: '로그인하고 내 기록 보기',
+      },
       backToReview: '검토로 돌아가기',
       newRecord: '새 기록',
       emptyPage: '이 페이지에 표시할 기록이 없어요. 더 불러와 확인해 주세요.',

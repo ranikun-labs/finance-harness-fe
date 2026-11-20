@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
@@ -116,7 +116,21 @@ describe('JournalListPage', () => {
     await screen.findByText('ETF');
     expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: 'next' }));
   });
-  it.each([401, 403, 500])(
+  it('offers sign-in when the initial list returns HTTP 401', async () => {
+    const list = vi.fn<JournalReadPort['list']>().mockResolvedValue({
+      ok: false,
+      error: { code: 'read_failed', status: 401 },
+    });
+    renderPage('ko', { list, detail: vi.fn() });
+
+    expect(
+      await screen.findByRole('link', { name: ko.app.journalList.signInRequired.action }),
+    ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
+    expect(screen.queryByRole('button', { name: ko.app.journalList.error.retry })).toBeNull();
+    expect(screen.queryByText(ko.app.journalList.emptyAll.title)).toBeNull();
+  });
+
+  it.each([403, 500])(
     'shows read failure for HTTP %i rather than an empty journal, and retries',
     async (status) => {
       const list = vi

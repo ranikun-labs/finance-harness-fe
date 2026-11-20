@@ -276,6 +276,11 @@ export const en: Messages = {
       },
     },
     journalList: {
+      signInRequired: {
+        title: 'Sign in to view your journal',
+        description: 'You’ll return to the journal after signing in.',
+        action: 'Sign in to view records',
+      },
       backToReview: 'Back to review',
       newRecord: 'New record',
       emptyPage: 'There are no records on this page. Load more to continue.',

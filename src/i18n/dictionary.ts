@@ -203,6 +203,7 @@ export interface Messages {
       navigation: { studyNote: string; investmentRecord: string; askAgain: string };
     };
     journalList: {
+      signInRequired: { title: string; description: string; action: string };
       backToReview: string;
       newRecord: string;
       emptyPage: string;
