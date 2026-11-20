@@ -136,7 +136,13 @@ export function JournalList({
           {t('app.journalList.title')}
         </Heading>
         {status !== 'empty' || nextCursor !== null ? (
-          <Link to={APP_ROUTE_PATHS.journalNew} className={cn(buttonVariants(), 'min-h-11')}>
+          <Link
+            to={APP_ROUTE_PATHS.journalNew}
+            className={cn(
+              buttonVariants({ variant: hasInitialError ? 'outline' : 'default' }),
+              'min-h-11',
+            )}
+          >
             {t('app.journalList.newRecord')}
           </Link>
         ) : null}
