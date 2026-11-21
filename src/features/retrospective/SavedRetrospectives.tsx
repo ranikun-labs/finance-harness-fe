@@ -20,13 +20,15 @@ type LoadState = 'loading' | 'ready' | 'error';
 export function SavedRetrospectives({
   journalId,
   revision,
+  onDirtyChange,
 }: {
   journalId: string;
   revision: number;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const fetchOverride = useJournalEditFetch();
   const fetchImpl = fetchOverride ?? window.fetch;
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const korean = locale === 'ko';
   const [items, setItems] = useState<Retrospective[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -39,6 +41,7 @@ export function SavedRetrospectives({
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const keysRef = useRef(new Map<string, string>());
   const pendingRef = useRef(false);
@@ -87,6 +90,21 @@ export function SavedRetrospectives({
     return () => controller.abort();
   }, [endpoint, fetchImpl, journalId, refresh]);
 
+  const dirty = Object.values(draft).some((value) => value.length > 0);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+    return () => onDirtyChange?.(false);
+  }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [dirty]);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pendingRef.current || !draft.body.trim()) return;
@@ -106,6 +124,7 @@ export function SavedRetrospectives({
     }
     pendingRef.current = true;
     setSaving(true);
+    setSaved(false);
     setError('');
     try {
       const response = await fetchImpl(endpoint, {
@@ -148,6 +167,7 @@ export function SavedRetrospectives({
       )
         throw new Error('Invalid save response');
       setDraft({ body: '', outcomeObservation: '', decisionQuality: '', nextCheck: '' });
+      setSaved(true);
       keysRef.current.delete(payload);
       setLoad('loading');
       setRefresh((value) => value + 1);
@@ -172,32 +192,78 @@ export function SavedRetrospectives({
 
   return (
     <div className="space-y-6">
-      <form onSubmit={submit} className="space-y-4">
-        {fields.map(([name, label, required]) => (
-          <label key={name} className="block space-y-2 text-sm font-semibold">
-            <span>
-              {label}
-              {required && ' *'}
-            </span>
-            <textarea
-              required={required}
-              disabled={saving}
-              maxLength={name === 'body' ? 4000 : 2000}
-              value={draft[name]}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, [name]: event.target.value }))
-              }
-              className="border-border bg-background w-full rounded-xl border p-3 text-sm"
-              rows={name === 'body' ? 5 : 2}
-            />
+      <form onSubmit={submit} className="space-y-6">
+        <div className="space-y-2 text-sm">
+          <label htmlFor="saved-retrospective-body" className="font-semibold">
+            {t('app.journalReview.retrospective.bodyLabel')} *
           </label>
-        ))}
+          <span id="saved-retrospective-prompt" className="text-muted-foreground block font-normal">
+            {t('app.journalReview.retrospective.bodyPrompt')}
+          </span>
+          <textarea
+            id="saved-retrospective-body"
+            required
+            disabled={saving}
+            maxLength={4000}
+            value={draft.body}
+            onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
+            aria-describedby="saved-retrospective-prompt"
+            className="border-border bg-background focus-visible:ring-ring min-h-[120px] w-full rounded-xl border p-4 text-sm leading-6 outline-none focus-visible:ring-2"
+            rows={5}
+          />
+        </div>
+        <details className="border-border border-y">
+          <summary className="focus-visible:ring-ring min-h-12 cursor-pointer rounded py-4 text-sm font-semibold focus-visible:ring-2">
+            {korean
+              ? '결과와 판단 과정 돌아보기 (선택)'
+              : 'Review the outcome and decision process (optional)'}
+          </summary>
+          <div className="space-y-4 pb-4">
+            {fields.slice(1, 3).map(([name, label]) => (
+              <label key={name} className="block space-y-2 text-sm font-semibold">
+                <span>{label}</span>
+                <textarea
+                  disabled={saving}
+                  maxLength={2000}
+                  value={draft[name]}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, [name]: event.target.value }))
+                  }
+                  className="border-border bg-background focus-visible:ring-ring min-h-[80px] w-full rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
+                  rows={2}
+                />
+              </label>
+            ))}
+          </div>
+        </details>
+        <label className="block space-y-2 text-sm font-semibold">
+          <span>{fields[3][1]}</span>
+          <textarea
+            disabled={saving}
+            maxLength={2000}
+            value={draft.nextCheck}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, nextCheck: event.target.value }))
+            }
+            className="border-border bg-background focus-visible:ring-ring min-h-[80px] w-full rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
+            rows={2}
+          />
+        </label>
+        {saved && (
+          <p role="status" className="text-sm">
+            {korean ? '복기를 저장했어요.' : 'Reflection saved.'}
+          </p>
+        )}
         {error && (
           <p role="alert" className="text-destructive text-sm">
             {error}
           </p>
         )}
-        <button type="submit" disabled={saving} className={buttonVariants()}>
+        <button
+          type="submit"
+          disabled={saving}
+          className={`${buttonVariants()} min-h-12 w-full sm:w-auto`}
+        >
           {saving ? (korean ? '저장 중…' : 'Saving…') : korean ? '복기 저장' : 'Save reflection'}
         </button>
       </form>
@@ -228,20 +294,24 @@ export function SavedRetrospectives({
         )}
         {load === 'ready' &&
           items.map((item) => (
-            <article
-              key={item.retrospectiveId}
-              className="border-border space-y-2 rounded-xl border p-4"
-            >
-              <time dateTime={item.createdAt}>
+            <article key={item.retrospectiveId} className="border-border space-y-3 border-t py-5">
+              <time className="text-muted-foreground text-sm font-medium" dateTime={item.createdAt}>
                 {new Intl.DateTimeFormat(korean ? 'ko-KR' : 'en-US', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 }).format(new Date(item.createdAt))}
               </time>
-              <p className="break-words whitespace-pre-wrap">{item.body}</p>
-              {item.outcomeObservation && <p>{item.outcomeObservation}</p>}
-              {item.decisionQuality && <p>{item.decisionQuality}</p>}
-              {item.nextCheck && <p>{item.nextCheck}</p>}
+              <dl className="space-y-3 text-sm">
+                {fields.map(([name, label]) => {
+                  const value = item[name];
+                  return value ? (
+                    <div key={name}>
+                      <dt className="font-semibold">{label}</dt>
+                      <dd className="mt-1 leading-6 break-words whitespace-pre-wrap">{value}</dd>
+                    </div>
+                  ) : null;
+                })}
+              </dl>
             </article>
           ))}
         {hasMore && (

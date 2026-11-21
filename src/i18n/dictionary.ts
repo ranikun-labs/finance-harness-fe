@@ -60,6 +60,7 @@ export interface Messages {
       loading: string;
       failure: string;
       failureDescription: string;
+      directFailureDescription: string;
       retry: string;
       noIntent: string;
       resumeNotice: string;

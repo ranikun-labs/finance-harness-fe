@@ -171,7 +171,9 @@ function InvestmentDetail({
         {t('app.journalDetail.investment.reasoningHeading')}
       </h2>
       <Card className="p-4">
-        <p className="min-w-0 text-sm leading-7 [overflow-wrap:anywhere]">{detail.reasoning}</p>
+        <p className="max-w-[720px] min-w-0 text-sm leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
+          {detail.reasoning}
+        </p>
       </Card>
     </section>
   );
@@ -186,7 +188,9 @@ function StudyDetail({ detail }: { detail: Extract<JournalDetailViewModel, { typ
           {t('app.journalDetail.study.keyContentHeading')}
         </h2>
         <Card className="p-4">
-          <p className="min-w-0 text-sm leading-7 [overflow-wrap:anywhere]">{detail.keyContent}</p>
+          <p className="max-w-[720px] min-w-0 text-sm leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
+            {detail.keyContent}
+          </p>
         </Card>
       </section>
 
