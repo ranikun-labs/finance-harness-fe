@@ -92,7 +92,10 @@ export function AuthEntryPage({
 
   function cancel() {
     if (phase === 'loading') return;
-    navigate(cancelTarget, { replace: true });
+    navigate(cancelTarget, {
+      replace: true,
+      state: intent?.reviewHandoff ? { focusReviewHandoff: intent.recordType } : undefined,
+    });
   }
 
   function beginAuth() {

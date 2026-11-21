@@ -1,5 +1,5 @@
 import { resolveTransient } from '@/lib/transientNavigation';
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -19,6 +19,8 @@ import {
   type JournalFetch,
 } from '@/features/journal-new/adapter/HttpJournalCreatePort';
 import { I18nProvider } from '@/i18n/I18nContext';
+import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT, type DecisionContextSnapshot } from '@/mocks/decisionContext';
@@ -47,6 +49,20 @@ function DetailDestination() {
 function ReviewDestination() {
   const location = useLocation();
   return <output data-testid="review-destination">review:{location.search}</output>;
+}
+
+function JournalNavigationHarness() {
+  const [dirty, setDirty] = useState(false);
+  return (
+    <RetrospectiveDraftContext.Provider value={{ dirty, setDirty }}>
+      <BottomNavigation />
+      <Routes>
+        <Route path={APP_ROUTE_PATHS.journalNew} element={<JournalNewPage />} />
+        <Route path={APP_ROUTE_PATHS.appHome} element={<p>Review destination</p>} />
+        <Route path={APP_ROUTE_PATHS.journalList} element={<p>Journal destination</p>} />
+      </Routes>
+    </RetrospectiveDraftContext.Provider>
+  );
 }
 
 function renderPage(
@@ -156,6 +172,44 @@ function ambiguousHttpPort(failure: 'network' | 'timeout' | 'invalid_result' | '
 }
 
 describe('JournalNewPage', () => {
+  it('protects an edited journal draft on primary navigation and unload', () => {
+    render(
+      <MemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
+        <I18nProvider locale="ko">
+          <JournalNavigationHarness />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+    const field = screen.getByLabelText('대상');
+    const cleanUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(cleanUnload);
+    expect(cleanUnload.defaultPrevented).toBe(false);
+    fireEvent.change(field, { target: { value: '보존할 초안' } });
+    const dirtyUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(dirtyUnload);
+    expect(dirtyUnload.defaultPrevented).toBe(true);
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    try {
+      for (const name of ['검토', '저널']) {
+        const link = screen.getByRole('link', { name });
+        fireEvent.click(link, { ctrlKey: true });
+        expect(confirm).not.toHaveBeenCalled();
+        fireEvent.click(link);
+        expect(confirm).toHaveBeenCalledTimes(1);
+        expect(field).toHaveValue('보존할 초안');
+        confirm.mockClear();
+      }
+      confirm.mockReturnValue(true);
+      fireEvent.click(screen.getByRole('link', { name: '검토' }));
+      expect(screen.getByText('Review destination')).toBeInTheDocument();
+      const afterLeaving = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(afterLeaving);
+      expect(afterLeaving.defaultPrevented).toBe(false);
+    } finally {
+      confirm.mockRestore();
+    }
+  });
   it.each(['network', 'timeout', 'invalid_result', 'server_error'] as const)(
     'replays a committed investment after %s and edit/revert without another Journal',
     async (failure) => {

@@ -3,6 +3,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
+import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
 import {
@@ -80,6 +81,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
     Boolean(incomingDecisionContext) && locationState?.decisionContextEnabled !== false,
   );
   const [dirty, setDirty] = useState(false);
+  const { setDirty: setNavigationDirty } = useRetrospectiveDraft();
   const [hasSubmission, setHasSubmission] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
   const inFlightRef = useRef(false);
@@ -88,6 +90,21 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   // Editing (even submitting another payload) cannot prove an earlier request failed.
   const idempotencyKeysRef = useRef(new Map<string, string>());
   const mountedRef = useRef(true);
+
+  useEffect(() => {
+    setNavigationDirty(dirty);
+    return () => setNavigationDirty(false);
+  }, [dirty, setNavigationDirty]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [dirty]);
 
   useEffect(() => {
     mountedRef.current = true;

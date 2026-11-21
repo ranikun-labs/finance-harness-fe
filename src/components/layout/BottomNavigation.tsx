@@ -67,8 +67,8 @@ export function BottomNavigation() {
               if (
                 !window.confirm(
                   locale === 'ko'
-                    ? '작성 중인 복기가 사라집니다. 이동할까요?'
-                    : 'Your unsaved reflection will be lost. Leave this page?',
+                    ? '작성 중인 내용이 사라집니다. 이동할까요?'
+                    : 'Your unsaved work will be lost. Leave this page?',
                 )
               )
                 event.preventDefault();
