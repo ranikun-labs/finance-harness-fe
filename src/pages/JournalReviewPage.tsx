@@ -772,13 +772,13 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
       {state.status === 'success' && detail && (
         <div className="retrospective-workspace">
           <section
-            className="retrospective-original-pane min-w-0 space-y-4 px-5 py-5"
+            className="retrospective-original-pane min-w-0 space-y-4 px-5 py-6 sm:px-7"
             aria-labelledby="saved-retro-original"
           >
             <h2 id="saved-retro-original" className="text-lg font-bold">
               {t('app.journalReview.retrospective.originalHeading')}
             </h2>
-            <Card className="space-y-4 p-5">
+            <Card className="space-y-4 p-5 sm:p-6">
               <h3 className="text-xl font-bold [overflow-wrap:anywhere]">
                 {detail.type === 'investment' ? detail.assetName : detail.title}
               </h3>
@@ -835,7 +835,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
             </Card>
           </section>
           <section
-            className="retrospective-editor-pane min-w-0 space-y-4 px-5 py-5"
+            className="retrospective-editor-pane min-w-0 space-y-6 px-5 py-6 sm:px-7"
             aria-labelledby="saved-retro-unavailable"
           >
             <h2 id="saved-retro-unavailable" className="text-lg font-bold">
