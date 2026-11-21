@@ -92,7 +92,9 @@ test('opens a server-supplied original from journal detail and after reload', as
     await original.locator('summary').click();
   }
   await expect(page.getByText(detail.reasoning)).toBeVisible();
-  await expect(page.getByText(ko.app.journalReview.saveUnavailable)).toBeVisible();
+  if (process.env.VITE_FINANCE_RETROSPECTIVE_ENABLED !== 'true') {
+    await expect(page.getByText(ko.app.journalReview.saveUnavailable)).toBeVisible();
+  }
   await expect(page.getByTestId('retrospective-editor')).toHaveCount(0);
   expect(detailRequests).toBe(2);
 
@@ -134,12 +136,25 @@ test('preserves a saved retrospective draft while opening the original across ro
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(buildAppJournalReviewPath(journalId));
-  const field = page.getByLabel('복기 내용 *');
+  const field = page.getByLabel('지금 다시 보면, 무엇이 달라졌나요? *');
   await field.fill('작성 중인 복기');
+  const optional = page.getByText('결과와 판단 과정 돌아보기 (선택)');
+  await optional.focus();
+  await page.keyboard.press('Enter');
+  await page.getByLabel('결과 관찰').fill('관찰');
+  await optional.focus();
+  await page.keyboard.press('Enter');
+  await optional.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('결과 관찰')).toHaveValue('관찰');
+  const preview = page.locator('.retrospective-original-pane > div p.line-clamp-2');
+  await expect(preview).toHaveText('원래 판단의 이유');
+  await expect(preview).toBeVisible();
   const original = page.locator('.retrospective-original-details');
   await original.locator('summary').focus();
   await page.keyboard.press('Enter');
   await expect(original).toHaveAttribute('open');
+  await expect(preview).toHaveCount(0);
   await page.setViewportSize({ width: 1194, height: 834 });
   await expect(original).toHaveAttribute('open');
   await expect(field).toHaveValue('작성 중인 복기');
@@ -147,6 +162,70 @@ test('preserves a saved retrospective draft while opening the original across ro
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(original).not.toHaveAttribute('open');
   await expect(field).toHaveValue('작성 중인 복기');
+  let confirmations = 0;
+  page.on('dialog', async (dialog) => {
+    confirmations += 1;
+    await dialog.dismiss();
+  });
+  await page.getByRole('link', { name: ko.app.journalReview.backLabel }).first().click();
+  expect(confirmations).toBe(1);
+  await expect(field).toHaveValue('작성 중인 복기');
+  await page.getByRole('link', { name: ko.app.journalReview.backLabel }).last().click();
+  expect(confirmations).toBe(2);
+  await expect(field).toHaveValue('작성 중인 복기');
+});
+
+test('wraps long saved retrospective fields on a phone', async ({ page }) => {
+  test.skip(
+    process.env.VITE_FINANCE_RETROSPECTIVE_ENABLED !== 'true',
+    'requires the saved retrospective feature flag',
+  );
+  const journalId = '19408084-cd43-4edd-aebc-9578935dc2ea';
+  await page.route(`**/finance/journals/${journalId}`, (route) =>
+    route.fulfill({
+      json: {
+        journalId,
+        type: 'investment',
+        occurredAt: '2026-08-12T14:30:15.123',
+        timeZone: 'Asia/Seoul',
+        createdAt: '2026-08-12T05:31:02.123Z',
+        updatedAt: '2026-08-12T05:31:02.123Z',
+        assetName: '원본 기록 대상',
+        action: 'interest',
+        reasoning: '원래 판단의 이유',
+        emotion: null,
+        revision: 1,
+      },
+    }),
+  );
+  const longText = 'unbroken'.repeat(100);
+  await page.route(`**/finance/journals/${journalId}/retrospectives`, (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            retrospectiveId: 'r1',
+            journalId,
+            sourceRevision: 1,
+            createdAt: '2026-11-20T00:00:00Z',
+            body: 'Reflection',
+            outcomeObservation: longText,
+            decisionQuality: longText,
+            nextCheck: longText,
+          },
+        ],
+        hasMore: false,
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.goto(buildAppJournalReviewPath(journalId));
+  const article = page.getByRole('article');
+  await expect(article).toBeVisible();
+  expect(await article.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+    true,
+  );
+  await expectNoHorizontalOverflow(page);
 });
 
 test.describe('Retrospective adaptive presentation', () => {
