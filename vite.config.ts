@@ -8,7 +8,10 @@ const financeApiProxyTarget = process.env.FINANCE_API_PROXY_TARGET?.trim();
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  if (env.VITE_LOCAL_GENERAL_ANALYSIS === 'true') {
+  if (
+    env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ||
+    env.VITE_LOCAL_GENERAL_ANALYSIS_HTTP_SMOKE === 'true'
+  ) {
     let target: URL;
     try {
       target = new URL(financeApiProxyTarget ?? '');

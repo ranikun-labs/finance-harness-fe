@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Setup = {
   questionId: string;
@@ -13,13 +13,14 @@ type Output = {
   evidenceNote: string;
 };
 
-async function request(
+async function requestAt(
+  prefix: string,
   path: string,
   method: string,
   body: object,
   signal: AbortSignal,
 ): Promise<unknown> {
-  const response = await fetch(`/finance/local-fake-analysis${path}`, {
+  const response = await fetch(`${prefix}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -57,10 +58,23 @@ function isOutput(value: unknown): value is Output {
 export function LocalGeneralAnalysis({
   question,
   onEdit,
+  httpSmoke = false,
 }: {
   question: string;
   onEdit: () => void;
+  httpSmoke?: boolean;
 }) {
+  const request = useCallback(
+    (path: string, method: string, body: object, signal: AbortSignal) =>
+      requestAt(
+        httpSmoke ? '/finance/general-analysis' : '/finance/local-fake-analysis',
+        path,
+        method,
+        body,
+        signal,
+      ),
+    [httpSmoke],
+  );
   const [scenario, setScenario] = useState('SECTOR');
   const [lens, setLens] = useState<{
     facts: { id: string; source: string; value: string }[];
@@ -129,7 +143,7 @@ export function LocalGeneralAnalysis({
       controller.abort();
       active.current?.abort();
     };
-  }, [question]);
+  }, [question, request]);
   async function analyze() {
     if (!setup || !confirmed || busy) return;
     invalidate();
@@ -163,6 +177,11 @@ export function LocalGeneralAnalysis({
         isOutput(response.output) &&
         typeof response.analysisId === 'string'
       ) {
+        if (httpSmoke) {
+          setOutput(response.output);
+          setMessage('Completed');
+          return;
+        }
         const result = (await request(
           `${base}/synthetic-lens`,
           'POST',
@@ -276,7 +295,9 @@ export function LocalGeneralAnalysis({
   return (
     <section className="space-y-4" aria-label="Local general analysis">
       <p className="text-sm">
-        Local demonstration using a deterministic fake analysis. No external market data.
+        {httpSmoke
+          ? 'Local HTTP smoke test using a deterministic model double. No external market data.'
+          : 'Local demonstration using a deterministic fake analysis. No external market data.'}
       </p>
       <h1 className="text-xl font-bold">{question}</h1>
       <button type="button" onClick={onEdit}>
@@ -329,44 +350,46 @@ export function LocalGeneralAnalysis({
           </div>
         </>
       )}
-      <section aria-label="Synthetic lens">
-        <h2>Synthetic market lens</h2>
-        <p>Invented signals and evidence; not market observations.</p>
-        <label>
-          Scenario{' '}
-          <select
-            value={scenario}
-            onChange={(e) => {
-              invalidate();
-              setScenario(e.target.value);
-            }}
-          >
-            <option value="SECTOR">Sector concentration</option>
-            <option value="MACRO">Broad macro</option>
-            <option value="WEAK">Weak signals</option>
-          </select>
-        </label>
-        {lens && (
-          <div>
-            <h3>Evidence (synthetic facts)</h3>
-            <p>
-              {lens.fixtureLabel} · as of {lens.asOf}
-            </p>
-            <ul>
-              {lens.facts.map((f) => (
-                <li key={f.id}>
-                  {f.id}: {f.value} ({f.source})
-                </li>
-              ))}
-            </ul>
-            <p>Interpretation: {lens.interpretation}</p>
-            <p>Next lens: {lens.nextLens ?? 'None'}</p>
-            <p>
-              Lookup trace: basic {lens.basicCalls}; supplemental {lens.supplementalCalls}
-            </p>
-          </div>
-        )}
-      </section>
+      {!httpSmoke && (
+        <section aria-label="Synthetic lens">
+          <h2>Synthetic market lens</h2>
+          <p>Invented signals and evidence; not market observations.</p>
+          <label>
+            Scenario{' '}
+            <select
+              value={scenario}
+              onChange={(e) => {
+                invalidate();
+                setScenario(e.target.value);
+              }}
+            >
+              <option value="SECTOR">Sector concentration</option>
+              <option value="MACRO">Broad macro</option>
+              <option value="WEAK">Weak signals</option>
+            </select>
+          </label>
+          {lens && (
+            <div>
+              <h3>Evidence (synthetic facts)</h3>
+              <p>
+                {lens.fixtureLabel} · as of {lens.asOf}
+              </p>
+              <ul>
+                {lens.facts.map((f) => (
+                  <li key={f.id}>
+                    {f.id}: {f.value} ({f.source})
+                  </li>
+                ))}
+              </ul>
+              <p>Interpretation: {lens.interpretation}</p>
+              <p>Next lens: {lens.nextLens ?? 'None'}</p>
+              <p>
+                Lookup trace: basic {lens.basicCalls}; supplemental {lens.supplementalCalls}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
       {output && (
         <article>
           <h2 className="font-bold">Analysis</h2>
