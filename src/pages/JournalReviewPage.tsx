@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, MouseEvent, RefObject } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
 import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { DecisionContextSnapshotView } from '@/components/journal/DecisionContextPanel';
 import { RecordTagBadge } from '@/components/common/RecordTagBadge';
@@ -676,6 +677,14 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const detail = state.data;
   const originalTouched = useRef(false);
   const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
+  const { setDirty } = useRetrospectiveDraft();
+  const handleDirtyChange = useCallback(
+    (dirty: boolean) => {
+      setRetrospectiveDirty(dirty);
+      setDirty(dirty);
+    },
+    [setDirty],
+  );
   const confirmBack = (event: MouseEvent<HTMLAnchorElement>) => {
     if (
       event.defaultPrevented ||
@@ -838,7 +847,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
                 key={`${detail.journalId}:${detail.revision}`}
                 journalId={detail.journalId}
                 revision={detail.revision}
-                onDirtyChange={setRetrospectiveDirty}
+                onDirtyChange={handleDirtyChange}
               />
             ) : (
               <p

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { useState, type ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +9,8 @@ import {
   buildAppJournalReviewPath,
 } from '@/constants/routes';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
+import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
@@ -19,6 +22,16 @@ import { JournalReviewPage } from '@/pages/JournalReviewPage';
 const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
 const SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
 const STUDY_ID = 'journal-2026-06-27-01';
+
+function NavigationDraftHarness({ children }: { children: ReactNode }) {
+  const [dirty, setDirty] = useState(false);
+  return (
+    <RetrospectiveDraftContext.Provider value={{ dirty, setDirty }}>
+      <BottomNavigation />
+      {children}
+    </RetrospectiveDraftContext.Provider>
+  );
+}
 
 function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: RetrospectiveSavePort) {
   return render(
@@ -74,9 +87,11 @@ describe('JournalReviewPage', () => {
           <JournalReadPortProvider port={{ list: vi.fn(), detail }}>
             <MemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
               <I18nProvider locale="ko">
-                <Routes>
-                  <Route path={APP_ROUTE_PATHS.journalReview} element={<JournalReviewPage />} />
-                </Routes>
+                <NavigationDraftHarness>
+                  <Routes>
+                    <Route path={APP_ROUTE_PATHS.journalReview} element={<JournalReviewPage />} />
+                  </Routes>
+                </NavigationDraftHarness>
               </I18nProvider>
             </MemoryRouter>
           </JournalReadPortProvider>
@@ -110,6 +125,21 @@ describe('JournalReviewPage', () => {
           expect(field).toHaveValue('새 복기 초안');
           confirm.mockClear();
         }
+        for (const name of ['검토', '저널']) {
+          const link = screen.getByRole('link', { name });
+          fireEvent.click(link, { ctrlKey: true });
+          expect(confirm).not.toHaveBeenCalled();
+          fireEvent.click(link);
+          expect(confirm).toHaveBeenCalledTimes(1);
+          expect(field).toHaveValue('새 복기 초안');
+          confirm.mockClear();
+        }
+        confirm.mockReturnValue(true);
+        fireEvent.click(screen.getByRole('link', { name: '검토' }));
+        expect(confirm).toHaveBeenCalledTimes(1);
+        expect(
+          screen.queryByLabelText('지금 다시 보면, 무엇이 달라졌나요? *'),
+        ).not.toBeInTheDocument();
       } finally {
         confirm.mockRestore();
       }
