@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { LocalGeneralAnalysis } from './LocalGeneralAnalysis';
 const setup = {
@@ -8,6 +8,28 @@ const setup = {
 };
 const response = (body: unknown) => ({ ok: true, json: async () => body }) as Response;
 afterEach(() => vi.unstubAllGlobals());
+it('keeps scenario selection unavailable until checklist preparation finishes', async () => {
+  let finish!: (value: Response) => void;
+  const fetchMock = vi.fn().mockImplementationOnce(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  vi.stubGlobal('fetch', fetchMock);
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
+  const scenario = screen.getByLabelText('Scenario');
+  expect(scenario).toBeDisabled();
+  fireEvent.change(scenario, { target: { value: 'MACRO' } });
+  expect(screen.getByRole('status')).toHaveTextContent('Preparing checklist');
+  await act(async () => finish(response(setup)));
+  expect(await screen.findByText('Which facts?')).toBeInTheDocument();
+  expect(scenario).toBeEnabled();
+  expect(scenario).toHaveValue('SECTOR');
+  fireEvent.change(scenario, { target: { value: 'MACRO' } });
+  expect(scenario).toHaveValue('MACRO');
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
 it('requires confirmation and hides a response that arrives after confirmation is withdrawn', async () => {
   let finish!: (value: Response) => void;
   const fetchMock = vi
