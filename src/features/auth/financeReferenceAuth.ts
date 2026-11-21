@@ -43,6 +43,7 @@ interface Snapshot {
 
 const LOGIN_PATH = '/api/v1/auth/finance-reference/login';
 const JOURNAL_PATH = '/finance/journals';
+export const HOLDING_PATH = '/finance/holding';
 const MAX_LOGIN_BODY_BYTES = 2048;
 const MAX_USER_ID_BYTES = 128;
 const MAX_PASSWORD_BYTES = 72;
@@ -154,6 +155,7 @@ export class FinanceReferenceAuthSession {
   constructor(
     readonly enabled: boolean,
     fetchImpl: FinanceReferenceFetch = globalThis.fetch.bind(globalThis),
+    holdingReferenceEnabled = false,
   ) {
     this.snapshot = { state: enabled ? 'guest' : 'unknown', session: null };
     this.loginPort = new FinanceReferenceLoginPort(fetchImpl);
@@ -161,6 +163,7 @@ export class FinanceReferenceAuthSession {
       fetchImpl,
       () => this.getValidSession(),
       (requestEpoch) => this.invalidate(requestEpoch),
+      holdingReferenceEnabled,
     );
   }
 
@@ -249,6 +252,7 @@ export function createFinanceReferenceJournalFetch(
   fetchImpl: FinanceReferenceFetch,
   getSession: () => FinanceReferenceSession | null,
   onUnauthorized: (epoch: number) => void,
+  holdingReferenceEnabled = false,
 ): FinanceReferenceFetch {
   return async (input, init) => {
     const rawUrl =
@@ -284,11 +288,24 @@ export function createFinanceReferenceJournalFetch(
       /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/retrospectives\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
         target.pathname,
       );
-    const protectedPath = isJournalBase || target.pathname.startsWith(`${JOURNAL_PATH}/`);
+    const isHolding = target.pathname === HOLDING_PATH;
+    if (isHolding || target.pathname.startsWith(`${HOLDING_PATH}/`)) {
+      if (
+        !holdingReferenceEnabled ||
+        !isHolding ||
+        target.search ||
+        (method !== 'GET' && method !== 'PUT')
+      ) {
+        throw new FinanceReferenceAuthError('external_request');
+      }
+    }
+    const protectedPath =
+      isHolding || isJournalBase || target.pathname.startsWith(`${JOURNAL_PATH}/`);
     if (!protectedPath) {
       return fetchImpl(input, { ...init, credentials: 'omit' });
     }
     if (
+      !isHolding &&
       !(isJournalBase && (method === 'GET' || method === 'POST')) &&
       !(isJournalDetail && (method === 'GET' || method === 'PATCH')) &&
       !(isDeletedList && method === 'GET') &&

@@ -1,3 +1,4 @@
+import { ReferenceHolding } from '@/features/holding/ReferenceHolding';
 import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
@@ -187,8 +188,17 @@ export function AppRouter({
       import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
       import.meta.env.PROD,
     );
+  const holdingReferenceEnabled =
+    referenceAuthEnabled &&
+    import.meta.env.DEV &&
+    import.meta.env.VITE_FINANCE_HOLDING_REFERENCE_ENABLED === 'true';
   const [financeAuth] = useState(
-    () => new FinanceReferenceAuthSession(referenceAuthEnabled, financeReferenceFetchImpl),
+    () =>
+      new FinanceReferenceAuthSession(
+        referenceAuthEnabled,
+        financeReferenceFetchImpl,
+        holdingReferenceEnabled,
+      ),
   );
   const authSnapshot = useSyncExternalStore(
     financeAuth.subscribe,
@@ -271,7 +281,21 @@ export function AppRouter({
           <Route path={APP_BASE} element={<AppShell />}>
             {/* Adaptive primary navigation 셸 = Review/Journal primary surfaces */}
             <Route element={<LazyTabLayout journalReadPort={activeJournalReadPort} />}>
-              <Route index element={<LazyHomePage />} />
+              <Route
+                index
+                element={
+                  <LazyHomePage
+                    holding={
+                      holdingReferenceEnabled && authSnapshot.session ? (
+                        <ReferenceHolding
+                          key={authSnapshot.session.epoch}
+                          fetchImpl={financeAuth.fetch}
+                        />
+                      ) : undefined
+                    }
+                  />
+                }
+              />
               <Route
                 path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.ask)}
                 element={<LazyAskPage />}

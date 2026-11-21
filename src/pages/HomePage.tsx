@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -18,7 +18,7 @@ interface ReviewStartLocationState {
 
 const EXAMPLE_KEYS = ['etf', 'earnings', 'loss'] as const;
 
-export function HomePage() {
+export function HomePage({ holding }: { holding?: ReactNode } = {}) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -76,6 +76,8 @@ export function HomePage() {
           {t('app.home.hero.description')}
         </p>
       </header>
+
+      {holding}
 
       <Card className="border-border bg-card min-w-0 rounded-2xl p-5 shadow-sm sm:p-7">
         <form className="flex min-w-0 flex-col gap-4" onSubmit={handleSubmit} noValidate>
