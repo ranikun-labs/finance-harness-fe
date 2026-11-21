@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { LocalHolding } from './LocalHolding';
 
 type Setup = {
   questionId: string;
@@ -350,6 +351,7 @@ export function LocalGeneralAnalysis({
           </div>
         </>
       )}
+      {import.meta.env.DEV && import.meta.env.VITE_LOCAL_HOLDING === 'true' && <LocalHolding />}
       {!httpSmoke && (
         <section aria-label="Synthetic lens">
           <h2>Synthetic market lens</h2>
