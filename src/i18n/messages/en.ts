@@ -49,6 +49,7 @@ export const en: Messages = {
       loading: 'Checking your sign-in request',
       failure: 'We could not sign you in',
       failureDescription: 'Try again, or return to the review result without losing its context.',
+      directFailureDescription: 'Try again, or return to the previous screen.',
       retry: 'Try again',
       noIntent: 'Choose where to continue so the original task can be resumed.',
       resumeNotice: 'You can continue writing from the review result.',

@@ -49,6 +49,7 @@ interface JournalNewLocationState {
   decisionContextEnabled?: boolean;
   reviewHandoff?: ReviewJournalHandoff;
   authResumeNotice?: boolean;
+  authResumed?: boolean;
 }
 
 export function JournalNewPage({ createPort, createMode = 'test', authAvailable = false }: Props) {
@@ -97,10 +98,10 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   }, []);
 
   useEffect(() => {
-    if (locationState?.authResumeNotice) {
+    if (locationState?.authResumed || locationState?.authResumeNotice) {
       headingRef.current?.focus();
     }
-  }, [locationState?.authResumeNotice]);
+  }, [locationState?.authResumed, locationState?.authResumeNotice]);
 
   const directEntryAuthState = (type: AuthResumeIntent['recordType']) => ({
     authResumeIntent: {
@@ -316,7 +317,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         )}
         <h1
           ref={headingRef}
-          tabIndex={locationState?.authResumeNotice ? -1 : undefined}
+          tabIndex={locationState?.authResumed || locationState?.authResumeNotice ? -1 : undefined}
           className="text-foreground text-2xl leading-tight font-bold tracking-tight outline-none"
         >
           {typeCopy.title}

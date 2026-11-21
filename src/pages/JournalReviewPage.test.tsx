@@ -82,7 +82,7 @@ describe('JournalReviewPage', () => {
           </JournalReadPortProvider>
         </JournalEditFetchContext.Provider>,
       );
-      const field = await screen.findByLabelText('복기 내용 *');
+      const field = await screen.findByLabelText('지금 다시 보면, 무엇이 달라졌나요? *');
       fireEvent.change(field, { target: { value: '새 복기 초안' } });
       const disclosure = screen.getByText('당시 기록 자세히 보기');
       fireEvent.click(disclosure);
