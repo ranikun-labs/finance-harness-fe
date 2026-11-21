@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent, RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { FormEvent, MouseEvent, RefObject } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
 import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { DecisionContextSnapshotView } from '@/components/journal/DecisionContextPanel';
 import { RecordTagBadge } from '@/components/common/RecordTagBadge';
@@ -33,15 +34,17 @@ interface ReviewHeaderProps {
   title: string;
   backLabel: string;
   backTo: string;
+  onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-function ReviewHeader({ title, backLabel, backTo }: ReviewHeaderProps) {
+function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
   return (
     <header className="relative flex min-h-11 items-center justify-center">
       <Link
         aria-label={backLabel}
         className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"
         to={backTo}
+        onClick={onBack}
       >
         <span aria-hidden="true">←</span>
       </Link>
@@ -673,6 +676,36 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const { t, locale } = useTranslation();
   const detail = state.data;
   const originalTouched = useRef(false);
+  const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
+  const { setDirty } = useRetrospectiveDraft();
+  const handleDirtyChange = useCallback(
+    (dirty: boolean) => {
+      setRetrospectiveDirty(dirty);
+      setDirty(dirty);
+    },
+    [setDirty],
+  );
+  const confirmBack = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      (event.currentTarget.target && event.currentTarget.target !== '_self')
+    )
+      return;
+    if (
+      retrospectiveDirty &&
+      !window.confirm(
+        locale === 'ko'
+          ? '작성 중인 복기가 사라집니다. 돌아갈까요?'
+          : 'Your unsaved reflection will be lost. Go back?',
+      )
+    )
+      event.preventDefault();
+  };
   const [originalOpen, setOriginalOpen] = useState(() =>
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(min-width: 1024px) and (orientation: landscape), (min-width: 1280px)')
@@ -711,6 +744,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
               ? buildAppJournalDetailPath(id)
               : APP_ROUTE_PATHS.journalList
           }
+          onBack={confirmBack}
         />
       </div>
       {state.status === 'loading' && (
@@ -752,9 +786,16 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
                 {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)} ·{' '}
                 {detail.timeZone}
               </p>
+              {detail.type === 'investment' && (
+                <RecordTagBadge kind="action" value={detail.action} />
+              )}
+              {!originalOpen && (
+                <p className="text-muted-foreground line-clamp-2 text-sm leading-6 [overflow-wrap:anywhere]">
+                  {detail.type === 'investment' ? detail.reasoning : detail.keyContent}
+                </p>
+              )}
               {detail.type === 'investment' ? (
                 <>
-                  <RecordTagBadge kind="action" value={detail.action} />
                   <details
                     className="retrospective-original-details"
                     open={originalOpen}
@@ -806,6 +847,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
                 key={`${detail.journalId}:${detail.revision}`}
                 journalId={detail.journalId}
                 revision={detail.revision}
+                onDirtyChange={handleDirtyChange}
               />
             ) : (
               <p
@@ -818,6 +860,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
             <Link
               className={buttonVariants({ variant: 'outline' })}
               to={buildAppJournalDetailPath(detail.journalId)}
+              onClick={confirmBack}
             >
               {t('app.journalReview.backLabel')}
             </Link>

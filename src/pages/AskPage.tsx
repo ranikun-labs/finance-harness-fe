@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -25,6 +25,7 @@ type ReviewPhase = 'loading' | 'result' | 'error';
 
 interface ReviewLocationState {
   reviewFlow?: 'loading';
+  focusReviewHandoff?: 'investment' | 'study';
 }
 
 function formatReviewTime(value: string, locale: 'ko' | 'en'): string {
@@ -168,14 +169,22 @@ function StructuredReviewResult({
   partial,
   returnTarget,
   reviewRef,
+  focusReviewHandoff,
 }: {
   question: string;
   partial: boolean;
   returnTarget: string;
   reviewRef: string;
+  focusReviewHandoff?: 'investment' | 'study';
 }) {
   const { locale, t } = useTranslation();
   const navigate = useNavigate();
+  const investmentLinkRef = useRef<HTMLAnchorElement>(null);
+  const studyLinkRef = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (focusReviewHandoff === 'investment') investmentLinkRef.current?.focus();
+    if (focusReviewHandoff === 'study') studyLinkRef.current?.focus();
+  }, [focusReviewHandoff]);
   const { state: authPresentationState } = useAuthPresentation();
   const fixture = useMemo(() => getReviewFixture(partial), [partial]);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
@@ -462,6 +471,7 @@ function StructuredReviewResult({
         </header>
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <Link
+            ref={investmentLinkRef}
             className={cn(
               buttonVariants({ variant: 'outline' }),
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
@@ -488,6 +498,7 @@ function StructuredReviewResult({
             </span>
           </Link>
           <Link
+            ref={studyLinkRef}
             className={cn(
               buttonVariants({ variant: 'default' }),
               'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
@@ -598,6 +609,7 @@ export function AskPage() {
           partial={partial}
           returnTarget={returnTarget}
           reviewRef={searchParams.get('ref') ?? ''}
+          focusReviewHandoff={locationState?.focusReviewHandoff}
         />
       )}
     </div>
