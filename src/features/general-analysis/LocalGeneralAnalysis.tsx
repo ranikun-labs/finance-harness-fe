@@ -358,7 +358,9 @@ export function LocalGeneralAnalysis({
             Scenario{' '}
             <select
               value={scenario}
+              disabled={!setup}
               onChange={(e) => {
+                if (!setup) return;
                 invalidate();
                 setScenario(e.target.value);
               }}

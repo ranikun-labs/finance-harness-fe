@@ -6,11 +6,12 @@ import { configDefaults, defineConfig } from 'vitest/config';
 
 const financeApiProxyTarget = process.env.FINANCE_API_PROXY_TARGET?.trim();
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   if (
-    env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ||
-    env.VITE_LOCAL_GENERAL_ANALYSIS_HTTP_SMOKE === 'true'
+    command === 'serve' &&
+    process.env.NODE_ENV !== 'production' &&
+    env.VITE_LOCAL_GENERAL_ANALYSIS === 'true'
   ) {
     let target: URL;
     try {
