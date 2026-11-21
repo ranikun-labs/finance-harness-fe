@@ -95,6 +95,15 @@ export const ko: Messages = {
     emotion: { FOMO: 'FOMO', 불안: '불안', 확신: '확신', 관망: '관망', 혼란: '혼란' },
   },
   app: {
+    holding: {
+      title: '관심 종목',
+      ticker: '종목 코드',
+      save: '종목 저장',
+      loading: '종목 불러오는 중…',
+      unavailable: '종목을 불러오지 못했어요. 화면을 다시 열어 주세요.',
+      empty: '저장된 종목 없음',
+      error: '종목을 저장하지 못했어요. 코드 형식을 확인하거나 다시 시도해 주세요.',
+    },
     home: {
       title: 'Home',
       hero: {

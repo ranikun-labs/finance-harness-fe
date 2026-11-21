@@ -98,6 +98,15 @@ export const en: Messages = {
     },
   },
   app: {
+    holding: {
+      title: 'Interest ticker',
+      ticker: 'Ticker',
+      save: 'Save ticker',
+      loading: 'Loading ticker…',
+      unavailable: 'Ticker unavailable. Reopen the page to try again.',
+      empty: 'No ticker saved',
+      error: 'Unable to save ticker. Check its format or retry.',
+    },
     home: {
       title: 'Home',
       hero: {

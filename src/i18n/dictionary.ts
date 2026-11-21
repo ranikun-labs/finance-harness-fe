@@ -97,6 +97,15 @@ export interface Messages {
     emotion: { FOMO: string; 불안: string; 확신: string; 관망: string; 혼란: string };
   };
   app: {
+    holding: {
+      title: string;
+      ticker: string;
+      save: string;
+      loading: string;
+      unavailable: string;
+      empty: string;
+      error: string;
+    };
     home: {
       /** 기존 skeleton route 제목 호환용. 실제 화면 h1은 `hero.heading`을 사용한다. */
       title: string;
