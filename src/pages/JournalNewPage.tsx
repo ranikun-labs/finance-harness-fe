@@ -80,7 +80,19 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   const [decisionContextEnabled, setDecisionContextEnabled] = useState(
     Boolean(incomingDecisionContext) && locationState?.decisionContextEnabled !== false,
   );
-  const [dirty, setDirty] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [initialContext] = useState(() => ({
+    enabled: Boolean(incomingDecisionContext) && locationState?.decisionContextEnabled !== false,
+    evidence: incomingDecisionContext?.optionalEvidence.map((item) => item.included) ?? [],
+  }));
+  const contextDirty =
+    decisionContextEnabled !== initialContext.enabled ||
+    Boolean(
+      decisionContext?.optionalEvidence.some(
+        (item, index) => item.included !== initialContext.evidence[index],
+      ),
+    );
+  const dirty = formDirty || contextDirty;
   const { setDirty: setNavigationDirty } = useRetrospectiveDraft();
   const [hasSubmission, setHasSubmission] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
@@ -409,7 +421,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
       )}
       {resolution.type === 'investment' ? (
         <InvestmentJournalForm
-          onDirtyChange={setDirty}
+          onDirtyChange={setFormDirty}
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}
           submitState={createPort ? submitState : undefined}
@@ -418,7 +430,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
       ) : (
         <StudyJournalForm
           initialValues={reviewHandoff?.learningDraft}
-          onDirtyChange={setDirty}
+          onDirtyChange={setFormDirty}
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}
           submitState={createPort ? submitState : undefined}

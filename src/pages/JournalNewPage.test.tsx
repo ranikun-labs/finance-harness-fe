@@ -494,6 +494,60 @@ describe('JournalNewPage', () => {
     expect(within(panel).getAllByRole('checkbox')[0]).not.toBeChecked();
   });
 
+  it('guards context selection changes and clears the warning when restored', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: APP_ROUTE_PATHS.journalNew,
+            search: '?type=investment',
+            state: {
+              decisionContext: SAMPLE_DECISION_CONTEXT,
+              reviewHandoff: REVIEW_DECISION_HANDOFF,
+            },
+          },
+        ]}
+      >
+        <I18nProvider locale="ko">
+          <JournalNavigationHarness />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+    const panel = screen.getByTestId('decision-context-capture');
+    const toggle = within(panel).getByRole('switch');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const unloadingIsBlocked = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    try {
+      expect(unloadingIsBlocked()).toBe(false);
+      fireEvent.click(toggle);
+      expect(unloadingIsBlocked()).toBe(true);
+      fireEvent.click(screen.getByRole('link', { name: '검토' }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      fireEvent.click(toggle);
+      expect(unloadingIsBlocked()).toBe(false);
+
+      const evidence = within(panel).getAllByRole('checkbox')[0];
+      const initiallyChecked = (evidence as HTMLInputElement).checked;
+      fireEvent.click(evidence);
+      expect(unloadingIsBlocked()).toBe(true);
+      fireEvent.click(screen.getByRole('link', { name: '저널' }));
+      expect(confirm).toHaveBeenCalledTimes(2);
+      expect((evidence as HTMLInputElement).checked).toBe(!initiallyChecked);
+      fireEvent.click(evidence);
+      expect(unloadingIsBlocked()).toBe(false);
+      fireEvent.click(screen.getByRole('link', { name: '검토' }));
+      expect(confirm).toHaveBeenCalledTimes(2);
+      expect(screen.getByText('Review destination')).toBeInTheDocument();
+    } finally {
+      confirm.mockRestore();
+    }
+  });
+
   it('does not expose Decision Context on a direct Decision Entry route', () => {
     renderPage(buildAppJournalNewPath('investment'), 'ko');
 
