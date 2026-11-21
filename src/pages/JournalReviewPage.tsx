@@ -678,6 +678,16 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
   const confirmBack = (event: MouseEvent<HTMLAnchorElement>) => {
     if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      (event.currentTarget.target && event.currentTarget.target !== '_self')
+    )
+      return;
+    if (
       retrospectiveDirty &&
       !window.confirm(
         locale === 'ko'

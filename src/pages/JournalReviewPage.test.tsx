@@ -89,6 +89,30 @@ describe('JournalReviewPage', () => {
       fireEvent.click(disclosure);
       expect(field).toHaveValue('새 복기 초안');
       expect(screen.getByText('원래 판단의 이유')).toBeInTheDocument();
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      try {
+        const links = screen.getAllByRole('link', { name: /기록 상세/ });
+        expect(links).toHaveLength(2);
+        for (const link of links) {
+          for (const modifier of [
+            { ctrlKey: true },
+            { metaKey: true },
+            { shiftKey: true },
+            { altKey: true },
+            { button: 1 },
+          ]) {
+            fireEvent.click(link, modifier);
+            expect(confirm).not.toHaveBeenCalled();
+            expect(field).toHaveValue('새 복기 초안');
+          }
+          fireEvent.click(link);
+          expect(confirm).toHaveBeenCalledTimes(1);
+          expect(field).toHaveValue('새 복기 초안');
+          confirm.mockClear();
+        }
+      } finally {
+        confirm.mockRestore();
+      }
     } finally {
       vi.unstubAllEnvs();
     }
