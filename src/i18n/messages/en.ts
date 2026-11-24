@@ -105,7 +105,7 @@ export const en: Messages = {
         eyebrow: 'Review',
         heading: 'Review what you are deciding now',
         description:
-          'I won’t tell you to buy or sell. I’ll organize what to check, evidence-based facts, and what is still unknown.',
+          'Explore an example of how to review checks and evidence before making an investment decision.',
         action: 'Start review',
         ariaLabel: 'Start the app',
       },
@@ -114,7 +114,7 @@ export const en: Messages = {
         exampleNotice:
           'Review results are examples of the screen flow, not analysis of your question.',
         placeholder: 'e.g. Should I add to my semiconductor ETF position now?',
-        helper: 'Keep your question intact while the review separates checks from evidence.',
+        helper: 'Your question appears at the top of the example result.',
         submit: 'Start example review',
         required: 'Enter something to review.',
       },
