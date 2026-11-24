@@ -8,6 +8,7 @@ import {
   buildAppJournalReviewPath,
 } from '@/constants/routes';
 import { I18nProvider } from '@/i18n/I18nContext';
+import { formatJournalInstant } from '@/lib/date';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
@@ -91,7 +92,14 @@ describe('JournalDetailPage', () => {
         .closest('[data-slot="info-row"]')!
         .querySelector('time'),
     ).toHaveAttribute('datetime', INVESTMENT_DETAIL.updatedAt);
-    expect(screen.getAllByText('2026. 08. 12. 오후 02:31')).toHaveLength(2);
+    // 표기 문자열은 실행 환경의 ICU(공백 문자 등)에 따라 달라질 수 있어 같은 포맷 함수로 기대값을 만든다.
+    const expectedInstant = formatJournalInstant(
+      INVESTMENT_DETAIL.createdAt,
+      INVESTMENT_DETAIL.timeZone,
+      'ko',
+    );
+    expect(expectedInstant).toContain('02:31');
+    expect(screen.getAllByText(expectedInstant)).toHaveLength(2);
     expect(
       screen.queryByText(ko.app.journalDetail.investment.aiChecklistHeading),
     ).not.toBeInTheDocument();
