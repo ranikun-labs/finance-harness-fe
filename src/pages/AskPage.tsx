@@ -81,7 +81,7 @@ function LoadingReview({ question }: { question: string }) {
         aria-label={t('app.ask.loading.title')}
         aria-live="polite"
         role="status"
-        className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-xl border p-5"
+        className="bg-card rounded-card flex min-w-0 flex-col gap-4 p-5"
       >
         <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
           <div className="bg-primary h-full w-2/3 animate-pulse rounded-full" />
