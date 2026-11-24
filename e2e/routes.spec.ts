@@ -216,9 +216,9 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
   }) => {
     await page.goto(APP_ROUTE_PATHS.appHome);
 
-    const recentSection = page
-      .getByRole('heading', { level: 2, name: ko.app.home.recentRecords.heading })
-      .locator('xpath=..');
+    // 섹션 제목이 SectionHeader로 감싸져 부모 노드가 section이 아니므로, DOM 구조 대신
+    // 접근 가능한 이름이 붙은 region(section[aria-label])으로 범위를 잡는다.
+    const recentSection = page.getByRole('region', { name: ko.app.home.recentRecords.heading });
     const recentItems = recentSection.getByRole('listitem');
     await expect(recentItems).toHaveCount(2);
     await expect(recentSection.getByText(ko.app.home.recentRecords.sampleNotice)).toBeVisible();

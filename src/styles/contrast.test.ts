@@ -69,6 +69,8 @@ describe.each(['light', 'dark'] as const)('Foundation v1 %s theme contrast (>= 4
     pairs.push([`${status} on ${status}-bg`, status, `${status}-bg`]);
     pairs.push([`${status} on card`, status, 'card']);
     pairs.push([`${status} on page`, status, 'page']);
+    // Notice 본문은 foreground를 상태 면 위에 둔다.
+    pairs.push([`foreground on ${status}-bg`, 'foreground', `${status}-bg`]);
   }
 
   it.each(pairs)('%s', (_name, foreground, background) => {
@@ -81,6 +83,10 @@ describe.each(['light', 'dark'] as const)('Foundation v1 %s theme contrast (>= 4
 
   it('control/input outline is at least 3:1 on card (non-text contrast)', () => {
     expect(contrastRatio(token(theme, 'input'), token(theme, 'card'))).toBeGreaterThanOrEqual(3);
+  });
+
+  it('control/input outline is at least 3:1 on inset (TextField fill="inset")', () => {
+    expect(contrastRatio(token(theme, 'input'), token(theme, 'inset'))).toBeGreaterThanOrEqual(3);
   });
 });
 
