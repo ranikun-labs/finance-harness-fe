@@ -10,7 +10,9 @@ function Harness({ destructive = false, onConfirm = vi.fn() }) {
   const [open, setOpen] = React.useState(false);
   return (
     <>
-      <button onClick={() => setOpen(true)}>열기</button>
+      <button type="button" onClick={() => setOpen(true)}>
+        열기
+      </button>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -109,5 +111,19 @@ describe('Dialog', () => {
     expect(document.body.style.overflow).toBe('hidden');
     fireEvent.click(screen.getByRole('button', { name: '취소' }));
     expect(document.body.style.overflow).toBe('');
+  });
+
+  // 폼 안에 렌더돼도 취소·확인이 바깥 폼을 제출하지 않아야 한다(Button은 기본 type을 두지 않음).
+  it('does not submit an enclosing form from cancel or confirm', () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Harness />
+      </form>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '열기' }));
+    fireEvent.click(screen.getByRole('button', { name: '삭제' }));
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

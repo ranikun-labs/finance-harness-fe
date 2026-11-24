@@ -152,6 +152,7 @@ function Dialog({
             {/* 취소는 항상 왼쪽, 확인은 오른쪽. */}
             <Button
               ref={cancelRef}
+              type="button"
               variant="neutral"
               className="flex-1 sm:flex-none"
               onClick={onClose}
@@ -160,6 +161,7 @@ function Dialog({
             </Button>
             {confirmLabel ? (
               <Button
+                type="button"
                 variant={destructive ? 'danger-strong' : 'strong'}
                 className="flex-1 sm:flex-none"
                 onClick={onConfirm}
