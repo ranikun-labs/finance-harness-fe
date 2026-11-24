@@ -211,7 +211,10 @@ export function AppRouter({
     [financeAuth, journalCreatePort, referenceAuthEnabled],
   );
   const activeCreateMode = referenceAuthEnabled ? 'test' : journalCreateMode;
-  const activePresentation = authPresentation ?? { state: authSnapshot.state };
+  const activePresentation = authPresentation ?? {
+    state: authSnapshot.state,
+    sessionEpoch: authSnapshot.session?.epoch,
+  };
 
   return (
     <JournalEditFetchContext.Provider value={referenceAuthEnabled ? financeAuth.fetch : undefined}>

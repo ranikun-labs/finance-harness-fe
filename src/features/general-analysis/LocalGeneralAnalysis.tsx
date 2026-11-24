@@ -13,6 +13,8 @@ type Output = {
   evidenceNote: string;
 };
 
+class ChecklistConflictError extends Error {}
+
 async function requestAt(
   prefix: string,
   path: string,
@@ -26,6 +28,7 @@ async function requestAt(
     body: JSON.stringify(body),
     signal,
   });
+  if (response.status === 409) throw new ChecklistConflictError();
   if (!response.ok) throw new Error('Request failed');
   return response.json() as Promise<unknown>;
 }
@@ -155,16 +158,21 @@ export function LocalGeneralAnalysis({
     const timeout = window.setTimeout(() => controller.abort(), 10000);
     try {
       const base = `/questions/${encodeURIComponent(setup.questionId)}`;
-      await request(
+      const confirmation = await request(
         `${base}/checklists/${encodeURIComponent(setup.checklistId)}`,
         'PUT',
         { checkedItemIds: checked, confirmed: true },
         controller.signal,
       );
+      if (
+        !confirmation || typeof confirmation !== 'object' ||
+        !('revision' in confirmation) || !Number.isSafeInteger(confirmation.revision) ||
+        typeof confirmation.revision !== 'number' || confirmation.revision < 0
+      ) throw new Error('Invalid checklist confirmation');
       const response = (await request(
         `${base}/analysis`,
         'POST',
-        { checklistId: setup.checklistId },
+        { checklistId: setup.checklistId, expectedRevision: confirmation.revision },
         controller.signal,
       )) as { status?: unknown; output?: unknown; analysisId?: unknown };
       if (current !== version.current) return;
@@ -172,7 +180,10 @@ export function LocalGeneralAnalysis({
         setMessage(
           'This request cannot be analyzed. Consider asking about general checks instead.',
         );
-      else if (
+      else if (response?.status === 'STALE') {
+        setConfirmed(false);
+        setMessage('The checklist changed. Review it before starting another analysis.');
+      } else if (
         response?.status === 'COMPLETED' &&
         isOutput(response.output) &&
         typeof response.analysisId === 'string'
@@ -225,9 +236,15 @@ export function LocalGeneralAnalysis({
         setLens({ ...result, analysisId: response.analysisId });
         setMessage('Completed');
       } else setMessage('Analysis could not be validated. Please try again.');
-    } catch {
-      if (current === version.current)
-        setMessage('Analysis failed or timed out. Your question and checklist are preserved.');
+    } catch (error) {
+      if (current === version.current) {
+        if (error instanceof ChecklistConflictError) {
+          setConfirmed(false);
+          setMessage('The checklist changed. Review it before starting another analysis.');
+        } else {
+          setMessage('Analysis failed or timed out. Your question and checklist are preserved.');
+        }
+      }
     } finally {
       clearTimeout(timeout);
       if (current === version.current) {

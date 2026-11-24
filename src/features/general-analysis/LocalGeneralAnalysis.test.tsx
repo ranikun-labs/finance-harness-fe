@@ -35,7 +35,7 @@ it('requires confirmation and hides a response that arrives after confirmation i
   const fetchMock = vi
     .fn()
     .mockResolvedValueOnce(response(setup))
-    .mockResolvedValueOnce(response({ confirmed: true }))
+    .mockResolvedValueOnce(response({ confirmed: true, revision: 1 }))
     .mockImplementationOnce(
       () =>
         new Promise<Response>((resolve) => {
@@ -65,13 +65,34 @@ it('requires confirmation and hides a response that arrives after confirmation i
   await waitFor(() => expect(screen.queryByText('Late output')).not.toBeInTheDocument());
   expect(screen.getByRole('status')).toHaveTextContent('Review the checklist');
 });
+it('requires checklist review again when the server marks analysis stale', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValueOnce(response(setup))
+      .mockResolvedValueOnce(response({ confirmed: true, revision: 1 }))
+      .mockResolvedValueOnce(response({ status: 'STALE', output: { summary: 'stale answer' } })),
+  );
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} httpSmoke />);
+  await screen.findByText('Which facts?');
+  fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
+  fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+
+  expect(
+    await screen.findByText('The checklist changed. Review it before starting another analysis.'),
+  ).toBeInTheDocument();
+  expect(screen.queryByText('stale answer')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('I reviewed the checklist')).not.toBeChecked();
+  expect(screen.getByRole('button', { name: 'Analyze' })).toBeDisabled();
+});
 it('hides invalid completed output', async () => {
   vi.stubGlobal(
     'fetch',
     vi
       .fn()
       .mockResolvedValueOnce(response(setup))
-      .mockResolvedValueOnce(response({}))
+      .mockResolvedValueOnce(response({ revision: 1 }))
       .mockResolvedValueOnce(response({ status: 'COMPLETED', output: {} })),
   );
   render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} />);
@@ -105,7 +126,7 @@ it('shows only validated backend evidence after analysis', async () => {
     vi
       .fn()
       .mockResolvedValueOnce(response(setup))
-      .mockResolvedValueOnce(response({}))
+      .mockResolvedValueOnce(response({ revision: 1 }))
       .mockResolvedValueOnce(response({ status: 'COMPLETED', analysisId: 'a', output }))
       .mockResolvedValueOnce(response(lens)),
   );
@@ -128,7 +149,7 @@ it('offers a synthetic contribution only after sector evidence and reads it only
   const mock = vi
     .fn()
     .mockResolvedValueOnce(response(setup))
-    .mockResolvedValueOnce(response({}))
+    .mockResolvedValueOnce(response({ revision: 1 }))
     .mockResolvedValueOnce(response({ status: 'COMPLETED', analysisId: 'a', output }))
     .mockResolvedValueOnce(
       response({
@@ -189,7 +210,7 @@ it('rejects contributions that do not match the approved synthetic fixture', asy
     vi
       .fn()
       .mockResolvedValueOnce(response(setup))
-      .mockResolvedValueOnce(response({}))
+      .mockResolvedValueOnce(response({ revision: 1 }))
       .mockResolvedValueOnce(response({ status: 'COMPLETED', analysisId: 'a', output }))
       .mockResolvedValueOnce(
         response({
@@ -233,4 +254,19 @@ it('rejects contributions that do not match the approved synthetic fixture', asy
     await screen.findByText('Suggestion expired or could not be validated. Run analysis again.'),
   ).toBeInTheDocument();
   expect(screen.queryByText(/REAL-TICKER/)).not.toBeInTheDocument();
+});
+
+it('sends the confirmed revision and requires review after a conflicting update', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(response(setup))
+    .mockResolvedValueOnce(response({ revision: 7 }))
+    .mockResolvedValueOnce({ ok: false, status: 409 });
+  vi.stubGlobal('fetch', fetchMock);
+  render(<LocalGeneralAnalysis question="Explain risk" onEdit={() => {}} httpSmoke />);
+  await screen.findByText('Which facts?');
+  fireEvent.click(screen.getByLabelText('I reviewed the checklist'));
+  fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+  expect(await screen.findByText('The checklist changed. Review it before starting another analysis.')).toBeInTheDocument();
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ checklistId: 'c', expectedRevision: 7 });
+  expect(screen.getByLabelText('I reviewed the checklist')).not.toBeChecked();
 });

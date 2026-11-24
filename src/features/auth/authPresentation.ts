@@ -23,6 +23,7 @@ export type AuthPresentationState = 'unknown' | 'guest' | 'authenticated';
 
 export interface AuthPresentationConsumer {
   state: AuthPresentationState;
+  sessionEpoch?: number;
 }
 
 /**

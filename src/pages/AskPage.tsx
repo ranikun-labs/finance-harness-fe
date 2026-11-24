@@ -530,6 +530,7 @@ function StructuredReviewResult({
 }
 
 export function AskPage() {
+  const { state: authState, sessionEpoch } = useAuthPresentation();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -586,16 +587,20 @@ export function AskPage() {
       {question !== '' &&
       import.meta.env.DEV &&
       import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ? (
-        <LocalGeneralAnalysis
-          key={question}
-          question={question}
-          onEdit={editQuestion}
-          httpSmoke={
-            import.meta.env.DEV &&
-            import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS_HTTP_SMOKE === 'true' &&
-            ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
-          }
-        />
+        authState === 'guest' ? (
+          <Link to={AUTH_ROUTE_PATHS.entry}>{t('nav.signIn')}</Link>
+        ) : (
+          <LocalGeneralAnalysis
+            key={JSON.stringify([question, authState, sessionEpoch])}
+            question={question}
+            onEdit={editQuestion}
+            httpSmoke={
+              import.meta.env.DEV &&
+              import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS_HTTP_SMOKE === 'true' &&
+              ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+            }
+          />
+        )
       ) : question === '' ? (
         <Card className="p-2">
           <EmptyState

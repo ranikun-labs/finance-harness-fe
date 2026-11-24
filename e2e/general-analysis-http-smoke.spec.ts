@@ -66,3 +66,92 @@ test('local generic analysis through Finance and the model double', async ({ pag
     fullPage: true,
   });
 });
+
+test('reference sign-out hides a pending analysis and its checklist', async ({ page }) => {
+  test.skip(
+    process.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED !== 'true',
+    'Requires explicit reference login opt-in',
+  );
+  await page.route('**/api/v1/auth/finance-reference/login', (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        message: 'ok',
+        data: {
+          accessToken: 'public-reference-fixture-token',
+          tokenType: 'Bearer',
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        },
+      },
+    }),
+  );
+  await page.route('**/finance/general-analysis/questions', (route) =>
+    route.fulfill({
+      status: 201,
+      json: {
+        questionId: 'test-question',
+        checklistId: 'test-checklist',
+        checklistItems: [{ id: 'known_facts', prompt: 'Private checklist fixture' }],
+      },
+    }),
+  );
+  await page.route('**/finance/general-analysis/questions/*/checklists/*', (route) =>
+    route.fulfill({ json: { confirmed: true, revision: 1 } }),
+  );
+  await page.goto('/auth');
+  await page.locator('input[autocomplete=username]').fill('fixture-user');
+  await page.locator('input[autocomplete=current-password]').fill('fixture-password');
+  await page.getByTestId('finance-reference-login').click();
+  await expect(page.getByTestId('finance-reference-session')).toBeVisible();
+
+  // Keep the in-memory session by navigating through the app instead of reloading it.
+  await page.locator('a[href="/app"]').first().click();
+  const field = page.locator('#review-question');
+  await field.fill('How can I check these facts?');
+  await field.press('Control+Enter');
+  await expect(page.getByText('Private checklist fixture')).toBeVisible();
+
+  let release!: () => void;
+  const holdResponse = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let markResponseAttempted!: () => void;
+  const responseAttempted = new Promise<void>((resolve) => {
+    markResponseAttempted = resolve;
+  });
+  const requestArrived = page.waitForRequest('**/finance/general-analysis/questions/*/analysis');
+  await page.route('**/finance/general-analysis/questions/*/analysis', async (route) => {
+    await holdResponse;
+    // The app may abort transport on logout. Still attempt the late delivery.
+    try {
+      await route.fulfill({
+        json: {
+          status: 'COMPLETED',
+          analysisId: 'test-analysis',
+          output: {
+            summary: 'Late private analysis fixture',
+            observations: ['observed'],
+            assumptions: ['assumed'],
+            nextChecks: ['check'],
+            evidenceNote: 'synthetic fixture',
+          },
+        },
+      });
+    } finally {
+      markResponseAttempted();
+    }
+  });
+  await page.getByLabel('I reviewed the checklist').check();
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click();
+  await requestArrived;
+  try {
+    await page.getByRole('button', { name: /Sign out locally/ }).click();
+    await expect(page.getByText('Private checklist fixture')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Analyze', exact: true })).toHaveCount(0);
+  } finally {
+    release();
+  }
+  await responseAttempted;
+  await expect(page.getByText('Late private analysis fixture')).toHaveCount(0);
+  await expect(page.getByText('Private checklist fixture')).toHaveCount(0);
+});
