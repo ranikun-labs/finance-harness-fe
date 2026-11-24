@@ -154,12 +154,12 @@ function JournalMetadata({ detail }: { detail: JournalDetailViewModel }) {
   );
 }
 
-/** 사용자가 쓴 본문: reading 16/27, 줄바꿈 보존(#46 의도), 긴 무공백 문자열은 끊어 넘침을 막는다. */
+/** 사용자가 쓴 본문: reading 16/27, 줄바꿈 보존(#46 의도), 한글은 어절 단위로 줄바꿈하고(break-keep), 긴 무공백 문자열은 끊어 넘침을 막는다. */
 function ReadingText({ children }: { children: ReactNode }) {
   return (
     <p
       className={cn(
-        'type-reading text-foreground min-w-0 wrap-anywhere whitespace-pre-wrap',
+        'type-reading text-foreground min-w-0 wrap-break-word break-keep whitespace-pre-wrap',
         READING_MEASURE_CLASS,
       )}
     >
