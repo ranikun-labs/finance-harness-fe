@@ -159,30 +159,38 @@ test('reference sign-out hides a pending analysis and its checklist', async ({ p
 // 실모델 화면 검수 전용. 기본 OFF이며 고정 문구 대신 검증된 답변 구조의 표시만 확인한다.
 test('live model answer through Finance reaches the existing analysis view', async ({ page }, testInfo) => {
   test.skip(process.env.FINANCE_LIVE_OPENAI !== 'true', 'live inspection is opt-in');
+  const analysisPath = /\/finance\/general-analysis\/questions\/[^/]+\/analysis$/;
+  let analysisPosts = 0;
   const analyses: { status: number; body: unknown }[] = [];
   const external: string[] = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.origin !== 'http://127.0.0.1:4178') external.push(url.origin);
+    if (request.method() === 'POST' && analysisPath.test(url.pathname)) analysisPosts += 1;
   });
   page.on('response', async (response) => {
-    if (/\/finance\/general-analysis\/questions\/[^/]+\/analysis$/.test(new URL(response.url()).pathname)) {
+    if (analysisPath.test(new URL(response.url()).pathname)) {
       analyses.push({ status: response.status(), body: await response.json().catch(() => null) });
     }
   });
-  await startReview(page, 'What basic points should I check when diversifying a synthetic portfolio?');
-  await page.getByLabel('I reviewed the checklist').check();
-  await page.getByRole('button', { name: 'Analyze', exact: true }).click();
-  // 실패 상태여도 증거를 남기도록 응답 도착을 먼저 기다린다.
-  await expect.poll(() => analyses.length, { timeout: 60_000 }).toBeGreaterThanOrEqual(1);
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: testInfo.outputPath('finance-live.png'), fullPage: true });
-  // 증거: 분석 POST 1건과 그 상태. 답변 본문은 기록하지 않는다.
-  const body = analyses[0]?.body as { analysisId?: string; status?: string } | null;
-  console.log(`LIVE_FE_EVIDENCE analyses=${analyses.length} analysisId=${body?.analysisId} status=${body?.status}`);
-  expect(analyses).toHaveLength(1);
-  expect(external).toEqual([]);
-  await expect(page.getByRole('status')).toHaveText('Completed');
-  await expect(page.getByRole('heading', { name: 'Analysis' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Observations' })).toBeVisible();
+  try {
+    await startReview(page, 'What basic points should I check when diversifying a synthetic portfolio?');
+    await page.getByLabel('I reviewed the checklist').check();
+    await page.getByRole('button', { name: 'Analyze', exact: true }).click();
+    // 실패 상태여도 증거를 남기도록 응답 도착을 먼저 기다린다.
+    await expect.poll(() => analyses.length, { timeout: 60_000 }).toBeGreaterThanOrEqual(1);
+    await page.waitForTimeout(500);
+    expect(analysisPosts).toBe(1);
+    expect(external).toEqual([]);
+    await expect(page.getByRole('status')).toHaveText('Completed');
+    await expect(page.getByRole('heading', { name: 'Analysis' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Observations' })).toBeVisible();
+  } finally {
+    // 응답이 없거나 단언이 실패해도 증거를 남긴다. 답변 본문은 기록하지 않는다.
+    const body = analyses[0]?.body as { analysisId?: string; status?: string } | null;
+    console.log(
+      `LIVE_FE_EVIDENCE posts=${analysisPosts} responses=${analyses.length} httpStatus=${analyses[0]?.status} analysisId=${body?.analysisId} status=${body?.status}`,
+    );
+    await page.screenshot({ path: testInfo.outputPath('finance-live.png'), fullPage: true });
+  }
 });
