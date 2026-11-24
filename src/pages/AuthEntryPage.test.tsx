@@ -235,8 +235,11 @@ describe('AuthEntryPage presentation seam', () => {
 
     const panel = screen.getByTestId('decision-context-capture');
     expect(within(panel).getByRole('switch')).toHaveAttribute('aria-checked', 'true');
-    expect(document.activeElement).toBe(
-      screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+    // 포커스 이동은 제목 렌더 이후 effect에서 일어나므로, 부하가 있는 CI에서도 안정적이도록 기다린다.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('heading', { name: ko.app.journalNew.investment }),
+      ),
     );
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
