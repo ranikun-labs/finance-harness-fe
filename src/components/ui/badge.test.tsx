@@ -12,9 +12,26 @@ describe('Badge', () => {
     expect(screen.getByText('임의의 라벨')).toBeInTheDocument();
   });
 
-  it.each(['neutral', 'info', 'destructive'] as const)('applies the %s tone', (tone) => {
+  it.each([
+    'neutral',
+    'info',
+    'information',
+    'success',
+    'warning',
+    'danger',
+    'conflict',
+    'destructive',
+  ] as const)('applies the %s tone', (tone) => {
     render(<Badge tone={tone}>라벨</Badge>);
     expect(screen.getByText('라벨')).toBeInTheDocument();
+  });
+
+  it('uses status tones that are independent of the brand color', () => {
+    render(<Badge tone="success">완료</Badge>);
+    const { className } = screen.getByText('완료');
+    expect(className).toContain('bg-success-bg');
+    expect(className).toContain('rounded-badge');
+    expect(className).not.toContain('primary');
   });
 
   it('merges a custom className', () => {
