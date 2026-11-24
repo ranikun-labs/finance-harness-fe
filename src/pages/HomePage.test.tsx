@@ -92,7 +92,14 @@ describe('HomePage / Review Start', () => {
       expect(question).toHaveValue('');
       expect(question).toHaveAttribute('aria-invalid', 'true');
       expect(question).toHaveFocus();
-      expect(question).toHaveAttribute('aria-describedby', 'review-question-error');
+      // 오류 연결 + 도움말 연결을 함께 유지한다(hint + error).
+      expect(question).toHaveAttribute(
+        'aria-describedby',
+        'review-question-hint review-question-error',
+      );
+      expect(question).toHaveAccessibleDescription(
+        new RegExp(`${ko.app.home.question.helper}.*${ko.app.home.question.required}`),
+      );
     },
   );
 
@@ -113,7 +120,14 @@ describe('HomePage / Review Start', () => {
       expect(screen.getByRole('alert')).toHaveTextContent(ko.app.home.question.required);
       expect(question).toHaveValue('   ');
       expect(question).toHaveAttribute('aria-invalid', 'true');
-      expect(question).toHaveAttribute('aria-describedby', 'review-question-error');
+      // 오류 연결 + 도움말 연결을 함께 유지한다(hint + error).
+      expect(question).toHaveAttribute(
+        'aria-describedby',
+        'review-question-hint review-question-error',
+      );
+      expect(question).toHaveAccessibleDescription(
+        new RegExp(`${ko.app.home.question.helper}.*${ko.app.home.question.required}`),
+      );
       expect(question).toHaveFocus();
     },
   );

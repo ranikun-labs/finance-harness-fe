@@ -26,14 +26,25 @@ describe('TextField', () => {
     expect(input).toHaveAccessibleDescription('한 줄로 적어 주세요');
   });
 
-  it('marks the field invalid and points the description at the error alert', () => {
+  it('marks the field invalid and describes it by both hint and error', () => {
     render(<TextField id="q" label="질문" hint="한 줄로 적어 주세요" error="입력해 주세요" />);
     const input = screen.getByRole('textbox', { name: '질문' });
     expect(input).toHaveAttribute('aria-invalid', 'true');
-    expect(input).toHaveAttribute('aria-describedby', 'q-error');
+    // 오류 연결 유지 + 도움말 연결도 유지(hint + error).
+    expect(input).toHaveAttribute('aria-describedby', 'q-hint q-error');
+    expect(input).toHaveAccessibleDescription('한 줄로 적어 주세요 입력해 주세요');
     expect(screen.getByRole('alert')).toHaveTextContent('입력해 주세요');
+    expect(screen.getByRole('alert')).toHaveAttribute('id', 'q-error');
     // 도움말은 오류 중에도 계속 보인다.
     expect(screen.getByText('한 줄로 적어 주세요')).toBeVisible();
+  });
+
+  it('describes by the error alone when there is no hint', () => {
+    render(<TextField id="q" label="질문" error="입력해 주세요" />);
+    expect(screen.getByRole('textbox', { name: '질문' })).toHaveAttribute(
+      'aria-describedby',
+      'q-error',
+    );
   });
 
   it('generates a stable id when none is given and keeps label/description wired', () => {

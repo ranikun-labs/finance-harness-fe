@@ -123,6 +123,10 @@ export function HomePage() {
             {t('app.home.question.submit')}
             <ArrowRight aria-hidden="true" />
           </Button>
+          {/* Light에서 inset=page 동색이라 page 위에서는 면이 안 보인다. 카드(흰) 안에 둔다. */}
+          <Notice>
+            <p>{t('app.home.policyNotice')}</p>
+          </Notice>
         </form>
       </Card>
 
@@ -142,10 +146,6 @@ export function HomePage() {
           ))}
         </ul>
       </section>
-
-      <Notice>
-        <p>{t('app.home.policyNotice')}</p>
-      </Notice>
 
       <section
         className="flex min-w-0 flex-col gap-1"

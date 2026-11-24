@@ -44,6 +44,8 @@ const toneRole: Record<NoticeTone, 'note' | 'status' | 'alert'> = {
 
 /**
  * 상태·정책 안내 면(inset). 테두리·그림자 없이 면 색 + 아이콘/제목으로 상태를 전달한다.
+ * 사용 규칙: neutral은 Light에서 inset이 page와 동색이므로 page 위에 직접 두지 말고 Card 안에 둔다
+ * (상태 tone은 자체 bg라 어디서든 보인다).
  * 문구·번역은 호출부가 넘긴다. 본문은 중립 글자색을 유지해 가독성(4.5:1)을 지킨다.
  */
 function Notice({

@@ -30,7 +30,7 @@ const fillClass = { card: 'bg-card', inset: 'bg-inset' } as const;
 
 /**
  * 라벨·입력·도움말·오류를 한 곳에서 연결한다(`<label for>`, `aria-describedby`, `aria-invalid`).
- * 접근성 설명은 오류가 있으면 오류 메시지를, 없으면 도움말을 가리킨다.
+ * 접근성 설명(`aria-describedby`)은 도움말과 오류를 함께 가리킨다(오류 중에도 도움말 id 유지).
  * 포커스 표시는 전역 `:focus-visible` 규칙을 그대로 쓰므로 개별 ring을 두지 않는다.
  * 도메인 key·i18n은 알지 못한다 — 문구는 호출부가 넘긴다.
  */
@@ -42,7 +42,8 @@ function TextField(props: TextFieldProps) {
   const errorId = `${id}-error`;
   const hasError = error !== undefined && error !== null && error !== false && error !== '';
   const hasHint = hint !== undefined && hint !== null && hint !== false && hint !== '';
-  const describedBy = hasError ? errorId : hasHint ? hintId : undefined;
+  const describedBy =
+    [hasHint ? hintId : null, hasError ? errorId : null].filter(Boolean).join(' ') || undefined;
   const classes = (extra: string) => cn(controlBase, fillClass[fill], extra);
 
   let control: React.ReactNode;
