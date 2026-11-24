@@ -45,12 +45,12 @@ interface ReviewHeaderProps {
 
 function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
   return (
-    <header className="retrospective-header relative flex min-h-14 items-center justify-center">
+    <header className="retrospective-header flex min-h-14 items-center gap-1">
       <Link
         aria-label={backLabel}
         className={cn(
           buttonVariants({ variant: 'text-neutral', size: 'icon' }),
-          'retrospective-header-back type-section-title absolute left-0',
+          'retrospective-header-back type-section-title shrink-0',
         )}
         to={backTo}
         onClick={onBack}

@@ -110,6 +110,60 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('keeps the shell header to one row: phone inner screens fold it, tablet starts content high', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+    const appHeader = page.getByTestId('app-shell-host').locator('> header');
+    const mainTop = async () => (await page.locator('main').boundingBox())!.y;
+
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    await expect(appHeader).toBeVisible();
+
+    for (const path of [buildAppJournalDetailPath(PRIMARY_ID), APP_ROUTE_PATHS.journalNew]) {
+      await page.goto(path);
+      await expect(page.locator('main')).toBeVisible();
+      await expect(appHeader).toBeHidden();
+      expect(await mainTop()).toBeLessThan(8);
+    }
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    await expect(appHeader).toBeVisible();
+    await expect(page.getByTestId('primary-navigation')).toBeVisible();
+    expect(await mainTop()).toBeLessThanOrEqual(130);
+    await page.goto(APP_ROUTE_PATHS.journalNew);
+    await expect(appHeader).toBeVisible();
+  });
+
+  test('keeps the small "new record" action a 44px target inside the two-pane list', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(APP_ROUTE_PATHS.journalList);
+    const link = page.getByRole('link', { name: ko.app.journalList.newRecord });
+    await expect(link).toBeVisible();
+    const box = (await link.boundingBox())!;
+    // 시각 박스(36) 바깥 ::after 확장 영역까지 실제로 같은 링크가 히트되는 높이를 잰다.
+    const hit = await link.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const hits = (y: number) => {
+        const t = document.elementFromPoint(x, y);
+        return t === el || el.contains(t);
+      };
+      let top = r.top;
+      let bottom = r.bottom;
+      for (let d = 1; d <= 12 && hits(r.top - d + 0.5); d += 1) top = r.top - d;
+      for (let d = 1; d <= 12 && hits(r.bottom + d - 0.5); d += 1) bottom = r.bottom + d;
+      return bottom - top;
+    });
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(hit).toBeGreaterThanOrEqual(44);
+  });
+
   test('keeps Tablet Portrait readable and out of the two-pane layout', async ({
     page,
   }, testInfo) => {
@@ -405,6 +459,15 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       page.getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.study.title) }),
     ).toHaveAttribute('href', AUTH_ROUTE_PATHS.entry);
     await expect(page.locator('input#assetName')).toHaveCount(0);
+    // 선택 카드는 테두리·그림자 없이 page 대비 surface(Card)로만 구분한다.
+    for (const title of [
+      ko.app.journalNew.entryChoice.investment.title,
+      ko.app.journalNew.entryChoice.study.title,
+    ]) {
+      const card = page.getByRole('link', { name: new RegExp(title) });
+      await expect(card).toHaveCSS('border-top-width', '0px');
+      await expect(card).toHaveCSS('box-shadow', 'none');
+    }
     await expectSingleMain(page);
     await expectNoHorizontalOverflow(page);
   });

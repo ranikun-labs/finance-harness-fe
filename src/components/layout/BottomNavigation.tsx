@@ -58,7 +58,7 @@ export function BottomNavigation({ focusMemory }: { focusMemory?: NavFocusMemory
       className={cn(
         'adaptive-primary-navigation border-border bg-background shrink-0',
         'order-2 border-t pb-[env(safe-area-inset-bottom)]',
-        'md:order-1 md:min-h-16 md:items-center md:justify-end md:border-t-0 md:border-b md:px-6 md:py-2',
+        'md:order-1 md:min-h-16 md:items-center md:justify-end md:border-t-0 md:border-b md:px-6 md:py-1',
         'lg:h-full lg:w-56 lg:flex-col lg:items-stretch lg:justify-start lg:border-r lg:border-b-0 lg:px-4 lg:py-5',
         mobileVisible ? 'flex' : 'hidden md:flex',
       )}

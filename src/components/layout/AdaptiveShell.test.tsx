@@ -56,6 +56,26 @@ describe('adaptive app shell', () => {
     expect(screen.queryByRole('link', { name: 'AI 투자 체크리스트' })).toBeNull();
   });
 
+  it('folds the product-name row on phone only for inner screens that carry their own back row', () => {
+    const { unmount } = render(
+      <MemoryRouter initialEntries={[APP_ROUTE_PATHS.journalNew]}>
+        <Routes>
+          <Route path={APP_BASE} element={<AppShell />}>
+            <Route path="journal/new" element={<main />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    // 폰에서만 접는다(`max-md:hidden`): 태블릿 이상은 내비와 함께 제품 이름 줄을 유지한다.
+    expect(screen.getByText('AI 투자 체크리스트').closest('header')).toHaveClass('max-md:hidden');
+    unmount();
+
+    renderShell();
+    expect(
+      screen.getByRole('link', { name: 'AI 투자 체크리스트' }).closest('header'),
+    ).not.toHaveClass('max-md:hidden');
+  });
+
   it('does not offer sign-in to an authenticated session', () => {
     render(
       <MemoryRouter initialEntries={[APP_ROUTE_PATHS.appHome]}>
