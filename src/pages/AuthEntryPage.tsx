@@ -41,6 +41,7 @@ function destinationState(intent: AuthResumeIntent | undefined) {
     reviewHandoff: intent.reviewHandoff,
     decisionContext: intent.decisionContext,
     decisionContextEnabled: intent.decisionContextEnabled,
+    authResumed: true,
     authResumeNotice: Boolean(intent.reviewHandoff),
   };
 }
@@ -91,7 +92,10 @@ export function AuthEntryPage({
 
   function cancel() {
     if (phase === 'loading') return;
-    navigate(cancelTarget, { replace: true });
+    navigate(cancelTarget, {
+      replace: true,
+      state: intent?.reviewHandoff ? { focusReviewHandoff: intent.recordType } : undefined,
+    });
   }
 
   function beginAuth() {
@@ -178,7 +182,7 @@ export function AuthEntryPage({
                   ? t('auth.entry.studyHeading')
                   : t('auth.entry.heading')}
             </h1>
-            {!authUnavailable && (
+            {!authUnavailable && !financeReferenceAuth?.enabled && (
               <p className="text-muted-foreground text-sm leading-6">
                 {t('auth.entry.description')}
               </p>
@@ -208,7 +212,11 @@ export function AuthEntryPage({
             >
               <p className="text-destructive text-sm font-semibold">{t('auth.entry.failure')}</p>
               <p className="text-muted-foreground text-sm leading-6">
-                {t('auth.entry.failureDescription')}
+                {t(
+                  intent?.reviewHandoff
+                    ? 'auth.entry.failureDescription'
+                    : 'auth.entry.directFailureDescription',
+                )}
               </p>
               {!financeReferenceAuth?.enabled && (
                 <button

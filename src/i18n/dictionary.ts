@@ -60,6 +60,7 @@ export interface Messages {
       loading: string;
       failure: string;
       failureDescription: string;
+      directFailureDescription: string;
       retry: string;
       noIntent: string;
       resumeNotice: string;
@@ -420,6 +421,7 @@ export interface Messages {
       };
       retrospective: {
         originalHeading: string;
+        originalDetails: string;
         editorHeading: string;
         editorDescription: string;
         timestampLabel: string;
