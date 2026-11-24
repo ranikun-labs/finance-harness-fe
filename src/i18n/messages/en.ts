@@ -31,6 +31,7 @@ export const en: Messages = {
     journal: 'Journal',
     ariaLabel: 'Primary navigation',
     signIn: 'Sign in',
+    skipToContent: 'Skip to main content',
   },
   auth: {
     entry: {
