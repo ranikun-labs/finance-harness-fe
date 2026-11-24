@@ -18,7 +18,7 @@ import type {
 import { useJournalDetail } from '@/features/journal-read/model/useJournalDetail';
 import type { JournalDetailViewModel } from '@/features/journal-read/model/journalReadViewModel';
 import { useTranslation } from '@/i18n/I18nContext';
-import { formatJournalOccurredAt } from '@/lib/date';
+import { formatJournalInstant, formatJournalOccurredAt } from '@/lib/date';
 import { cn } from '@/lib/utils';
 
 /**
@@ -28,20 +28,43 @@ import { cn } from '@/lib/utils';
  */
 const READING_MEASURE_CLASS = 'max-w-2xl';
 
-function DetailHeader({ title, backLabel }: { title: string; backLabel: string }) {
+function DetailHeader({
+  title,
+  backLabel,
+  collapseTitle,
+}: {
+  title: string;
+  backLabel: string;
+  /** 본문 머리(유형·제목)가 이미 있는 성공 상태에서만 2-pane 제목 줄을 접는다. 없음·오류 상태는 제목이 곧 상태 안내다. */
+  collapseTitle: boolean;
+}) {
   return (
-    <header className="relative flex min-h-14 items-center justify-center">
+    // `journal-detail-*`: 2-pane(List | Detail)에서는 목록이 항상 옆에 있어 뒤로 가기가 필요 없다.
+    // globals.css가 같은 2-pane 조건에서 뒤로 가기를 숨기고 h1은 시각적으로만 접는다(DOM 유지).
+    <header
+      className={cn(
+        'relative flex min-h-14 items-center justify-center',
+        collapseTitle && 'journal-detail-header',
+      )}
+    >
       <Link
         aria-label={backLabel}
         className={cn(
           buttonVariants({ variant: 'text-neutral', size: 'icon' }),
-          'type-section-title absolute left-0',
+          'journal-detail-back type-section-title absolute left-0',
         )}
         to={APP_ROUTE_PATHS.journalList}
       >
         <span aria-hidden="true">←</span>
       </Link>
-      <h1 className="type-content-title text-foreground">{title}</h1>
+      <h1
+        className={cn(
+          'type-content-title text-foreground',
+          collapseTitle && 'journal-detail-heading',
+        )}
+      >
+        {title}
+      </h1>
     </header>
   );
 }
@@ -115,42 +138,80 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
   );
 }
 
-/** 메타는 배지가 아닌 텍스트 InfoList다. 값 색으로 감정·행동에 의미를 싣지 않는다. */
+/**
+ * 기록 정보: 읽기가 끝난 뒤 확인하는 보조 값이라 본문 맨 아래에 둔다. 배지가 아닌 텍스트 InfoList다.
+ * 유형·기록 시점·당시 행동/감정은 머리(`DetailHead`)에서 한 번만 보인다. 생성·수정 시점은
+ * 서버 ISO 문자열 대신 기록 시간대 기준 표기로 보이고, 원본은 `<time dateTime>`에 남긴다.
+ * 시간대 이름(IANA)은 화면에 보이지 않는다(F1-05 공통 AC 5). 표기 계산에만 쓴다.
+ */
 function JournalMetadata({ detail }: { detail: JournalDetailViewModel }) {
   const { t, locale } = useTranslation();
   return (
     <Card className="px-5 pt-5 pb-2 sm:px-6">
       <InfoList>
-        <InfoRow label={t('app.journalDetail.metadata.recordType')}>
-          <RecordTagText kind="entryType" value={detail.type} />
-        </InfoRow>
-        <InfoRow label={t('app.journalDetail.metadata.recordedAt')}>
-          <time dateTime={detail.occurredAt}>
-            {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)}
+        <InfoRow label={t('app.journalDetail.metadata.createdAt')}>
+          <time dateTime={detail.createdAt}>
+            {formatJournalInstant(detail.createdAt, detail.timeZone, locale)}
           </time>
         </InfoRow>
-        <InfoRow label={t('app.journalDetail.metadata.timeZone')}>{detail.timeZone}</InfoRow>
-        {detail.type === 'investment' && (
-          <>
-            <InfoRow label={t('app.journalDetail.metadata.pastAction')}>
-              <RecordTagText kind="action" value={detail.action} />
-            </InfoRow>
-            {detail.emotion !== null && (
-              <InfoRow label={t('app.journalDetail.metadata.pastEmotion')}>
-                <RecordTagText kind="emotion" value={detail.emotion} />
-              </InfoRow>
-            )}
-          </>
-        )}
-        {/* ISO 시각은 길어 좁은 폭에서 값이 깨지므로 라벨 위·값 아래로 둔다. */}
-        <InfoRow layout="stack" label={t('app.journalDetail.metadata.createdAt')}>
-          <time dateTime={detail.createdAt}>{detail.createdAt}</time>
-        </InfoRow>
-        <InfoRow layout="stack" label={t('app.journalDetail.metadata.updatedAt')}>
-          <time dateTime={detail.updatedAt}>{detail.updatedAt}</time>
+        <InfoRow label={t('app.journalDetail.metadata.updatedAt')}>
+          <time dateTime={detail.updatedAt}>
+            {formatJournalInstant(detail.updatedAt, detail.timeZone, locale)}
+          </time>
         </InfoRow>
       </InfoList>
     </Card>
+  );
+}
+
+/**
+ * 상세 머리: 유형 · 기록 시점(메타 글자) → 제목 → 당시 행동·감정. 메타는 배지가 아니라 글자고
+ * 값 색으로 감정·행동에 의미를 싣지 않는다. 판단 이유가 이 아래 첫 본문이다.
+ */
+function DetailHead({ detail, title }: { detail: JournalDetailViewModel; title: string }) {
+  const { t, locale } = useTranslation();
+  return (
+    <Stack gap="related">
+      <p className="type-meta text-text-secondary">
+        <span>
+          <RecordTagText kind="entryType" value={detail.type} />
+        </span>
+        {' · '}
+        <time dateTime={detail.occurredAt}>
+          {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)}
+        </time>
+      </p>
+      <h2
+        id="journal-detail-title"
+        className="type-page-title text-foreground min-w-0 wrap-anywhere"
+      >
+        {title}
+      </h2>
+      {detail.type === 'investment' && (
+        <p
+          className="type-supporting text-text-secondary"
+          data-testid="journal-detail-context-line"
+        >
+          <span>
+            {t('app.journalDetail.metadata.pastAction')}{' '}
+            <span>
+              <RecordTagText kind="action" value={detail.action} />
+            </span>
+          </span>
+          {detail.emotion !== null && (
+            <>
+              {' · '}
+              <span>
+                {t('app.journalDetail.metadata.pastEmotion')}{' '}
+                <span>
+                  <RecordTagText kind="emotion" value={detail.emotion} />
+                </span>
+              </span>
+            </>
+          )}
+        </p>
+      )}
+    </Stack>
   );
 }
 
@@ -235,12 +296,7 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
 
   return (
     <Stack gap="section">
-      <h2
-        id="journal-detail-title"
-        className="type-page-title text-foreground min-w-0 wrap-anywhere"
-      >
-        {title}
-      </h2>
+      <DetailHead detail={detail} title={title} />
 
       {detail.type === 'investment' ? (
         <InvestmentDetail detail={detail} />
@@ -248,20 +304,20 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
         <StudyDetail detail={detail} />
       )}
 
-      <JournalMetadata detail={detail} />
-
-      {/* 복기는 읽기가 끝난 뒤의 선택 행동이라 subtle(진한 버튼 0개). 문구는 그대로 유지한다. */}
+      {/* 복기는 읽기가 끝난 뒤의 선택 행동이라 subtle(진한 버튼 0개)이고, 본문 바로 뒤에 둔다. 문구는 그대로 유지한다. */}
       <nav aria-label={t('app.journalDetail.headerTitle')}>
         <Link
           className={cn(
             buttonVariants({ variant: 'subtle' }),
-            'h-auto min-h-12 py-2 text-center whitespace-normal',
+            'h-auto min-h-12 w-full py-2 text-center whitespace-normal sm:w-auto',
           )}
           to={buildAppJournalReviewPath(detail.journalId, detail.revision)}
         >
           {t('app.journalDetail.navigation.review')}
         </Link>
       </nav>
+
+      <JournalMetadata detail={detail} />
     </Stack>
   );
 }
@@ -282,7 +338,11 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
 
   return (
     <Stack gap="group" className="min-h-full px-5 pt-4 pb-10 sm:px-6 sm:pt-6">
-      <DetailHeader title={headerTitle} backLabel={t('app.journalDetail.backLabel')} />
+      <DetailHeader
+        title={headerTitle}
+        backLabel={t('app.journalDetail.backLabel')}
+        collapseTitle={state.status === 'success'}
+      />
       {state.status === 'loading' && (
         <DetailStatus
           title={t('app.journalDetail.loading.title')}

@@ -402,6 +402,20 @@
   .journal-workspace-list-pane {
     border-right: 1px solid var(--border);
   }
+
+  /* 2-pane 상세: 목록이 옆에 있으니 뒤로 가기는 숨기고(display:none이라 탭 순서에서도 빠진다),
+   * 가운데 제목(h1)은 문서 구조·스크린리더용으로만 남겨 본문 머리가 위에서 시작하게 한다. */
+  .journal-detail-header {
+    display: contents;
+  }
+
+  .journal-detail-back {
+    display: none;
+  }
+
+  .journal-detail-heading {
+    @apply sr-only;
+  }
 }
 
 /* Original Journal | Retrospective is the only review two-pane surface. Phone
