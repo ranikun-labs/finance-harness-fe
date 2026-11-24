@@ -121,9 +121,10 @@ describe('AskPage / Structured Review Result', () => {
     (question) => {
       renderPage(buildAppAskPath(question));
 
-      expect(screen.getByText(question)).toBeInTheDocument();
+      // 질문이 page-title(h1)이고, 결과 구분은 메타 글자로 남는다.
+      expect(screen.getByRole('heading', { level: 1, name: question })).toBeInTheDocument();
       expect(
-        screen.getByRole('heading', { level: 1, name: ko.app.ask.structured.resultTitle }),
+        screen.getByText(new RegExp(`^${ko.app.ask.structured.resultTitle} ·`)),
       ).toBeInTheDocument();
     },
   );
@@ -133,12 +134,14 @@ describe('AskPage / Structured Review Result', () => {
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     const headings = [
-      ko.app.ask.structured.questionLabel,
-      ko.app.ask.structured.checklist.heading,
-      ko.app.ask.structured.fact.heading,
-      ko.app.ask.structured.inference.heading,
-      ko.app.ask.structured.unknown.heading,
-    ].map((name) => screen.getByRole('heading', { level: 2, name }));
+      screen.getByRole('heading', { level: 1, name: '순서 확인' }),
+      ...[
+        ko.app.ask.structured.checklist.heading,
+        ko.app.ask.structured.fact.heading,
+        ko.app.ask.structured.inference.heading,
+        ko.app.ask.structured.unknown.heading,
+      ].map((name) => screen.getByRole('heading', { level: 2, name })),
+    ];
 
     for (let index = 0; index < headings.length - 1; index += 1) {
       expect(
@@ -210,15 +213,14 @@ describe('AskPage / Structured Review Result', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('status', { name: ko.app.ask.loading.title })).toBeInTheDocument();
     expect(screen.getByText('로딩 확인')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: ko.app.ask.structured.resultTitle }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(new RegExp(`^${ko.app.ask.structured.resultTitle} ·`))).toBeNull();
 
     act(() => {
       vi.advanceTimersByTime(600);
     });
+    expect(screen.getByRole('heading', { level: 1, name: '로딩 확인' })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.ask.structured.resultTitle }),
+      screen.getByText(new RegExp(`^${ko.app.ask.structured.resultTitle} ·`)),
     ).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
@@ -243,9 +245,7 @@ describe('AskPage / Structured Review Result', () => {
     act(() => {
       vi.advanceTimersByTime(600);
     });
-    expect(
-      screen.getByRole('heading', { level: 1, name: ko.app.ask.structured.resultTitle }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '오류를 다시 시도' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     const checklist = screen
       .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
@@ -287,9 +287,7 @@ describe('AskPage / Structured Review Result', () => {
   it('renders the structured result in English', () => {
     renderPage(buildAppAskPath('English result'), 'en');
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: en.app.ask.structured.resultTitle }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'English result' })).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: en.app.ask.structured.checklist.heading }),
     ).toBeInTheDocument();
@@ -297,6 +295,27 @@ describe('AskPage / Structured Review Result', () => {
       screen.getByRole('heading', { name: en.app.ask.structured.fact.heading }),
     ).toBeInTheDocument();
     expect(screen.getByRole('note')).toHaveTextContent(en.app.ask.structured.provenance);
+  });
+
+  it('gives the hand-off a single Strong action and a Subtle study note, without result-screen context controls', () => {
+    renderPage(buildAppAskPath('행동 위계'));
+
+    const investment = screen.getByRole('link', { name: ko.app.ask.handoff.investment.title });
+    const study = screen.getByRole('link', { name: ko.app.ask.handoff.study.title });
+    expect(investment.className).toContain('bg-primary');
+    expect(study.className).toContain('bg-brand-subtle');
+    expect(study.className).not.toContain('bg-primary');
+    // F1-G8 승인 전: 맥락 포함 Checkbox·사실 칩은 결과 화면에 두지 않는다.
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument();
+  });
+
+  it('shows the fact as-of date as YYYY.MM.DD while keeping the ISO value in dateTime', () => {
+    const { container } = renderPage(buildAppAskPath('기준일 표기'));
+
+    const asOf = getReviewFixture().facts[0].asOf;
+    const time = container.querySelector(`time[datetime="${asOf}"]`)!;
+    expect(time).toHaveTextContent(asOf.replaceAll('-', '.'));
   });
 
   it('keeps HTML-like input as text', () => {

@@ -175,14 +175,13 @@ test.describe('모바일 세로 스크롤 계약', () => {
   test('Ask Result는 main만 스크롤하고 phone primary navigation을 노출하지 않는다', async ({
     page,
   }) => {
-    await startReview(page, '모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문');
+    const question = '모바일 스크롤 표면과 마지막 CTA 노출을 확인하는 질문';
+    await startReview(page, question);
     await expect(
       page.getByRole('heading', { level: 1, name: ko.app.ask.header.title }),
     ).toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: ko.app.ask.structured.resultTitle, exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: question })).toBeVisible();
     const viewportHeight = page.viewportSize()!.height;
     const scrollContract = await page.evaluate(() => {
       const main = document.querySelector('main')!;
