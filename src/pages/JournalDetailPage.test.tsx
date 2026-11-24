@@ -75,8 +75,22 @@ describe('JournalDetailPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('thesis')).toBeInTheDocument();
     expect(screen.getByText('Asia/Seoul')).toBeInTheDocument();
-    expect(screen.getAllByText(INVESTMENT_DETAIL.createdAt)).toHaveLength(2);
-    expect(screen.getAllByText(INVESTMENT_DETAIL.updatedAt)).toHaveLength(2);
+    // 서버 ISO 값은 화면 글자가 아니라 time[datetime]에만 남고, 글자는 기록 시간대 기준으로 표기된다.
+    expect(screen.queryByText(INVESTMENT_DETAIL.createdAt)).not.toBeInTheDocument();
+    expect(screen.queryByText(INVESTMENT_DETAIL.updatedAt)).not.toBeInTheDocument();
+    expect(
+      screen
+        .getByText(ko.app.journalDetail.metadata.createdAt)
+        .closest('[data-slot="info-row"]')!
+        .querySelector('time'),
+    ).toHaveAttribute('datetime', INVESTMENT_DETAIL.createdAt);
+    expect(
+      screen
+        .getByText(ko.app.journalDetail.metadata.updatedAt)
+        .closest('[data-slot="info-row"]')!
+        .querySelector('time'),
+    ).toHaveAttribute('datetime', INVESTMENT_DETAIL.updatedAt);
+    expect(screen.getAllByText('2026. 08. 12. 오후 02:31')).toHaveLength(2);
     expect(
       screen.queryByText(ko.app.journalDetail.investment.aiChecklistHeading),
     ).not.toBeInTheDocument();
@@ -196,12 +210,52 @@ describe('JournalDetailPage', () => {
 
       expect(container.querySelector('[data-slot="badge"]')).toBeNull();
       const emotion = screen.getByText(ko.recordTags.emotion.FOMO);
-      expect(emotion.closest('dd')?.className).not.toMatch(/danger|destructive/);
-      expect(emotion.closest('[data-slot="info-row"]')).toHaveTextContent(
-        ko.app.journalDetail.metadata.pastEmotion,
+      expect(emotion.className).not.toMatch(/danger|destructive/);
+      expect(emotion.closest('p')?.className).not.toMatch(/danger|destructive/);
+      // 당시 행동·감정은 머리의 글자 한 줄이다(라벨 + 값).
+      const contextLine = screen.getByTestId('journal-detail-context-line');
+      expect(contextLine).toHaveTextContent(
+        `${ko.app.journalDetail.metadata.pastAction} ${ko.recordTags.action.buy}`,
+      );
+      expect(contextLine).toHaveTextContent(
+        `${ko.app.journalDetail.metadata.pastEmotion} ${ko.recordTags.emotion.FOMO}`,
       );
       expect(screen.getByText(ko.recordTags.action.buy)).toBeInTheDocument();
       expect(screen.getByText(ko.recordTags.entryType.investment)).toBeInTheDocument();
+    });
+
+    it('puts the reasoning before the review entry and the record info last', async () => {
+      renderPage(
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+        successfulPort(INVESTMENT_DETAIL),
+      );
+      const review = await screen.findByRole('link', {
+        name: ko.app.journalDetail.navigation.review,
+      });
+      const title = screen.getByRole('heading', { level: 2, name: 'ETF' });
+      const reasoning = screen.getByText('thesis');
+      const timeZone = screen.getByText(ko.app.journalDetail.metadata.timeZone);
+      const follows = (a: Node, b: Node) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(title, reasoning)).toBe(true);
+      expect(follows(reasoning, review)).toBe(true);
+      expect(follows(review, timeZone)).toBe(true);
+    });
+
+    it('marks the back link and title for the two-pane CSS without changing the DOM contract', async () => {
+      const { container } = renderPage(
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+        successfulPort(INVESTMENT_DETAIL),
+      );
+      await screen.findByText('thesis');
+      // 2-pane에서 뒤로 가기는 CSS로만 숨기고(DOM·라벨 유지), h1은 접근성 트리에 남는다.
+      expect(container.querySelector('.journal-detail-back')).toHaveAttribute(
+        'aria-label',
+        ko.app.journalDetail.backLabel,
+      );
+      expect(container.querySelector('h1.journal-detail-heading')).toHaveTextContent(
+        ko.app.journalDetail.headerTitle,
+      );
     });
 
     it('keeps the review entry as a single non-strong link', async () => {

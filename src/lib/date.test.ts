@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
+import { formatJournalInstant, formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
 
 /** 포맷 결과에서 숫자 토큰(연/월/일)만 뽑아낸다 — ICU 버전에 따라 달라지는 구분자·
  * 순서에 의존하지 않고 "며칠"이 실제로 맞는지만 검증하기 위함이다. */
@@ -85,5 +85,23 @@ describe('formatJournalOccurredAt', () => {
 
   it('rejects a timestamp carrying an offset or Z', () => {
     expect(() => formatJournalOccurredAt('2026-08-12T14:30:15.123Z', 'Asia/Seoul', 'ko')).toThrow();
+  });
+});
+
+describe('formatJournalInstant', () => {
+  it('shows the instant in the record time zone without the ISO string', () => {
+    const ko = formatJournalInstant('2026-08-12T05:31:02.123Z', 'Asia/Seoul', 'ko');
+    expect(ko).not.toContain('2026-08-12T');
+    expect(ko).toContain('02:31');
+    expect(formatJournalInstant('2026-08-12T05:31:02.123Z', 'Asia/Seoul', 'en')).toContain(
+      '02:31 PM',
+    );
+  });
+
+  it('falls back to the raw value instead of throwing on unparsable input', () => {
+    expect(formatJournalInstant('not-a-date', 'Asia/Seoul', 'ko')).toBe('not-a-date');
+    expect(formatJournalInstant('2026-08-12T05:31:02.123Z', 'Not/AZone', 'ko')).toBe(
+      '2026-08-12T05:31:02.123Z',
+    );
   });
 });

@@ -218,6 +218,59 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     }
   });
 
+  test('hides the Detail back link only where the two-pane workspace is shown', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    const cases = [
+      { width: 393, height: 852, twoPane: false },
+      { width: 768, height: 1024, twoPane: false },
+      { width: 1023, height: 768, twoPane: false },
+      { width: 1024, height: 768, twoPane: true },
+      { width: 1024, height: 1366, twoPane: false },
+      { width: 1279, height: 1366, twoPane: false },
+      { width: 1280, height: 1366, twoPane: true },
+      { width: 1440, height: 900, twoPane: true },
+    ] as const;
+
+    for (const { width, height, twoPane } of cases) {
+      await page.setViewportSize({ width, height });
+      await page.goto(buildAppJournalDetailPath(PRIMARY_ID));
+      const label = `${width}x${height}`;
+      await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
+      const back = page.getByRole('link', { name: ko.app.journalDetail.backLabel });
+      if (twoPane) {
+        await expect(back, label).toBeHidden();
+        await expect(page.locator('.journal-workspace-list-pane')).toBeVisible();
+      } else {
+        await expect(back, label).toBeVisible();
+      }
+      // 제목(h1)은 2-pane에서도 접근성 트리에 남는다(시각적으로만 접힘).
+      await expect(
+        page.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
+        label,
+      ).toHaveCount(1);
+      // 판단 이유 → 복기 진입 순서, 원문 ISO 글자는 보이지 않는다.
+      const reasoningBox = await page.getByText(/HBM 수요/).boundingBox();
+      const reviewBox = await page
+        .getByRole('link', { name: ko.app.journalDetail.navigation.review })
+        .boundingBox();
+      expect(reasoningBox!.y, label).toBeLessThan(reviewBox!.y);
+      await expect(page.locator('main')).not.toContainText(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+      await expectNoHorizontalOverflow(page);
+    }
+
+    // 없음 상태는 제목이 곧 상태 안내라 2-pane에서도 보이고, 뒤로 가기만 숨는다.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(buildAppJournalDetailPath('00000000-0000-4000-8000-000000000000'));
+    await expect(
+      page.getByRole('heading', { level: 1, name: ko.app.journalDetail.notFound.heading }),
+    ).toBeVisible();
+    // 없음 안내 안의 "목록으로" 링크는 별도 행동이라 남는다. 숨는 것은 머리의 ← 링크뿐이다.
+    await expect(page.locator('.journal-detail-back')).toBeHidden();
+  });
+
   test('filters the loaded journal records without dropping subsequent pages', async ({ page }) => {
     const studyId = '7d444840-9dc0-11d1-b245-5ffdce74fad2';
     await page.route('**/finance/journals?*', (route) => {

@@ -83,3 +83,25 @@ export function formatJournalOccurredAt(
     minute: '2-digit',
   }).format(surrogate);
 }
+
+/**
+ * 서버가 준 instant(ISO-8601, `Z` 포함: createdAt·updatedAt)를 기록의 원래 IANA 시간대 기준
+ * 벽시계로 표시한다. 화면에 ISO 문자열이 그대로 나오지 않게 하는 표시용이며 값은 바꾸지 않는다
+ * (원본은 호출부가 `<time dateTime>`에 둔다). 해석할 수 없는 값은 던지지 않고 원문을 돌려준다.
+ */
+export function formatJournalInstant(instant: string, timeZone: string, locale: Locale): string {
+  const parsed = new Date(instant);
+  if (Number.isNaN(parsed.getTime())) return instant;
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(parsed);
+  } catch {
+    return instant;
+  }
+}
