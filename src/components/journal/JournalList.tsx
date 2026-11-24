@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { JournalSummaryCard } from '@/components/journal/JournalSummaryCard';
+import { JournalSummaryRow } from '@/components/journal/JournalSummaryRow';
 import {
   JournalTypeFilter,
   type JournalTypeFilterValue,
 } from '@/components/journal/JournalTypeFilter';
+import { Stack } from '@/components/layout/Stack';
 import { buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ErrorState } from '@/components/ui/error-state';
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
 import type { AuthEntryLocationState } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
@@ -35,6 +38,7 @@ interface JournalListProps {
   onSelectableRecordsChange?: (available: boolean) => void;
 }
 
+/** 비오류 상태(로그인 필요 등). 테두리 없이 카드 면 + 제목 → 설명 → 행동 한 가지. */
 function StatusMessage({
   title,
   description,
@@ -45,14 +49,31 @@ function StatusMessage({
   action?: React.ReactNode;
 }) {
   return (
-    <div
-      className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
-      role="status"
-    >
-      <p className="text-foreground text-base font-semibold">{title}</p>
-      <p className="text-muted-foreground text-sm">{description}</p>
+    <Card className="flex flex-col items-center gap-3 px-6 py-10 text-center" role="status">
+      <p className="type-content-title text-foreground">{title}</p>
+      <p className="type-supporting text-text-secondary break-keep">{description}</p>
       {action}
-    </div>
+    </Card>
+  );
+}
+
+/**
+ * 첫 로딩. 질문(제목)과 자리는 유지하고 행 모양 자리표시자 3줄을 둔다. 움직임은 선호 설정을 따른다.
+ * 자리표시자는 장식이라 스크린리더에서 숨기고 상태 문장만 `role="status"`로 알린다.
+ */
+function LoadingRows({ title, description }: { title: string; description: string }) {
+  return (
+    <Card className="flex flex-col gap-4 p-5">
+      <div role="status" className="flex flex-col gap-1">
+        <p className="type-content-title text-foreground">{title}</p>
+        <p className="type-supporting text-text-secondary break-keep">{description}</p>
+      </div>
+      <div aria-hidden="true" className="flex flex-col gap-2">
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="bg-control rounded-inset h-14 motion-safe:animate-pulse" />
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -115,37 +136,40 @@ function ErrorMessage({
           : t('app.journalList.error.retry');
 
   return (
-    <StatusMessage
-      title={copy}
-      description={description}
-      action={
-        <div className="flex flex-wrap justify-center gap-2">
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className={cn(
-                buttonVariants({
-                  variant: phase === 'load-more' ? 'outline' : 'default',
-                  size: 'sm',
-                }),
-                'min-h-11',
-              )}
-            >
-              {retryLabel}
-            </button>
-          )}
-          {phase !== 'load-more' && (
-            <Link
-              to={APP_ROUTE_PATHS.appHome}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-            >
-              {t('app.journalList.backToReview')}
-            </Link>
-          )}
-        </div>
-      }
-    />
+    <Card>
+      <ErrorState
+        className={phase === 'load-more' ? 'py-6' : undefined}
+        title={copy}
+        description={description}
+        action={
+          <div className="flex flex-wrap justify-center gap-2">
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className={cn(
+                  buttonVariants({
+                    variant: phase === 'load-more' ? 'outline' : 'default',
+                    size: 'sm',
+                  }),
+                  'min-h-11',
+                )}
+              >
+                {retryLabel}
+              </button>
+            )}
+            {phase !== 'load-more' && (
+              <Link
+                to={APP_ROUTE_PATHS.appHome}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+              >
+                {t('app.journalList.backToReview')}
+              </Link>
+            )}
+          </div>
+        }
+      />
+    </Card>
   );
 }
 
@@ -186,17 +210,26 @@ export function JournalList({
   }, [hasSelectableRecords, onSelectableRecordsChange]);
 
   return (
-    <div className="flex min-h-full flex-col gap-6 px-5 py-8 sm:px-8 sm:py-10">
-      <div className="border-border flex flex-wrap items-center justify-between gap-4 border-b pb-5">
-        <Heading className="text-foreground text-3xl leading-tight font-bold tracking-tight">
+    <Stack gap="group" className="min-h-full px-5 pt-6 pb-10 sm:px-6">
+      {/* 2-pane(selectedId)에서는 상세가 page-title을 갖고 목록 제목은 한 단계 낮춘다. */}
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+        <Heading
+          className={cn(
+            'text-foreground min-w-0 wrap-anywhere',
+            selectedId ? 'type-section-title' : 'type-page-title',
+          )}
+        >
           {t('app.journalList.title')}
         </Heading>
         {status !== 'empty' || nextCursor !== null ? (
           <Link
             to={APP_ROUTE_PATHS.journalNew}
             className={cn(
-              buttonVariants({ variant: hasInitialError ? 'outline' : 'default' }),
-              'min-h-11',
+              buttonVariants({
+                variant: hasInitialError ? 'neutral' : 'subtle',
+                size: 'sm',
+              }),
+              'shrink-0',
             )}
           >
             {t('app.journalList.newRecord')}
@@ -209,33 +242,38 @@ export function JournalList({
       )}
 
       {isInitialLoading ? (
-        <StatusMessage
+        <LoadingRows
           title={t('app.journalList.loading.title')}
           description={t('app.journalList.loading.description')}
         />
       ) : hasInitialError && error ? (
         <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
       ) : status === 'empty' && !hasPendingEmptyPage && filter === 'all' ? (
-        <EmptyState
-          title={t('app.journalList.emptyAll.title')}
-          description={t('app.journalList.emptyAll.description')}
-          action={
-            <div className="flex flex-col items-center gap-3">
-              <Link to={APP_ROUTE_PATHS.journalNew} className={cn(buttonVariants({ size: 'lg' }))}>
-                {t('app.journalList.emptyAll.cta')}
-              </Link>
-              <p className="text-muted-foreground max-w-[260px] text-center text-xs leading-relaxed">
-                {t('app.journalList.emptyAll.hint')}
-              </p>
-              <Link
-                to={APP_ROUTE_PATHS.appHome}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-              >
-                {t('app.journalList.backToReview')}
-              </Link>
-            </div>
-          }
-        />
+        <Card>
+          <EmptyState
+            title={t('app.journalList.emptyAll.title')}
+            description={t('app.journalList.emptyAll.description')}
+            action={
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  to={APP_ROUTE_PATHS.journalNew}
+                  className={cn(buttonVariants({ size: 'lg' }))}
+                >
+                  {t('app.journalList.emptyAll.cta')}
+                </Link>
+                <p className="text-text-secondary max-w-[260px] text-center text-xs leading-relaxed">
+                  {t('app.journalList.emptyAll.hint')}
+                </p>
+                <Link
+                  to={APP_ROUTE_PATHS.appHome}
+                  className={cn(buttonVariants({ variant: 'text', size: 'sm' }), 'min-h-11')}
+                >
+                  {t('app.journalList.backToReview')}
+                </Link>
+              </div>
+            }
+          />
+        </Card>
       ) : (
         <>
           {!serverFilter && <JournalTypeFilter value={filter} onChange={setFilter} />}
@@ -243,7 +281,7 @@ export function JournalList({
             filter !== 'all' &&
             nextCursor !== null &&
             visibleEntries.length > 0 && (
-              <p className="text-muted-foreground text-sm">
+              <p className="type-supporting text-text-secondary">
                 {t('app.journalList.filteredPageScope')}
               </p>
             )}
@@ -251,38 +289,44 @@ export function JournalList({
             status !== 'loading-more' &&
             status !== 'error' &&
             (nextCursor !== null ? (
-              <p className="text-muted-foreground text-sm" role="status">
+              <p className="type-supporting text-text-secondary" role="status">
                 {t('app.journalList.filteredPagePending')}
               </p>
             ) : (
-              <EmptyState
-                title={t('app.journalList.emptyFilter.title')}
-                description={t('app.journalList.emptyFilter.description')}
-                action={
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-                    onClick={() => setFilter('all')}
-                  >
-                    {t('app.journalList.emptyFilter.resetAction')}
-                  </button>
-                }
-              />
+              <Card>
+                <EmptyState
+                  title={t('app.journalList.emptyFilter.title')}
+                  description={t('app.journalList.emptyFilter.description')}
+                  action={
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
+                      onClick={() => setFilter('all')}
+                    >
+                      {t('app.journalList.emptyFilter.resetAction')}
+                    </button>
+                  }
+                />
+              </Card>
             ))}
           {filter === 'all' && hasPendingEmptyPage && status === 'empty' && (
-            <p className="text-muted-foreground text-sm" role="status">
+            <p className="type-supporting text-text-secondary" role="status">
               {t('app.journalList.emptyPage')}
             </p>
           )}
-          <div className="flex flex-col gap-4">
-            {visibleEntries.map((entry) => (
-              <JournalSummaryCard
-                key={entry.journalId}
-                entry={entry}
-                selected={entry.journalId === selectedId}
-              />
-            ))}
-          </div>
+          {visibleEntries.length > 0 && (
+            <Card className="p-2">
+              <ul>
+                {visibleEntries.map((entry) => (
+                  <JournalSummaryRow
+                    key={entry.journalId}
+                    entry={entry}
+                    selected={entry.journalId === selectedId}
+                  />
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {status === 'error' && error && errorPhase === 'load-more' && (
             <ErrorMessage error={error} phase={errorPhase} onRetry={onRetry} />
@@ -303,12 +347,10 @@ export function JournalList({
               {t('app.journalList.loadMore')}
             </button>
           ) : hasNoFilteredMatch ? null : (
-            <p className="text-muted-foreground pt-2 pb-1 text-center text-xs">
-              {t('app.journalList.endOfList')}
-            </p>
+            <p className="type-meta text-text-secondary px-1">{t('app.journalList.endOfList')}</p>
           )}
         </>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -148,4 +148,25 @@ describe('JournalList', () => {
     expect(screen.getByText('모든 기록을 확인했어요.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '더 불러오기' })).not.toBeInTheDocument();
   });
+
+  it('renders records as one list of rows without badges or time zone text', () => {
+    renderList([INVESTMENT_ENTRY, STUDY_ENTRY], { selectedId: STUDY_ENTRY.journalId });
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(document.querySelectorAll('[data-slot="badge"]')).toHaveLength(0);
+    expect(screen.queryByText('Asia/Seoul')).not.toBeInTheDocument();
+    expect(document.querySelector('time[title]')).toBeNull();
+    const rows = screen.getAllByRole('link');
+    expect(rows.filter((row) => row.getAttribute('aria-current') === 'page')).toEqual([
+      screen.getByRole('link', { name: /월말 리밸런싱/ }),
+    ]);
+  });
+
+  it('keeps "새 기록" subtle and reserves the strong button for the empty list', () => {
+    renderList([INVESTMENT_ENTRY]);
+    expect(screen.getByRole('link', { name: '새 기록' }).className).not.toMatch(/bg-primary\b/);
+    cleanup();
+    renderList([], { status: 'empty' });
+    expect(screen.queryByRole('link', { name: '새 기록' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '첫 기록 남기기' }).className).toMatch(/bg-primary\b/);
+  });
 });
