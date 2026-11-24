@@ -24,7 +24,10 @@ describe('adaptive layout contract', () => {
 
   it('stays in sync with the CSS media queries', () => {
     const css = readFileSync('src/styles/globals.css', 'utf8');
-    expect(css).toContain(`(min-width: ${BREAKPOINTS.rail}px) and (orientation: portrait)`);
+    // portrait 상단 규칙은 desktop(rail) 직전까지만 적용된다 — 상한이 없으면 1280 portrait가 상단으로 샌다.
+    expect(css).toContain(
+      `(min-width: ${BREAKPOINTS.rail}px) and (max-width: ${BREAKPOINTS.desktop - 1}px) and (orientation: portrait)`,
+    );
     expect(css).toContain(`(min-width: ${BREAKPOINTS.desktop}px)`);
     // Tailwind md/lg 기본값(768/1024)에 클래스가 의존한다 — 바뀌면 계약을 함께 갱신한다.
     expect(BREAKPOINTS.tablet).toBe(768);
