@@ -262,6 +262,40 @@ test.describe('Retrospective adaptive presentation', () => {
     }
   });
 
+  test('starts the phone Retrospective on one back-link row with the product name row folded', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(REVIEW_PATH);
+
+    const workspace = page.getByTestId('retrospective-workspace');
+    await expect(workspace).toBeVisible();
+    // 제품 이름 줄(앱 셸 header)은 폰 복기에서 접힌다.
+    await expect(page.getByTestId('app-shell-host').locator('> header')).toBeHidden();
+
+    // 뒤로 가기 한 줄: 링크와 제목이 같은 줄(세로 중심 차이 ≤ 4)에 있다.
+    const back = page.getByRole('link', { name: ko.app.journalReview.backLabel });
+    const title = page.getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle });
+    await expect(back).toBeVisible();
+    const backBox = (await back.boundingBox())!;
+    const titleBox = (await title.boundingBox())!;
+    expect(
+      Math.abs(backBox.y + backBox.height / 2 - (titleBox.y + titleBox.height / 2)),
+    ).toBeLessThanOrEqual(4);
+
+    // 본문 시작: main이 화면 맨 위에서 시작하고, 뒤로 가기 한 줄 뒤에 원본이 바로 이어진다.
+    const mainBox = (await page.locator('main').boundingBox())!;
+    expect(mainBox.y).toBeLessThan(8);
+    const original = page.getByRole('heading', {
+      name: ko.app.journalReview.retrospective.originalHeading,
+    });
+    const originalBox = (await original.boundingBox())!;
+    expect(originalBox.y).toBeLessThan(160);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('uses Original Journal | Retrospective two-pane only on Landscape and Desktop', async ({
     page,
   }, testInfo) => {

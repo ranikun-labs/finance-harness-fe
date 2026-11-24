@@ -68,7 +68,7 @@ export function DecisionContextCapturePanel({
 
   return (
     <section
-      className="border-border bg-card mx-4 mb-2 overflow-hidden rounded-xl border shadow-sm"
+      className="bg-card rounded-card mx-4 mb-2 overflow-hidden"
       aria-labelledby="decision-context-capture-heading"
       data-testid="decision-context-capture"
     >
@@ -111,7 +111,7 @@ export function DecisionContextCapturePanel({
       </div>
 
       {enabled && (
-        <div id={panelId} className="border-border bg-muted/30 space-y-5 border-t p-4">
+        <div id={panelId} className="space-y-5 px-4 pt-1 pb-4">
           <div className="space-y-3">
             <p className="text-text-tertiary text-xs font-bold tracking-wider uppercase">
               {t('app.journalNew.decisionContext.minimumLabel')}
@@ -184,7 +184,7 @@ export function DecisionContextCapturePanel({
               {context.optionalEvidence.map((evidence) => (
                 <label
                   key={evidence.id}
-                  className="border-border bg-background flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border p-3"
+                  className="bg-inset rounded-inset flex min-w-0 cursor-pointer items-start gap-3 p-3"
                 >
                   <input
                     type="checkbox"
