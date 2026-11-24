@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter, useLocation, useNavigate } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
@@ -12,6 +12,7 @@ import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { getReviewFixture } from '@/mocks/reviewResult';
 import { AskPage } from '@/pages/AskPage';
+import { AuthEntryPage } from '@/pages/AuthEntryPage';
 
 function DecisionContextStateProbe() {
   const location = useLocation();
@@ -46,14 +47,8 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', state?: { reviewFl
 
 function AuthRoundTripHarness() {
   const location = useLocation();
-  const navigate = useNavigate();
   if (location.pathname === APP_ROUTE_PATHS.ask) return <AskPage />;
-  const payload = resolveTransient<{ authResumeIntent: { returnTarget: string } }>(location.state);
-  return (
-    <button onClick={() => navigate(payload!.authResumeIntent.returnTarget)}>
-      Return to result
-    </button>
-  );
+  return <AuthEntryPage />;
 }
 
 afterEach(() => {
@@ -97,12 +92,15 @@ describe('AskPage / Structured Review Result', () => {
       fireEvent.click(
         screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff[type].title) }),
       );
-      fireEvent.click(screen.getByRole('button', { name: 'Return to result' }));
+      fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.cancel }));
       const restored = screen
         .getByRole('heading', { name: ko.app.ask.structured.checklist.heading })
         .closest('section')!;
       expect(within(restored).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true');
       expect(within(restored).getByText('1/4 확인')).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff[type].title) }),
+      ).toHaveFocus();
       view.unmount();
       renderPage(buildAppAskPath('새 질문'));
       expect(screen.getByText('0/4 확인')).toBeInTheDocument();
