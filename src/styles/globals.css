@@ -415,41 +415,9 @@
   min-width: 0;
 }
 
+/* 원본 pane은 page 대비 inset 면이다. 내용(Card)이 그 위에 올라간다. */
 .retrospective-original-pane {
-  background: var(--muted);
-}
-
-.retrospective-original-details {
-  border-top: 1px solid var(--border);
-}
-
-.retrospective-original-details summary {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--primary);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.retrospective-original-details summary::before {
-  content: '▸';
-  flex: none;
-}
-
-.retrospective-original-details[open] summary::before {
-  content: '▾';
-}
-
-.retrospective-original-details summary:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.retrospective-original-details > :not(summary) {
-  margin-top: 0.5rem;
+  background: var(--inset);
 }
 
 @media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {

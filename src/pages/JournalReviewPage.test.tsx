@@ -482,4 +482,25 @@ describe('JournalReviewPage', () => {
     expect(screen.getByText('관심')).toBeInTheDocument();
     expect(screen.getByText('확신')).toBeInTheDocument();
   });
+
+  it('keeps a single strong action and no boxed card borders through editing and Save Error', async () => {
+    const save = vi.fn<RetrospectiveSavePort['save']>().mockRejectedValueOnce(new Error('x'));
+    const { container } = renderPage(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID), 'ko', {
+      save,
+    });
+    const strongCount = () =>
+      [...container.querySelectorAll('a, button')].filter((element) =>
+        /(^|\s)(bg-primary|bg-danger-solid)(\s|$)/.test(element.className),
+      ).length;
+    expect(strongCount()).toBe(1);
+    fireEvent.change(screen.getByLabelText(ko.app.journalReview.retrospective.bodyLabel), {
+      target: { value: '복기' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalReview.retrospective.save }));
+    await waitFor(() => expect(screen.getByTestId('retrospective-save-error')).toBeInTheDocument());
+    expect(strongCount()).toBe(1);
+    for (const card of container.querySelectorAll('[data-slot="card"]')) {
+      expect(card.className).not.toMatch(/(^|\s)(border|shadow)/);
+    }
+  });
 });
