@@ -160,12 +160,9 @@ describe('JournalDetailPage', () => {
     const unknownId = 'private-unknown-record-id';
     renderPage(buildAppJournalDetailPath(unknownId), readPort);
 
-    await waitFor(() =>
-      expect(
-        screen.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
-      ).toBeInTheDocument(),
-    );
-    expect(screen.getByText(ko.app.journalDetail.notFound.heading)).toBeInTheDocument();
+    // 로딩 중에도 일반 머리 제목(h1)이 먼저 보이므로, 그 제목을 기다리면 not-found 전환 전에 단언이 실행돼
+    // 병렬 실행에서 간헐 실패한다. 상태 전환의 결과(not-found 제목)를 직접 기다린다.
+    expect(await screen.findByText(ko.app.journalDetail.notFound.heading)).toBeInTheDocument();
     expect(screen.queryByText(unknownId)).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: ko.app.journalDetail.navigation.review }),
