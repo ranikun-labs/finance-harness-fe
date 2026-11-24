@@ -15,6 +15,7 @@ import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditCont
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
+import { formatJournalOccurredAt } from '@/lib/date';
 import { JOURNAL_ENTRIES, type JournalEntry } from '@/mocks/journalEntries';
 import type { RetrospectiveSavePort } from '@/mocks/retrospective';
 import { JournalReviewPage } from '@/pages/JournalReviewPage';
@@ -181,6 +182,11 @@ describe('JournalReviewPage', () => {
     expect(screen.getByText(ko.app.journalReview.saveUnavailable)).toBeInTheDocument();
     expect(screen.queryByTestId('retrospective-editor')).not.toBeInTheDocument();
     expect(detail).toHaveBeenCalledWith(id, expect.any(AbortSignal));
+    // 기록 시각은 포맷 함수 결과(실행 환경 ICU 기준)만 보이고 시간대 이름(IANA)은 화면에 나오지 않는다.
+    expect(
+      screen.getByText(formatJournalOccurredAt('2026-08-12T14:30:15.123', 'Asia/Seoul', 'ko')),
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('Asia/Seoul');
   });
 
   it('preserves the existing parameterized title contract', () => {

@@ -431,12 +431,19 @@
   min-width: 0;
 }
 
-/* 원본 pane은 page 대비 inset 면이다. 내용(Card)이 그 위에 올라간다. */
-.retrospective-original-pane {
-  background: var(--inset);
-}
-
+/* 원본·복기 두 열은 같은 page 바탕 위에 Card가 올라간다. 열 구분은 2-pane의 세로 구분선뿐이다
+ * (Dark에서 원본 열만 띠로 떠 보이던 면 차이 제거). */
 @media (min-width: 1024px) and (orientation: landscape), (min-width: 1280px) {
+  /* 두 열 위의 머리는 가운데가 아니라 왼쪽: 뒤로 가기 옆에 제목이 붙어 원본 열 머리로 읽힌다. */
+  .retrospective-header {
+    justify-content: flex-start;
+    gap: 0.25rem;
+  }
+
+  .retrospective-header-back {
+    position: static;
+  }
+
   .retrospective-workspace-main {
     display: flex;
     min-height: 0;

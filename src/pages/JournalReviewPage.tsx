@@ -45,12 +45,12 @@ interface ReviewHeaderProps {
 
 function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
   return (
-    <header className="relative flex min-h-14 items-center justify-center">
+    <header className="retrospective-header relative flex min-h-14 items-center justify-center">
       <Link
         aria-label={backLabel}
         className={cn(
           buttonVariants({ variant: 'text-neutral', size: 'icon' }),
-          'type-section-title absolute left-0',
+          'retrospective-header-back type-section-title absolute left-0',
         )}
         to={backTo}
         onClick={onBack}
@@ -278,21 +278,22 @@ function RetrospectiveEditor({
   }
 
   return (
-    <Card className="p-5 sm:p-6">
-      <form
-        className="flex min-w-0 flex-col gap-6"
-        aria-labelledby="retrospective-editor-heading"
-        onSubmit={onSubmit}
-        noValidate
-        data-testid="retrospective-editor"
-      >
-        <div className="flex flex-col gap-2">
-          <h2 id="retrospective-editor-heading" className="type-section-title text-foreground">
-            {copy.editorHeading}
-          </h2>
-          <p className="type-supporting text-text-secondary break-keep">{copy.editorDescription}</p>
-        </div>
+    // 머리(제목·설명)는 카드 밖에 둔다. 원본 열 머리와 같은 높이에서 시작해 두 열이 같은 무게로 읽힌다.
+    <form
+      className="flex min-w-0 flex-col gap-4"
+      aria-labelledby="retrospective-editor-heading"
+      onSubmit={onSubmit}
+      noValidate
+      data-testid="retrospective-editor"
+    >
+      <div className="flex flex-col gap-2">
+        <h2 id="retrospective-editor-heading" className="type-section-title text-foreground">
+          {copy.editorHeading}
+        </h2>
+        <p className="type-supporting text-text-secondary break-keep">{copy.editorDescription}</p>
+      </div>
 
+      <Card className="flex min-w-0 flex-col gap-6 p-5 sm:p-6">
         <TextField
           multiline
           ref={bodyRef}
@@ -399,8 +400,8 @@ function RetrospectiveEditor({
             {isSaving ? copy.saving : copy.save}
           </Button>
         </div>
-      </form>
-    </Card>
+      </Card>
+    </form>
   );
 }
 
@@ -830,8 +831,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
                   {detail.type === 'investment' ? detail.assetName : detail.title}
                 </h3>
                 <p className="type-meta text-text-secondary">
-                  {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)} ·{' '}
-                  {detail.timeZone}
+                  {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)}
                 </p>
                 {detail.type === 'investment' && (
                   <p className="type-supporting text-text-secondary">

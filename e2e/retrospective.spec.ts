@@ -91,7 +91,10 @@ test('opens a server-supplied original from journal detail and after reload', as
   if (!(await original.evaluate((element: HTMLDetailsElement) => element.open))) {
     await original.locator('summary').click();
   }
-  await expect(page.getByText(detail.reasoning)).toBeVisible();
+  // 접힌 폰에서는 두 줄 미리보기와 펼친 본문에 같은 문장이 있다. 펼치는 순간 미리보기가 사라지기 전까지
+  // 둘이 함께 있어(strict mode 위반) 간헐 실패했으므로, 확인 대상을 펼쳐진 원본 본문으로 한정한다.
+  await expect(original).toHaveAttribute('open');
+  await expect(original.getByText(detail.reasoning)).toBeVisible();
   if (process.env.VITE_FINANCE_RETROSPECTIVE_ENABLED !== 'true') {
     await expect(page.getByText(ko.app.journalReview.saveUnavailable)).toBeVisible();
   }
@@ -102,7 +105,10 @@ test('opens a server-supplied original from journal detail and after reload', as
   if (!(await original.evaluate((element: HTMLDetailsElement) => element.open))) {
     await original.locator('summary').click();
   }
-  await expect(page.getByText(detail.reasoning)).toBeVisible();
+  // 접힌 폰에서는 두 줄 미리보기와 펼친 본문에 같은 문장이 있다. 펼치는 순간 미리보기가 사라지기 전까지
+  // 둘이 함께 있어(strict mode 위반) 간헐 실패했으므로, 확인 대상을 펼쳐진 원본 본문으로 한정한다.
+  await expect(original).toHaveAttribute('open');
+  await expect(original.getByText(detail.reasoning)).toBeVisible();
   expect(detailRequests).toBe(3);
 });
 
@@ -288,6 +294,53 @@ test.describe('Retrospective adaptive presentation', () => {
         .evaluateAll((sections) => sections.map((section) => section.className));
       expect(paneOrder[0]).toContain('retrospective-original-pane');
       expect(paneOrder[1]).toContain('retrospective-editor-pane');
+    }
+  });
+
+  test('aligns both pane heads on one baseline over the same ground in Light and Dark', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    for (const scheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme: scheme });
+      for (const viewport of [
+        { width: 1194, height: 834 },
+        { width: 1280, height: 1366 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto(REVIEW_PATH);
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          scheme === 'dark',
+        );
+
+        const originalPane = page.locator('.retrospective-original-pane');
+        const editorPane = page.locator('.retrospective-editor-pane');
+        const originalTop = await originalPane
+          .getByRole('heading', { name: ko.app.journalReview.retrospective.originalHeading })
+          .evaluate((element) => element.getBoundingClientRect().top);
+        const editorTop = await editorPane
+          .getByRole('heading', { name: ko.app.journalReview.retrospective.editorHeading })
+          .evaluate((element) => element.getBoundingClientRect().top);
+        expect(Math.abs(originalTop - editorTop)).toBeLessThanOrEqual(1);
+
+        const backgrounds = await page.evaluate(() =>
+          ['.retrospective-original-pane', '.retrospective-editor-pane'].map(
+            (selector) => getComputedStyle(document.querySelector(selector)!).backgroundColor,
+          ),
+        );
+        expect(backgrounds[0]).toBe(backgrounds[1]);
+
+        // 두 열 위의 머리는 뒤로 가기 옆 왼쪽: 제목이 두 열 가운데에 떠 있지 않다.
+        const title = await page
+          .getByRole('heading', { level: 1, name: ko.app.journalReview.headerTitle })
+          .evaluate((element) => element.getBoundingClientRect().left);
+        const mainLeft = await page
+          .getByRole('main')
+          .evaluate((element) => element.getBoundingClientRect().left);
+        expect(title - mainLeft).toBeLessThan(120);
+      }
     }
   });
 
