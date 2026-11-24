@@ -77,7 +77,7 @@ export function BottomNavigation() {
             className={cn(
               'relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs',
               'focus-visible:ring-ring/50 rounded-lg outline-none focus-visible:ring-3',
-              'md:min-h-10 md:flex-none md:flex-row md:px-5 md:py-0 md:text-sm',
+              'md:min-h-11 md:flex-none md:flex-row md:px-5 md:py-0 md:text-sm',
               'lg:min-h-11 lg:w-full lg:justify-start lg:gap-3 lg:px-3',
               activeTab === tab.id
                 ? 'text-primary bg-primary/10 md:bg-background lg:bg-primary/10 font-semibold md:shadow-sm lg:shadow-none'

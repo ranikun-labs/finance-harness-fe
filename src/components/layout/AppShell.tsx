@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Link, Outlet, matchPath, useLocation } from 'react-router';
 
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
+import { SkipLink } from '@/components/layout/SkipLink';
+import { APP_SHELL_MAX_WIDTH_PX } from '@/constants/layout';
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
 import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import { useTranslation } from '@/i18n/I18nContext';
@@ -9,7 +11,7 @@ import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
 import { RouteDocumentTitle } from '@/metadata/documentTitle';
 
 /** 승인된 Desktop contract의 앱 host 최대 폭. 그 이하에서는 viewport 폭을 전부 쓴다. */
-export const APP_SHELL_MAX_WIDTH = '1360px';
+export const APP_SHELL_MAX_WIDTH = `${APP_SHELL_MAX_WIDTH_PX}px`;
 
 /**
  * 앱(`/app/*`) URL 경계이자 앱 locale choke point. `PublicLayout`과 대칭 구조로
@@ -66,10 +68,11 @@ export function AppShell() {
       <RouteDocumentTitle />
       <div className="bg-muted flex h-dvh w-full justify-center overflow-hidden">
         <div
-          className="bg-background flex h-full min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto pt-[env(safe-area-inset-top)] xl:shadow-xl"
+          className="bg-background flex h-full min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] xl:shadow-xl"
           data-testid="app-shell-host"
           style={{ maxWidth: APP_SHELL_MAX_WIDTH }}
         >
+          <SkipLink />
           <AppHeader />
           <Suspense fallback={<LazyLoadingFallback asMain />}>
             <Outlet />

@@ -3,11 +3,14 @@ import { Outlet, useLocation } from 'react-router';
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
+import { BREAKPOINTS } from '@/constants/layout';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 const LazyJournalWorkspace = lazy(() =>
@@ -18,6 +21,8 @@ const LazyJournalWorkspace = lazy(() =>
 
 /** 본문(스크롤 가능)과 하단 탭바(고정)의 스크롤 책임을 분리하는 레이아웃. */
 export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPort }) {
+  // Tablet 이상은 내비가 본문 앞(상단·좌측)에 보이므로 DOM도 내비가 먼저다. Phone은 하단이라 본문이 먼저.
+  const navFirst = useMediaQuery(`(min-width: ${BREAKPOINTS.tablet}px)`);
   const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
   const { pathname } = useLocation();
   const isReviewResult = pathname === APP_ROUTE_PATHS.ask;
@@ -31,6 +36,7 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
     >
       <JournalReadPortProvider port={journalReadPort}>
         <div className="adaptive-shell-layout flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+          {navFirst && <BottomNavigation />}
           <main
             className={cn(
               'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
@@ -38,16 +44,12 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
               isRetrospectiveWorkspace && 'retrospective-workspace-main',
             )}
           >
-            <div
+            <PageContainer
+              size={isReviewResult ? 'result' : 'reading'}
               className={cn(
-                'adaptive-readable-host mx-auto min-h-full w-full',
-                isReviewResult
-                  ? 'max-w-[760px]'
-                  : isJournalWorkspace
-                    ? 'journal-workspace-host max-w-[660px]'
-                    : isRetrospectiveWorkspace
-                      ? 'retrospective-workspace-host max-w-[660px]'
-                      : 'max-w-[660px]',
+                'adaptive-readable-host',
+                isJournalWorkspace && 'journal-workspace-host',
+                isRetrospectiveWorkspace && 'retrospective-workspace-host',
               )}
               data-testid="adaptive-content-host"
             >
@@ -65,9 +67,9 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
                   <Outlet />
                 </Suspense>
               )}
-            </div>
+            </PageContainer>
           </main>
-          <BottomNavigation />
+          {!navFirst && <BottomNavigation />}
         </div>
       </JournalReadPortProvider>
     </RetrospectiveDraftContext.Provider>

@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppShell, APP_SHELL_MAX_WIDTH } from '@/components/layout/AppShell';
 import { TabLayout } from '@/components/layout/TabLayout';
@@ -99,5 +99,48 @@ describe('adaptive app shell', () => {
     expect(navigation).toHaveClass('hidden', 'md:flex');
     expect(screen.getByTestId('adaptive-content-host')).toHaveClass('max-w-[760px]');
     expect(screen.getByRole('link', { name: '검토' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('puts a skip link first and moves focus to the single main landmark', () => {
+    renderShell();
+
+    const skip = screen.getByRole('link', { name: '본문으로 건너뛰기' });
+    const firstLink = document.querySelector('a');
+    expect(firstLink).toBe(skip);
+
+    fireEvent.click(skip);
+    expect(screen.getByRole('main')).toHaveFocus();
+  });
+
+  describe('DOM order follows the visual order', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    function stubViewport(matches: boolean) {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((query: string) => ({
+          matches,
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      );
+    }
+
+    it('places navigation before main from the tablet breakpoint up', () => {
+      stubViewport(true);
+      renderShell();
+      const nav = screen.getByRole('navigation', { name: '주요 화면 이동' });
+      const main = screen.getByRole('main');
+      expect(nav.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('keeps the phone bottom navigation after main', () => {
+      stubViewport(false);
+      renderShell();
+      const nav = screen.getByRole('navigation', { name: '주요 화면 이동' });
+      const main = screen.getByRole('main');
+      expect(main.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
   });
 });

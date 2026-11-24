@@ -45,6 +45,10 @@ navigation은 current contract가 아니다.
 | Tablet Landscape | 좌측 rail 검토/저널 | 필요한 맥락에서만 2-pane |
 | Desktop | 좌측 rail 검토/저널, Bottom Navigation 없음 | 최대 2 major surfaces |
 
+Breakpoint·콘텐츠 폭 값은 [`src/constants/layout.ts`](../src/constants/layout.ts)가 명시한다
+(768 / 1024 landscape / 1280, host 1360, 콘텐츠 660·760, 터치 44). Tablet 이상은 DOM도
+내비가 본문 앞이고, Phone은 본문 뒤(하단)다. 모든 `/app` 화면 첫 포커스는 본문 건너뛰기 링크다.
+
 Tablet Portrait·Landscape·Desktop에서는 저널 목록뿐 아니라 저널 신규·상세·복기 화면에도
 동일한 `BOTTOM_TABS` 기반 검토/저널 primary navigation을 유지한다. Phone의 내부 결과·작성·
 상세·복기 화면은 context navigation을 사용하고 Bottom Navigation을 노출하지 않는다.

@@ -43,6 +43,7 @@ export interface Messages {
     journal: string;
     ariaLabel: string;
     signIn: string;
+    skipToContent: string;
   };
   auth: {
     entry: {

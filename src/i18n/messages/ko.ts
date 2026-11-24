@@ -35,6 +35,7 @@ export const ko: Messages = {
     journal: '저널',
     ariaLabel: '주요 화면 이동',
     signIn: '로그인',
+    skipToContent: '본문으로 건너뛰기',
   },
   auth: {
     entry: {
