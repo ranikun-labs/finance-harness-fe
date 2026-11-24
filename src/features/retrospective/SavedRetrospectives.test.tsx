@@ -38,13 +38,20 @@ describe('saved retrospectives', () => {
       </JournalEditFetchContext.Provider>,
     );
     await screen.findByText('아직 저장한 복기가 없어요.');
-    fireEvent.change(screen.getByLabelText('복기 내용 *'), { target: { value: '복기 내용' } });
+    fireEvent.change(screen.getByLabelText('지금 다시 보면, 무엇이 달라졌나요? *'), {
+      target: { value: '복기 내용' },
+    });
     fireEvent.click(screen.getByRole('button', { name: '복기 저장' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('입력을 유지');
-    expect(screen.getByLabelText('복기 내용 *')).toHaveValue('복기 내용');
+    expect(screen.getByLabelText('지금 다시 보면, 무엇이 달라졌나요? *')).toHaveValue('복기 내용');
     fireEvent.click(screen.getByRole('button', { name: '복기 저장' }));
     await waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(4));
     expect(await screen.findByRole('article')).toHaveTextContent('복기 내용');
+    expect(screen.getByRole('status')).toHaveTextContent('복기를 저장했어요.');
+    expect(screen.getByRole('article')).toHaveTextContent('복기 내용복기 내용');
+    const savedEvent = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(savedEvent);
+    expect(savedEvent.defaultPrevented).toBe(false);
     const first = fetchImpl.mock.calls[1][1] as RequestInit;
     const second = fetchImpl.mock.calls[2][1] as RequestInit;
     expect(first.headers).toEqual(second.headers);
@@ -68,7 +75,7 @@ describe('saved retrospectives', () => {
       </JournalEditFetchContext.Provider>,
     );
     await screen.findByText('아직 저장한 복기가 없어요.');
-    const field = screen.getByLabelText('복기 내용 *');
+    const field = screen.getByLabelText('지금 다시 보면, 무엇이 달라졌나요? *');
     fireEvent.change(field, { target: { value: 'A' } });
     fireEvent.click(screen.getByRole('button', { name: '복기 저장' }));
     await screen.findByRole('alert');
@@ -116,6 +123,27 @@ describe('saved retrospectives', () => {
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('불러오지 못했어요');
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
+  });
+
+  it('warns before unloading an unsaved draft and removes the guard on unmount', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(response({ items: [], hasMore: false }));
+    const { unmount } = render(
+      <JournalEditFetchContext.Provider value={fetchImpl}>
+        <I18nProvider locale="ko">
+          <SavedRetrospectives journalId="j1" revision={3} />
+        </I18nProvider>
+      </JournalEditFetchContext.Provider>,
+    );
+    await screen.findByText('아직 저장한 복기가 없어요.');
+    fireEvent.click(screen.getByText('결과와 판단 과정 돌아보기 (선택)'));
+    fireEvent.change(screen.getByLabelText('결과 관찰'), { target: { value: 'draft' } });
+    const dirtyEvent = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(dirtyEvent);
+    expect(dirtyEvent.defaultPrevented).toBe(true);
+    unmount();
+    const cleanEvent = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(cleanEvent);
+    expect(cleanEvent.defaultPrevented).toBe(false);
   });
 
   it('retries a failed history fetch without showing an empty list', async () => {
