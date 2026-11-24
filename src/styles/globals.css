@@ -68,8 +68,9 @@
   --secondary: var(--control);
   --secondary-foreground: #191f28;
 
-  /* neutral gray, not blue — brand blue lives only in --primary/--brand */
-  --muted: var(--inset);
+  /* neutral gray, not blue — brand blue lives only in --primary/--brand.
+     muted는 page(--background)보다 한 단계 진해야 앱 프레임·선택 탭·안내 박스 구분이 유지된다(inset=page와 동색 금지). */
+  --muted: var(--control);
   --muted-foreground: var(--text-tertiary);
 
   --accent: var(--inset);
@@ -116,7 +117,7 @@
   /* var() 별칭은 .dark에서도 다시 선언해 조상 요소에 .dark가 붙는 경우에도 해석되게 한다. */
   --background: var(--page);
   --secondary: var(--control);
-  --muted: var(--inset);
+  --muted: var(--control);
   --muted-foreground: var(--text-tertiary);
   --accent: var(--inset);
   --destructive: var(--danger);

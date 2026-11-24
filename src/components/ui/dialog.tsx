@@ -6,6 +6,23 @@ import { cn } from '@/lib/utils';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// 중첩 Dialog가 비-LIFO로 닫혀도 배경 스크롤이 먼저 풀리지 않도록 잠금을 카운트한다.
+let scrollLockCount = 0;
+let scrollLockPrevious = '';
+
+function lockBodyScroll() {
+  if (scrollLockCount === 0) {
+    scrollLockPrevious = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  scrollLockCount += 1;
+}
+
+function unlockBodyScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) document.body.style.overflow = scrollLockPrevious;
+}
+
 type DialogProps = {
   open: boolean;
   /** 취소·ESC·닫기 — 부모가 `open`을 false로 내린다(제어 컴포넌트). */
@@ -55,6 +72,10 @@ function Dialog({
   const titleId = React.useId();
   const descriptionId = React.useId();
   const nativeModal = React.useRef(false);
+  const openRef = React.useRef(open);
+  React.useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   React.useEffect(() => {
     const dialog = ref.current;
@@ -68,8 +89,7 @@ function Dialog({
       dialog.setAttribute('open', '');
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
 
     const target = destructive
       ? cancelRef.current
@@ -78,7 +98,7 @@ function Dialog({
     (target ?? dialog).focus();
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      unlockBodyScroll();
       if (nativeModal.current && typeof dialog.close === 'function') {
         if (dialog.open) dialog.close();
       } else {
@@ -125,6 +145,11 @@ function Dialog({
       onCancel={(event) => {
         event.preventDefault();
         onClose();
+      }}
+      // 연속 ESC 등으로 브라우저가 cancel 취소를 무시하고 닫아도, 부모가 아직 열어두고 있으면 다시 연다.
+      onClose={(event) => {
+        const dialog = event.currentTarget;
+        if (openRef.current && nativeModal.current && !dialog.open) dialog.showModal();
       }}
       onKeyDown={handleKeyDown}
       className={cn(

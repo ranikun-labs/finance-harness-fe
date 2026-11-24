@@ -126,4 +126,55 @@ describe('Dialog', () => {
     fireEvent.click(screen.getByRole('button', { name: '취소' }));
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  // A를 열고 B를 열고 A를 먼저 닫아도 B가 열려 있는 동안 배경 스크롤은 잠겨 있어야 한다.
+  it('keeps body scroll locked until the last of several open dialogs closes', () => {
+    function Pair() {
+      const [a, setA] = React.useState(true);
+      const [b, setB] = React.useState(true);
+      return (
+        <>
+          <Dialog open={a} onClose={() => setA(false)} title="A" cancelLabel="A 취소" />
+          <Dialog open={b} onClose={() => setB(false)} title="B" cancelLabel="B 취소" />
+        </>
+      );
+    }
+    document.body.style.overflow = '';
+    render(<Pair />);
+    expect(document.body.style.overflow).toBe('hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'A 취소' }));
+    expect(document.body.style.overflow).toBe('hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'B 취소' }));
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  // 브라우저가 연속 ESC로 cancel 취소를 무시하고 닫아도 부모가 열어두면 다시 연다.
+  it('re-opens the native dialog when it closes while the parent still wants it open', () => {
+    const proto = HTMLDialogElement.prototype;
+    const original = { show: proto.showModal, close: proto.close };
+    const showModal = vi.fn(function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    });
+    proto.showModal = showModal;
+    proto.close = function (this: HTMLDialogElement) {
+      this.removeAttribute('open');
+    };
+    try {
+      render(<Harness />);
+      fireEvent.click(screen.getByRole('button', { name: '열기' }));
+      const dialog = screen.getByRole('dialog', { name: '기록 삭제' });
+      expect(showModal).toHaveBeenCalledTimes(1);
+      dialog.removeAttribute('open');
+      fireEvent(dialog, new Event('close'));
+      expect(showModal).toHaveBeenCalledTimes(2);
+      expect(dialog).toHaveAttribute('open');
+      // 정상 닫힘(부모가 open=false)에서는 다시 열지 않는다.
+      fireEvent.click(screen.getByRole('button', { name: '취소' }));
+      fireEvent(dialog, new Event('close'));
+      expect(showModal).toHaveBeenCalledTimes(2);
+    } finally {
+      proto.showModal = original.show;
+      proto.close = original.close;
+    }
+  });
 });
