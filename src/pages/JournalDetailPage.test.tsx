@@ -56,7 +56,7 @@ function renderPage(path: string, readPort: JournalReadPort, locale: 'ko' | 'en'
   );
 }
 
-function successfulPort(detail: typeof INVESTMENT_DETAIL | typeof STUDY_DETAIL): JournalReadPort {
+function successfulPort(detail: object): JournalReadPort {
   return {
     list: vi.fn(),
     detail: vi.fn().mockResolvedValue({ ok: true, data: detail }),
@@ -182,5 +182,77 @@ describe('JournalDetailPage', () => {
     expect(
       screen.getByRole('link', { name: ko.app.journalDetail.navigation.review }),
     ).toHaveAttribute('href', buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+  });
+
+  describe('Foundation presentation', () => {
+    const WITH_EMOTION = { ...INVESTMENT_DETAIL, emotion: 'FOMO' as const };
+
+    it('shows metadata as a text list with no badges and no emotion color', async () => {
+      const { container } = renderPage(
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+        successfulPort(WITH_EMOTION),
+      );
+      await waitFor(() => expect(screen.getByText('thesis')).toBeInTheDocument());
+
+      expect(container.querySelector('[data-slot="badge"]')).toBeNull();
+      const emotion = screen.getByText(ko.recordTags.emotion.FOMO);
+      expect(emotion.closest('dd')?.className).not.toMatch(/danger|destructive/);
+      expect(emotion.closest('[data-slot="info-row"]')).toHaveTextContent(
+        ko.app.journalDetail.metadata.pastEmotion,
+      );
+      expect(screen.getByText(ko.recordTags.action.buy)).toBeInTheDocument();
+      expect(screen.getByText(ko.recordTags.entryType.investment)).toBeInTheDocument();
+    });
+
+    it('keeps the review entry as a single non-strong link', async () => {
+      const { container } = renderPage(
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+        successfulPort(INVESTMENT_DETAIL),
+      );
+      const review = await screen.findByRole('link', {
+        name: ko.app.journalDetail.navigation.review,
+      });
+      expect(review.className).toContain('bg-brand-subtle');
+      expect(review.className).not.toMatch(/(^|\s)bg-primary(\s|$)/);
+      // 진한(strong) 버튼은 이 화면에 없다.
+      expect(container.querySelectorAll('.bg-primary')).toHaveLength(0);
+    });
+
+    it('preserves line breaks in the reading text and has no card border or shadow', async () => {
+      const { container } = renderPage(
+        buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID),
+        successfulPort({ ...INVESTMENT_DETAIL, reasoning: '첫 줄\n둘째 줄' }),
+      );
+      await screen.findByRole('link', { name: ko.app.journalDetail.navigation.review });
+      const body = container.querySelector('p.type-reading')!;
+      expect(body.textContent).toBe('첫 줄\n둘째 줄');
+      expect(body).toHaveClass('whitespace-pre-wrap', 'type-reading');
+
+      for (const card of container.querySelectorAll('[data-slot="card"]')) {
+        expect(card.className).not.toMatch(/(^|\s)(border|shadow)(-\S+)?(\s|$)/);
+      }
+    });
+
+    it('keeps study content and open questions as readable text without badges', async () => {
+      const { container } = renderPage(
+        buildAppJournalDetailPath(STUDY_ID),
+        successfulPort({ ...STUDY_DETAIL, keyContent: 'a\nb' }),
+      );
+      await waitFor(() => expect(screen.getByRole('list')).toBeInTheDocument());
+      expect(container.querySelector('[data-slot="badge"]')).toBeNull();
+      const body = container.querySelector('p.type-reading')!;
+      expect(body.textContent).toBe('a\nb');
+      expect(body).toHaveClass('whitespace-pre-wrap');
+    });
+
+    it('shows a single retry action for recoverable errors', async () => {
+      const readPort: JournalReadPort = {
+        list: vi.fn(),
+        detail: vi.fn().mockResolvedValue({ ok: false, error: { code: 'read_failed' } }),
+      };
+      renderPage(buildAppJournalDetailPath(PRIMARY_INVESTMENT_ID), readPort);
+      await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
   });
 });

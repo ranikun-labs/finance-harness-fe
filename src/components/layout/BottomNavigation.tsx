@@ -1,4 +1,5 @@
 import { CircleCheckBig, NotebookText } from 'lucide-react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { Link, matchPath, useLocation } from 'react-router';
 
 import { BOTTOM_TABS, type BottomTabConfig } from '@/constants/navigation';
@@ -22,7 +23,15 @@ const NAV_ICON = {
   journal: NotebookText,
 } satisfies Record<BottomTabConfig['id'], typeof CircleCheckBig>;
 
-export function BottomNavigation() {
+export type NavFocusMemory = RefObject<BottomTabConfig['id'] | null>;
+
+/**
+ * `focusMemory`: 768 경계(회전·리사이즈)에서 TabLayout이 내비를 다른 DOM 위치(본문 앞/뒤)로
+ * 다시 마운트할 때, 직전에 포커스가 내비 링크에 있었다면 새 인스턴스에서 같은 탭으로 복원한다.
+ * DOM 순서 = 시각 순서 계약 때문에 remount 자체는 피할 수 없어, 유실만 완화한다.
+ */
+export function BottomNavigation({ focusMemory }: { focusMemory?: NavFocusMemory }) {
+  const rootRef = useRef<HTMLElement>(null);
   const { t, locale } = useTranslation();
   const { dirty } = useRetrospectiveDraft();
   const { pathname } = useLocation();
@@ -35,8 +44,17 @@ export function BottomNavigation() {
     matchPath({ path: APP_ROUTE_PATHS.journalReview, end: true }, pathname) !== null;
   const activeTab: BottomTabConfig['id'] = isJournalRoute ? 'journal' : 'review';
 
+  useEffect(() => {
+    const remembered = focusMemory?.current;
+    if (!remembered) return;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    rootRef.current?.querySelector<HTMLElement>(`[data-nav-tab="${remembered}"]`)?.focus();
+  }, [focusMemory]);
+
   return (
     <nav
+      ref={rootRef}
       className={cn(
         'adaptive-primary-navigation border-border bg-background shrink-0',
         'order-2 border-t pb-[env(safe-area-inset-bottom)]',
@@ -72,6 +90,14 @@ export function BottomNavigation() {
                 )
               )
                 event.preventDefault();
+            }}
+            data-nav-tab={tab.id}
+            onFocus={() => {
+              if (focusMemory) focusMemory.current = tab.id;
+            }}
+            onBlur={(event) => {
+              // 다른 요소로 포커스가 옮겨간 경우만 기억을 지운다(요소 제거에 의한 blur는 relatedTarget이 없다).
+              if (focusMemory && event.relatedTarget) focusMemory.current = null;
             }}
             aria-current={activeTab === tab.id ? 'page' : undefined}
             className={cn(
