@@ -42,16 +42,13 @@ function DetailHeader({
     // `journal-detail-*`: 2-pane(List | Detail)에서는 목록이 항상 옆에 있어 뒤로 가기가 필요 없다.
     // globals.css가 같은 2-pane 조건에서 뒤로 가기를 숨기고 h1은 시각적으로만 접는다(DOM 유지).
     <header
-      className={cn(
-        'relative flex min-h-14 items-center justify-center',
-        collapseTitle && 'journal-detail-header',
-      )}
+      className={cn('flex min-h-14 items-center gap-1', collapseTitle && 'journal-detail-header')}
     >
       <Link
         aria-label={backLabel}
         className={cn(
           buttonVariants({ variant: 'text-neutral', size: 'icon' }),
-          'journal-detail-back type-section-title absolute left-0',
+          'journal-detail-back type-section-title shrink-0',
         )}
         to={APP_ROUTE_PATHS.journalList}
       >

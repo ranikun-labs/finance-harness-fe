@@ -9,6 +9,7 @@ import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import { useTranslation } from '@/i18n/I18nContext';
 import { AppLocaleProvider } from '@/i18n/AppLocaleProvider';
 import { RouteDocumentTitle } from '@/metadata/documentTitle';
+import { cn } from '@/lib/utils';
 
 /** 승인된 Desktop contract의 앱 host 최대 폭. 그 이하에서는 viewport 폭을 전부 쓴다. */
 export const APP_SHELL_MAX_WIDTH = `${APP_SHELL_MAX_WIDTH_PX}px`;
@@ -33,7 +34,14 @@ function AppHeader() {
   ].some((path) => matchPath({ path, end: true }, pathname) !== null);
 
   return (
-    <header className="border-border bg-background flex min-h-14 shrink-0 items-center justify-between border-b px-4 sm:px-6">
+    <header
+      className={cn(
+        'border-border bg-background flex min-h-14 shrink-0 items-center justify-between border-b px-4 sm:px-6',
+        // 폰의 안쪽 화면(작성·상세·복기)은 화면 자체의 뒤로 가기 줄이 머리다. 제품 이름 줄이 위에 겹치면
+        // 본문이 112px 아래에서 시작하므로 폰에서만 접는다(태블릿 이상은 내비와 함께 유지).
+        mayContainJournalEdits && 'max-md:hidden',
+      )}
+    >
       {mayContainJournalEdits ? (
         <span className="text-foreground inline-flex min-h-11 items-center px-2 text-sm font-bold">
           {t('common.appName')}
