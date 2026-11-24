@@ -1,22 +1,52 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { PolicyNotice } from '@/components/common/PolicyNotice';
-import { JournalRecordCard } from '@/components/journal/JournalRecordCard';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Notice } from '@/components/ui/notice';
+import { SectionHeader } from '@/components/ui/section-header';
+import { TextField } from '@/components/ui/text-field';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { holdTransient, resolveTransient } from '@/lib/transientNavigation';
 import { useTranslation } from '@/i18n/I18nContext';
-import { cn } from '@/lib/utils';
-import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
+import { formatLocalizedDate } from '@/lib/date';
+import { JOURNAL_ENTRIES, type JournalEntry } from '@/mocks/journalEntries';
 
 interface ReviewStartLocationState {
   prefill?: string;
 }
 
 const EXAMPLE_KEYS = ['etf', 'earnings', 'loss'] as const;
+
+/**
+ * 최근 기록(예시 데이터) 한 건. 배지·막대 없이 텍스트 메타 + divider 행으로 표시한다.
+ * 비로그인 화면의 표시 전용이라 링크가 없다.
+ */
+function RecentRecordRow({ entry }: { entry: JournalEntry }) {
+  const { t, locale } = useTranslation();
+  const title =
+    entry.type === 'investment' ? t(`app.journalList.subjects.${entry.subjectKey}`) : entry.title;
+  const meta = [
+    formatLocalizedDate(entry.recordedAt, locale),
+    t(`recordTags.entryType.${entry.type}`),
+    ...(entry.type === 'investment' ? [t(`recordTags.action.${entry.action}`)] : []),
+  ].join(' · ');
+
+  return (
+    <li className="flex min-w-0 flex-col gap-1 py-4 first:pt-0 last:pb-0">
+      <span className="type-content-title text-foreground wrap-anywhere break-keep">{title}</span>
+      <span className="type-meta text-text-secondary">{meta}</span>
+      <span className="type-supporting text-text-secondary wrap-anywhere break-keep">
+        {entry.question}
+      </span>
+      <p className="type-supporting text-text-body line-clamp-2 wrap-anywhere break-keep">
+        {entry.memo}
+      </p>
+    </li>
+  );
+}
 
 export function HomePage() {
   const { t } = useTranslation();
@@ -63,133 +93,100 @@ export function HomePage() {
   }
 
   return (
-    <div className="flex min-h-full min-w-0 flex-col gap-8 px-5 pt-8 pb-10 sm:px-8 sm:pt-10">
-      <header className="flex max-w-2xl min-w-0 flex-col gap-4">
-        <p className="text-primary text-xs font-bold tracking-wider uppercase">
-          <span aria-hidden="true">✦ </span>
-          {t('app.home.hero.eyebrow')}
-        </p>
-        <h1 className="text-foreground min-w-0 text-3xl leading-tight font-bold tracking-tight [overflow-wrap:anywhere] break-keep sm:text-4xl">
+    <div className="flex min-h-full min-w-0 flex-col gap-8 px-5 pt-6 pb-10 sm:px-6 sm:pt-8">
+      <header className="flex min-w-0 flex-col gap-2">
+        <h1 className="type-page-title text-foreground wrap-anywhere break-keep">
           {t('app.home.hero.heading')}
         </h1>
-        <p className="text-muted-foreground min-w-0 text-base leading-7 break-keep">
-          {t('app.home.hero.description')}
-        </p>
+        <p className="type-body text-text-secondary break-keep">{t('app.home.hero.description')}</p>
       </header>
 
-      <Card className="border-border bg-card min-w-0 rounded-2xl p-5 shadow-sm sm:p-7">
+      <Card className="min-w-0 p-5 sm:p-6">
         <form className="flex min-w-0 flex-col gap-4" onSubmit={handleSubmit} noValidate>
-          <p className="text-muted-foreground text-sm leading-5 break-keep">
+          <p className="type-supporting text-text-secondary break-keep">
             {t('app.home.question.exampleNotice')}
           </p>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="review-question" className="text-lg font-bold">
-              {t('app.home.question.label')}
-            </label>
-            <textarea
-              id="review-question"
-              name="question"
-              rows={4}
-              value={question}
-              onChange={(event) => handleQuestionChange(event.target.value)}
-              onKeyDown={handleQuestionKeyDown}
-              placeholder={t('app.home.question.placeholder')}
-              aria-invalid={hasValidationError}
-              aria-describedby={
-                hasValidationError ? 'review-question-error' : 'review-question-help'
-              }
-              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-32 w-full resize-y rounded-xl border px-4 py-3 text-base leading-6 [overflow-wrap:anywhere] break-keep outline-none focus-visible:ring-3"
-            />
-            <p
-              id="review-question-help"
-              className="text-muted-foreground text-sm leading-5 break-keep"
-            >
-              {t('app.home.question.helper')}
-            </p>
-            {hasValidationError && (
-              <p
-                id="review-question-error"
-                role="alert"
-                className="text-destructive text-sm font-semibold"
-              >
-                {t('app.home.question.required')}
-              </p>
-            )}
-          </div>
-          <button type="submit" className={cn(buttonVariants({ size: 'lg' }), 'min-h-12 w-full')}>
+          <TextField
+            multiline
+            id="review-question"
+            name="question"
+            rows={4}
+            label={t('app.home.question.label')}
+            value={question}
+            onChange={(event) => handleQuestionChange(event.target.value)}
+            onKeyDown={handleQuestionKeyDown}
+            placeholder={t('app.home.question.placeholder')}
+            hint={t('app.home.question.helper')}
+            error={hasValidationError ? t('app.home.question.required') : undefined}
+          />
+          <Button type="submit" className="w-full sm:w-auto sm:self-end">
             {t('app.home.question.submit')}
-            <span aria-hidden="true">→</span>
-          </button>
+            <ArrowRight aria-hidden="true" />
+          </Button>
         </form>
       </Card>
 
-      <section className="flex min-w-0 flex-col gap-3" aria-labelledby="review-examples-heading">
-        <h2
-          id="review-examples-heading"
-          className="text-foreground text-lg font-bold tracking-tight"
-        >
-          {t('app.home.examples.heading')}
-        </h2>
-        <div className="grid min-w-0 gap-2 sm:grid-cols-3">
+      <section className="flex min-w-0 flex-col gap-1" aria-label={t('app.home.examples.heading')}>
+        <SectionHeader title={t('app.home.examples.heading')} />
+        <ul className="divide-border -mx-3 divide-y">
           {EXAMPLE_KEYS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => startReview(t(`app.home.examples.items.${key}`))}
-              className="border-border bg-card text-foreground hover:bg-accent focus-visible:border-ring focus-visible:ring-ring/50 min-h-20 w-full rounded-xl border px-4 py-3 text-left text-sm leading-6 break-keep transition-colors outline-none focus-visible:ring-3"
-            >
-              {t(`app.home.examples.items.${key}`)}
-            </button>
+            <li key={key}>
+              <button
+                type="button"
+                onClick={() => startReview(t(`app.home.examples.items.${key}`))}
+                className="type-body text-foreground hover:bg-control rounded-inset min-h-14 w-full px-3 py-3 text-left break-keep transition-colors"
+              >
+                {t(`app.home.examples.items.${key}`)}
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
-      <PolicyNotice>
+      <Notice>
         <p>{t('app.home.policyNotice')}</p>
-      </PolicyNotice>
+      </Notice>
 
-      <section className="flex min-w-0 flex-col gap-3" aria-labelledby="home-recent-records">
-        <h2 id="home-recent-records" className="text-foreground text-lg font-bold tracking-tight">
-          {t('app.home.recentRecords.heading')}
-        </h2>
+      <section
+        className="flex min-w-0 flex-col gap-1"
+        aria-label={t('app.home.recentRecords.heading')}
+      >
+        <SectionHeader
+          title={t('app.home.recentRecords.heading')}
+          action={
+            recentEntries.length > 0 ? (
+              <Link
+                to={APP_ROUTE_PATHS.journalList}
+                className={buttonVariants({ variant: 'text', size: 'sm' })}
+              >
+                {t('app.home.recentRecords.viewAll')}
+              </Link>
+            ) : undefined
+          }
+        />
 
         {recentEntries.length > 0 ? (
           <>
-            <p className="text-muted-foreground text-sm">
+            <p className="type-supporting text-text-secondary pb-3">
               {t('app.home.recentRecords.sampleNotice')}
             </p>
-            <ul className="flex min-w-0 flex-col gap-3">
-              {recentEntries.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="[&_a]:focus-visible:ring-ring/50 min-w-0 [&_a]:rounded-lg [&_a]:outline-none [&_a]:focus-visible:ring-3 [&_p]:[overflow-wrap:anywhere] [&_span]:[overflow-wrap:anywhere]"
-                >
-                  <JournalRecordCard entry={entry} displayOnly />
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              to={APP_ROUTE_PATHS.journalList}
-              className={cn(buttonVariants({ variant: 'outline' }), 'mt-1 min-h-11 w-full')}
-            >
-              {t('app.home.recentRecords.viewAll')}
-            </Link>
+            <Card className="min-w-0 p-5">
+              <ul className="divide-border flex min-w-0 flex-col divide-y">
+                {recentEntries.map((entry) => (
+                  <RecentRecordRow key={entry.id} entry={entry} />
+                ))}
+              </ul>
+            </Card>
           </>
         ) : (
-          <Card className="p-2">
+          <Card>
             <EmptyState
-              icon={<span className="text-2xl">◇</span>}
               title={t('app.home.empty.title')}
               description={t('app.home.empty.description')}
               action={
-                <button
-                  type="button"
-                  onClick={() => startReview()}
-                  className={cn(buttonVariants({ size: 'lg' }), 'mt-2 min-h-11')}
-                >
+                <Button type="button" variant="text" onClick={() => startReview()}>
                   {t('app.home.empty.action')}
-                </button>
+                </Button>
               }
             />
           </Card>
