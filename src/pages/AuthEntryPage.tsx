@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
+import { MAIN_LANDMARK_ID } from '@/constants/layout';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import type {
   AuthEntryLocationState,
@@ -155,6 +156,7 @@ export function AuthEntryPage({
   return (
     <div className="bg-muted flex min-h-dvh w-full justify-center px-4 py-6 sm:px-6 sm:py-10">
       <main
+        id={MAIN_LANDMARK_ID}
         className="bg-background flex min-h-[min(720px,calc(100dvh-3rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-xl"
         data-testid="auth-entry"
       >

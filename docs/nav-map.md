@@ -47,7 +47,9 @@ navigation은 current contract가 아니다.
 
 Breakpoint·콘텐츠 폭 값은 [`src/constants/layout.ts`](../src/constants/layout.ts)가 명시한다
 (768 / 1024 landscape / 1280, host 1360, 콘텐츠 660·760, 터치 44). Tablet 이상은 DOM도
-내비가 본문 앞이고, Phone은 본문 뒤(하단)다. 모든 `/app` 화면 첫 포커스는 본문 건너뛰기 링크다.
+내비가 본문 앞이고, Phone은 본문 뒤(하단)다. 모든 `/app` 화면 첫 포커스는 본문 건너뛰기 링크이고,
+그 대상은 `<main id="main">`(`MAIN_LANDMARK_ID`)이다. 768 경계에서 내비가 다시 마운트돼도
+직전에 내비 링크에 있던 포커스는 같은 탭으로 이어받는다.
 
 Tablet Portrait·Landscape·Desktop에서는 저널 목록뿐 아니라 저널 신규·상세·복기 화면에도
 동일한 `BOTTOM_TABS` 기반 검토/저널 primary navigation을 유지한다. Phone의 내부 결과·작성·

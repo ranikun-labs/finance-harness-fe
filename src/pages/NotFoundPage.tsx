@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
+import { MAIN_LANDMARK_ID } from '@/constants/layout';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 
@@ -13,7 +14,10 @@ import { useTranslation } from '@/i18n/I18nContext';
 export function NotFoundPage() {
   const { t } = useTranslation();
   return (
-    <main className="flex min-h-full flex-col items-center justify-center gap-4 p-4 pb-[env(safe-area-inset-bottom)] text-center">
+    <main
+      id={MAIN_LANDMARK_ID}
+      className="flex min-h-full flex-col items-center justify-center gap-4 p-4 pb-[env(safe-area-inset-bottom)] text-center"
+    >
       <h1 className="text-foreground text-lg font-semibold">{t('app.notFound.heading')}</h1>
       <p className="text-text-tertiary text-sm">{t('app.notFound.description')}</p>
       <Link to={APP_ROUTE_PATHS.appHome} className={buttonVariants({ variant: 'default' })}>

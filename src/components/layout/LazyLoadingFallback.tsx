@@ -1,3 +1,4 @@
+import { MAIN_LANDMARK_ID } from '@/constants/layout';
 import { useTranslation } from '@/i18n/I18nContext';
 
 interface LazyLoadingFallbackProps {
@@ -22,7 +23,11 @@ export function LazyLoadingFallback({ asMain = false }: LazyLoadingFallbackProps
   );
 
   if (asMain) {
-    return <main className="flex min-h-full items-center justify-center p-4">{status}</main>;
+    return (
+      <main id={MAIN_LANDMARK_ID} className="flex min-h-full items-center justify-center p-4">
+        {status}
+      </main>
+    );
   }
 
   return status;

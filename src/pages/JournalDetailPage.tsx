@@ -3,9 +3,12 @@ import { JournalEditor } from '@/features/journal-edit/JournalEditor';
 import { Link, useParams } from 'react-router';
 import type { ReactNode } from 'react';
 
-import { RecordTagBadge } from '@/components/common/RecordTagBadge';
-import { buttonVariants } from '@/components/ui/button';
+import { RecordTagText } from '@/components/common/RecordTagText';
+import { Stack } from '@/components/layout/Stack';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ErrorState } from '@/components/ui/error-state';
+import { InfoList, InfoRow } from '@/components/ui/info-row';
 import { APP_ROUTE_PATHS, buildAppJournalReviewPath } from '@/constants/routes';
 import { useJournalReadPort } from '@/features/journal-read/JournalReadPortContext';
 import type {
@@ -18,39 +21,47 @@ import { useTranslation } from '@/i18n/I18nContext';
 import { formatJournalOccurredAt } from '@/lib/date';
 import { cn } from '@/lib/utils';
 
+/**
+ * 읽기 본문 줄 길이 상한. Tailwind 스케일(`max-w-2xl`, 672px)을 쓴다. #46의 720px는 스케일 밖
+ * 임의 값이라 가장 가까운 토큰으로 대체했다 — 셸 reading 폭(660)·2-pane 상세 폭 안에서는
+ * 이 상한이 넘치는 경우가 거의 없어 폭이 큰 pane에서만 줄 길이를 보호한다.
+ */
+const READING_MEASURE_CLASS = 'max-w-2xl';
+
 function DetailHeader({ title, backLabel }: { title: string; backLabel: string }) {
   return (
-    <header className="border-border relative flex min-h-14 items-center justify-center border-b pb-2">
+    <header className="relative flex min-h-14 items-center justify-center">
       <Link
         aria-label={backLabel}
-        className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"
+        className={cn(
+          buttonVariants({ variant: 'text-neutral', size: 'icon' }),
+          'type-section-title absolute left-0',
+        )}
         to={APP_ROUTE_PATHS.journalList}
       >
         <span aria-hidden="true">←</span>
       </Link>
-      <h1 className="text-base font-bold">{title}</h1>
+      <h1 className="type-content-title text-foreground">{title}</h1>
     </header>
   );
 }
 
+/** 로딩·없음처럼 행동이 없거나 보조 행동뿐인 상태 면. 복구 가능한 오류는 ErrorState를 쓴다. */
 function DetailStatus({
   title,
   description,
   action,
 }: {
-  title: string;
+  title?: string;
   description: string;
   action?: ReactNode;
 }) {
   return (
-    <div
-      className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
-      role="status"
-    >
-      <p className="text-foreground text-base font-semibold">{title}</p>
-      <p className="text-muted-foreground text-sm">{description}</p>
+    <Card className="flex flex-col items-center gap-3 px-6 py-12 text-center" role="status">
+      {title ? <p className="type-content-title text-foreground">{title}</p> : null}
+      <p className="type-supporting text-text-secondary break-keep">{description}</p>
       {action}
-    </div>
+    </Card>
   );
 }
 
@@ -58,20 +69,14 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
   const { t } = useTranslation();
   if (error.code === 'journal_not_found') {
     return (
-      <div
-        className="border-border bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-12 text-center"
-        role="status"
-      >
-        <p className="text-muted-foreground text-sm">
-          {t('app.journalDetail.notFound.description')}
-        </p>
-        <Link
-          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-          to={APP_ROUTE_PATHS.journalList}
-        >
-          {t('app.journalDetail.notFound.listAction')}
-        </Link>
-      </div>
+      <DetailStatus
+        description={t('app.journalDetail.notFound.description')}
+        action={
+          <Link className={buttonVariants({ variant: 'text' })} to={APP_ROUTE_PATHS.journalList}>
+            {t('app.journalDetail.notFound.listAction')}
+          </Link>
+        }
+      />
     );
   }
 
@@ -95,67 +100,71 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
           };
 
   return (
-    <DetailStatus
-      title={copy.title}
-      description={copy.description}
-      action={
-        <button
-          type="button"
-          onClick={onRetry}
-          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11')}
-        >
-          {copy.retry}
-        </button>
-      }
-    />
+    <Card>
+      <ErrorState
+        title={copy.title}
+        description={copy.description}
+        // 오류 화면에서는 복구가 유일한 행동이라 진한 버튼 1개(화면당 1개 원칙 유지).
+        action={
+          <Button type="button" onClick={onRetry}>
+            {copy.retry}
+          </Button>
+        }
+      />
+    </Card>
   );
 }
 
+/** 메타는 배지가 아닌 텍스트 InfoList다. 값 색으로 감정·행동에 의미를 싣지 않는다. */
 function JournalMetadata({ detail }: { detail: JournalDetailViewModel }) {
   const { t, locale } = useTranslation();
   return (
-    <Card className="rounded-2xl p-5 shadow-sm sm:p-6">
-      <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 text-sm">
-        <dt className="text-muted-foreground">{t('app.journalDetail.metadata.recordType')}</dt>
-        <dd className="justify-self-end">
-          <RecordTagBadge kind="entryType" value={detail.type} />
-        </dd>
-        <dt className="text-muted-foreground">{t('app.journalDetail.metadata.recordedAt')}</dt>
-        <dd className="text-right font-medium">
+    <Card className="px-5 pt-5 pb-2 sm:px-6">
+      <InfoList>
+        <InfoRow label={t('app.journalDetail.metadata.recordType')}>
+          <RecordTagText kind="entryType" value={detail.type} />
+        </InfoRow>
+        <InfoRow label={t('app.journalDetail.metadata.recordedAt')}>
           <time dateTime={detail.occurredAt}>
             {formatJournalOccurredAt(detail.occurredAt, detail.timeZone, locale)}
           </time>
-        </dd>
-        <dt className="text-muted-foreground">{t('app.journalDetail.metadata.timeZone')}</dt>
-        <dd className="text-right font-medium [overflow-wrap:anywhere]">{detail.timeZone}</dd>
+        </InfoRow>
+        <InfoRow label={t('app.journalDetail.metadata.timeZone')}>{detail.timeZone}</InfoRow>
         {detail.type === 'investment' && (
           <>
-            <dt className="text-muted-foreground">{t('app.journalDetail.metadata.pastAction')}</dt>
-            <dd className="justify-self-end">
-              <RecordTagBadge kind="action" value={detail.action} />
-            </dd>
+            <InfoRow label={t('app.journalDetail.metadata.pastAction')}>
+              <RecordTagText kind="action" value={detail.action} />
+            </InfoRow>
             {detail.emotion !== null && (
-              <>
-                <dt className="text-muted-foreground">
-                  {t('app.journalDetail.metadata.pastEmotion')}
-                </dt>
-                <dd className="justify-self-end">
-                  <RecordTagBadge kind="emotion" value={detail.emotion} />
-                </dd>
-              </>
+              <InfoRow label={t('app.journalDetail.metadata.pastEmotion')}>
+                <RecordTagText kind="emotion" value={detail.emotion} />
+              </InfoRow>
             )}
           </>
         )}
-        <dt className="text-muted-foreground">{t('app.journalDetail.metadata.createdAt')}</dt>
-        <dd className="text-right font-medium">
+        {/* ISO 시각은 길어 좁은 폭에서 값이 깨지므로 라벨 위·값 아래로 둔다. */}
+        <InfoRow layout="stack" label={t('app.journalDetail.metadata.createdAt')}>
           <time dateTime={detail.createdAt}>{detail.createdAt}</time>
-        </dd>
-        <dt className="text-muted-foreground">{t('app.journalDetail.metadata.updatedAt')}</dt>
-        <dd className="text-right font-medium">
+        </InfoRow>
+        <InfoRow layout="stack" label={t('app.journalDetail.metadata.updatedAt')}>
           <time dateTime={detail.updatedAt}>{detail.updatedAt}</time>
-        </dd>
-      </dl>
+        </InfoRow>
+      </InfoList>
     </Card>
+  );
+}
+
+/** 사용자가 쓴 본문: reading 16/27, 줄바꿈 보존(#46 의도), 한글은 어절 단위로 줄바꿈하고(break-keep), 긴 무공백 문자열은 끊어 넘침을 막는다. */
+function ReadingText({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className={cn(
+        'type-reading text-foreground min-w-0 wrap-break-word break-keep whitespace-pre-wrap',
+        READING_MEASURE_CLASS,
+      )}
+    >
+      {children}
+    </p>
   );
 }
 
@@ -166,12 +175,12 @@ function InvestmentDetail({
 }) {
   const { t } = useTranslation();
   return (
-    <section className="space-y-2" aria-labelledby="journal-detail-investment-reasoning">
-      <h2 id="journal-detail-investment-reasoning" className="text-base font-bold">
+    <section className="flex flex-col gap-3" aria-labelledby="journal-detail-investment-reasoning">
+      <h2 id="journal-detail-investment-reasoning" className="type-section-title text-foreground">
         {t('app.journalDetail.investment.reasoningHeading')}
       </h2>
-      <Card className="p-4">
-        <p className="min-w-0 text-sm leading-7 [overflow-wrap:anywhere]">{detail.reasoning}</p>
+      <Card className="p-5 sm:p-6">
+        <ReadingText>{detail.reasoning}</ReadingText>
       </Card>
     </section>
   );
@@ -181,29 +190,32 @@ function StudyDetail({ detail }: { detail: Extract<JournalDetailViewModel, { typ
   const { t } = useTranslation();
   return (
     <>
-      <section className="space-y-2" aria-labelledby="journal-detail-study-content">
-        <h2 id="journal-detail-study-content" className="text-base font-bold">
+      <section className="flex flex-col gap-3" aria-labelledby="journal-detail-study-content">
+        <h2 id="journal-detail-study-content" className="type-section-title text-foreground">
           {t('app.journalDetail.study.keyContentHeading')}
         </h2>
-        <Card className="p-4">
-          <p className="min-w-0 text-sm leading-7 [overflow-wrap:anywhere]">{detail.keyContent}</p>
+        <Card className="p-5 sm:p-6">
+          <ReadingText>{detail.keyContent}</ReadingText>
         </Card>
       </section>
 
-      <section className="space-y-2" aria-labelledby="journal-detail-study-open-questions">
-        <h2 id="journal-detail-study-open-questions" className="text-base font-bold">
+      <section
+        className="flex flex-col gap-3"
+        aria-labelledby="journal-detail-study-open-questions"
+      >
+        <h2 id="journal-detail-study-open-questions" className="type-section-title text-foreground">
           {t('app.journalDetail.study.openQuestionsHeading')}
         </h2>
         {detail.openQuestions.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="type-supporting text-text-secondary">
             {t('app.journalDetail.study.noOpenQuestions')}
           </p>
         ) : (
-          <Card>
-            <ol className="divide-border list-decimal divide-y pl-10">
+          <Card className="px-5 py-2 sm:px-6">
+            <ol className="divide-border marker:text-text-secondary list-decimal divide-y pl-5">
               {detail.openQuestions.map((question, index) => (
                 <li
-                  className="min-w-0 p-4 pl-2 text-sm leading-6 [overflow-wrap:anywhere]"
+                  className="type-body text-foreground min-w-0 py-3 pl-2 wrap-anywhere"
                   key={`${index}-${question}`}
                 >
                   {question}
@@ -222,16 +234,13 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
   const title = detail.type === 'investment' ? detail.assetName : detail.title;
 
   return (
-    <>
-      <section className="space-y-3" aria-labelledby="journal-detail-title">
-        <h2
-          id="journal-detail-title"
-          className="min-w-0 text-2xl leading-tight font-bold tracking-tight [overflow-wrap:anywhere]"
-        >
-          {title}
-        </h2>
-        <JournalMetadata detail={detail} />
-      </section>
+    <Stack gap="section">
+      <h2
+        id="journal-detail-title"
+        className="type-page-title text-foreground min-w-0 wrap-anywhere"
+      >
+        {title}
+      </h2>
 
       {detail.type === 'investment' ? (
         <InvestmentDetail detail={detail} />
@@ -239,18 +248,21 @@ function JournalDetailContent({ detail }: { detail: JournalDetailViewModel }) {
         <StudyDetail detail={detail} />
       )}
 
+      <JournalMetadata detail={detail} />
+
+      {/* 복기는 읽기가 끝난 뒤의 선택 행동이라 subtle(진한 버튼 0개). 문구는 그대로 유지한다. */}
       <nav aria-label={t('app.journalDetail.headerTitle')}>
         <Link
           className={cn(
-            buttonVariants({ size: 'lg' }),
-            'h-auto min-h-[54px] w-full text-center whitespace-normal',
+            buttonVariants({ variant: 'subtle' }),
+            'h-auto min-h-12 py-2 text-center whitespace-normal',
           )}
           to={buildAppJournalReviewPath(detail.journalId, detail.revision)}
         >
           {t('app.journalDetail.navigation.review')}
         </Link>
       </nav>
-    </>
+    </Stack>
   );
 }
 
@@ -269,7 +281,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
       : t('app.journalDetail.headerTitle');
 
   return (
-    <div className="flex min-h-full flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+    <Stack gap="group" className="min-h-full px-5 pt-4 pb-10 sm:px-6 sm:pt-6">
       <DetailHeader title={headerTitle} backLabel={t('app.journalDetail.backLabel')} />
       {state.status === 'loading' && (
         <DetailStatus
@@ -292,9 +304,11 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
             detail={state.data}
             onSaved={retry}
           />
-          <JournalDetailContent detail={state.data} />
+          <div className="pt-4">
+            <JournalDetailContent detail={state.data} />
+          </div>
         </>
       )}
-    </div>
+    </Stack>
   );
 }

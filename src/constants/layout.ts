@@ -14,6 +14,12 @@ export const BREAKPOINTS = {
   desktop: 1280,
 } as const;
 
+/**
+ * 본문 landmark(`<main>`)의 id. SkipLink의 `#main` 대상이다 — JS 없이도 앵커로 이동하도록
+ * 앱 셸 안의 모든 `<main>`이 같은 id를 가진다(한 번에 하나만 렌더).
+ */
+export const MAIN_LANDMARK_ID = 'main';
+
 /** 앱 host 최대 폭(px). 그 이하에서는 viewport 폭을 전부 쓴다. */
 export const APP_SHELL_MAX_WIDTH_PX = 1360;
 

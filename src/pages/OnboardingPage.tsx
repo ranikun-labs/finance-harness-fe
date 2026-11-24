@@ -7,6 +7,7 @@ import {
 import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { Card } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
+import { MAIN_LANDMARK_ID } from '@/constants/layout';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
@@ -52,7 +53,10 @@ export function OnboardingPage() {
   ];
 
   return (
-    <main className="flex w-full flex-col gap-6 px-6 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    <main
+      id={MAIN_LANDMARK_ID}
+      className="flex w-full flex-col gap-6 px-6 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]"
+    >
       <header className="flex items-center gap-3">
         <span
           aria-hidden="true"

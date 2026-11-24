@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -112,6 +112,16 @@ describe('adaptive app shell', () => {
     expect(screen.getByRole('main')).toHaveFocus();
   });
 
+  it('gives the skip link a real anchor target so it works without JavaScript', () => {
+    renderShell();
+
+    const skip = screen.getByRole('link', { name: '본문으로 건너뛰기' });
+    const main = screen.getByRole('main');
+    expect(main).toHaveAttribute('id', 'main');
+    expect(skip).toHaveAttribute('href', '#main');
+    expect(document.querySelector(skip.getAttribute('href')!)).toBe(main);
+  });
+
   describe('DOM order follows the visual order', () => {
     afterEach(() => vi.unstubAllGlobals());
 
@@ -141,6 +151,60 @@ describe('adaptive app shell', () => {
       const nav = screen.getByRole('navigation', { name: '주요 화면 이동' });
       const main = screen.getByRole('main');
       expect(main.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('keeps keyboard focus on the same primary tab when the 768 boundary remounts the navigation', () => {
+      let matches = false;
+      const listeners = new Set<() => void>();
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((query: string) => ({
+          get matches() {
+            return matches;
+          },
+          media: query,
+          addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+          removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+        })),
+      );
+      renderShell();
+
+      const journalTab = screen.getByRole('link', { name: '저널' });
+      journalTab.focus();
+      expect(journalTab).toHaveFocus();
+
+      act(() => {
+        matches = true;
+        listeners.forEach((listener) => listener());
+      });
+
+      const remounted = screen.getByRole('link', { name: '저널' });
+      expect(remounted).not.toBe(journalTab);
+      expect(remounted).toHaveFocus();
+    });
+
+    it('does not steal focus on rotation when the navigation did not hold it', () => {
+      let matches = false;
+      const listeners = new Set<() => void>();
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((query: string) => ({
+          get matches() {
+            return matches;
+          },
+          media: query,
+          addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+          removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+        })),
+      );
+      renderShell();
+
+      screen.getByRole('link', { name: '본문으로 건너뛰기' }).focus();
+      act(() => {
+        matches = true;
+        listeners.forEach((listener) => listener());
+      });
+      expect(screen.getByRole('link', { name: '저널' })).not.toHaveFocus();
     });
   });
 });
