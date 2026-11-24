@@ -258,6 +258,8 @@ test.describe('Journal adaptive List | Detail presentation', () => {
         .boundingBox();
       expect(reasoningBox!.y, label).toBeLessThan(reviewBox!.y);
       await expect(page.locator('main')).not.toContainText(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+      // 시간대 이름(IANA, 예: Asia/Seoul)은 화면에 보이지 않는다(F1-05 공통 AC 5).
+      await expect(page.locator('main')).not.toContainText(/[A-Z][a-z]+\/[A-Z][A-Za-z_]+/);
       await expectNoHorizontalOverflow(page);
     }
 

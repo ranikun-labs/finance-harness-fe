@@ -142,13 +142,13 @@ function DetailError({ error, onRetry }: { error: JournalReadError; onRetry: () 
  * 기록 정보: 읽기가 끝난 뒤 확인하는 보조 값이라 본문 맨 아래에 둔다. 배지가 아닌 텍스트 InfoList다.
  * 유형·기록 시점·당시 행동/감정은 머리(`DetailHead`)에서 한 번만 보인다. 생성·수정 시점은
  * 서버 ISO 문자열 대신 기록 시간대 기준 표기로 보이고, 원본은 `<time dateTime>`에 남긴다.
+ * 시간대 이름(IANA)은 화면에 보이지 않는다(F1-05 공통 AC 5). 표기 계산에만 쓴다.
  */
 function JournalMetadata({ detail }: { detail: JournalDetailViewModel }) {
   const { t, locale } = useTranslation();
   return (
     <Card className="px-5 pt-5 pb-2 sm:px-6">
       <InfoList>
-        <InfoRow label={t('app.journalDetail.metadata.timeZone')}>{detail.timeZone}</InfoRow>
         <InfoRow label={t('app.journalDetail.metadata.createdAt')}>
           <time dateTime={detail.createdAt}>
             {formatJournalInstant(detail.createdAt, detail.timeZone, locale)}

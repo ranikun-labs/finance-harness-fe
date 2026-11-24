@@ -74,7 +74,8 @@ describe('JournalDetailPage', () => {
       screen.getByRole('heading', { level: 1, name: ko.app.journalDetail.headerTitle }),
     ).toBeInTheDocument();
     expect(screen.getByText('thesis')).toBeInTheDocument();
-    expect(screen.getByText('Asia/Seoul')).toBeInTheDocument();
+    // 시간대 이름(IANA)은 화면에 보이지 않는다(F1-05 공통 AC 5).
+    expect(screen.queryByText(/Asia\/Seoul/)).not.toBeInTheDocument();
     // 서버 ISO 값은 화면 글자가 아니라 time[datetime]에만 남고, 글자는 기록 시간대 기준으로 표기된다.
     expect(screen.queryByText(INVESTMENT_DETAIL.createdAt)).not.toBeInTheDocument();
     expect(screen.queryByText(INVESTMENT_DETAIL.updatedAt)).not.toBeInTheDocument();
@@ -234,7 +235,8 @@ describe('JournalDetailPage', () => {
       });
       const title = screen.getByRole('heading', { level: 2, name: 'ETF' });
       const reasoning = screen.getByText('thesis');
-      const timeZone = screen.getByText(ko.app.journalDetail.metadata.timeZone);
+      // 기록 정보의 첫 행은 이제 생성 시점이다(시간대 이름 행은 AC 5로 비노출).
+      const timeZone = screen.getByText(ko.app.journalDetail.metadata.createdAt);
       const follows = (a: Node, b: Node) =>
         Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
       expect(follows(title, reasoning)).toBe(true);
