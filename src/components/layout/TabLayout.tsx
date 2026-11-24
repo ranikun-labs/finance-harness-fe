@@ -51,6 +51,8 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
             id={MAIN_LANDMARK_ID}
             className={cn(
               'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
+              // 고정 하단 행동이 포커스·앵커 이동 대상을 가리지 않도록 96px 여유.
+              isReviewResult && 'scroll-pb-24',
               isJournalWorkspace && 'journal-workspace-main',
               isRetrospectiveWorkspace && 'retrospective-workspace-main',
             )}

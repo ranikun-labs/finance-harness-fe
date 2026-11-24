@@ -7,6 +7,7 @@ import { PolicyNotice } from '@/components/common/PolicyNotice';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Notice } from '@/components/ui/notice';
 import { AUTH_ROUTE_PATHS, APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
@@ -35,6 +36,11 @@ function formatReviewTime(value: string, locale: 'ko' | 'en'): string {
     timeStyle: 'short',
     timeZone: 'Asia/Seoul',
   }).format(new Date(value));
+}
+
+/** 기준일은 `YYYY.MM.DD`로 표시한다(ISO 문자열은 `dateTime` 속성에만 둔다). */
+function formatAsOfDate(value: string): string {
+  return value.replaceAll('-', '.');
 }
 
 function LoadingReview({ question }: { question: string }) {
@@ -66,7 +72,7 @@ function LoadingReview({ question }: { question: string }) {
         >
           {t('app.ask.structured.questionLabel')}
         </h2>
-        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
+        <Card className="p-5">
           <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
         </Card>
       </section>
@@ -137,7 +143,7 @@ function ReviewError({
         >
           {t('app.ask.structured.questionLabel')}
         </h2>
-        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
+        <Card className="p-5">
           <p className="min-w-0 text-lg leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
         </Card>
       </section>
@@ -249,64 +255,49 @@ function StructuredReviewResult({
     setCheckedItems(next);
   }
 
+  const investmentLinkProps = {
+    to: investmentDestination,
+    onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+        return;
+      event.preventDefault();
+      navigate(investmentDestination, { state: transientState(investmentDestinationState) });
+    },
+  };
+
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <header className="flex min-w-0 items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-2">
-          <p className="text-primary text-xs font-bold tracking-wider uppercase">
-            {t('app.ask.header.title')}
-          </p>
-          <h1 className="min-w-0 text-2xl leading-tight font-extrabold tracking-tight break-keep sm:text-3xl">
-            {t('app.ask.structured.resultTitle')}
-          </h1>
-        </div>
-        <Badge tone="info">{t('app.ask.structured.fixtureLabel')}</Badge>
+      <header className="flex min-w-0 flex-col gap-2">
+        <p className="type-meta text-text-secondary">
+          {t('app.ask.structured.resultTitle')} · {t('app.ask.structured.fixtureLabel')}
+        </p>
+        <h1 className="type-page-title min-w-0 wrap-anywhere break-keep">{question}</h1>
       </header>
 
-      <section aria-labelledby="result-question-heading" className="space-y-2">
-        <h2
-          id="result-question-heading"
-          className="text-text-tertiary text-xs font-bold tracking-wider"
-        >
-          {t('app.ask.structured.questionLabel')}
-        </h2>
-        <Card className="border-l-primary border-l-4 p-5 shadow-sm">
-          <p className="min-w-0 text-xl leading-7 font-bold [overflow-wrap:anywhere]">{question}</p>
-        </Card>
-      </section>
-
       {partial && (
-        <section
-          role="status"
-          aria-live="polite"
-          className="border-border bg-muted/50 flex min-w-0 flex-col gap-1 rounded-xl border p-4"
-        >
-          <h2 className="text-base font-bold">{t('app.ask.structured.partialTitle')}</h2>
-          <p className="text-muted-foreground text-sm leading-6">
-            {t('app.ask.structured.partialDescription')}
-          </p>
-          <p className="text-muted-foreground text-xs leading-5">
-            {t('app.ask.structured.partialNarrow')}
-          </p>
-        </section>
+        <Notice tone="warning" role="status" aria-live="polite">
+          <h2 className="type-label">{t('app.ask.structured.partialTitle')}</h2>
+          <p>{t('app.ask.structured.partialDescription')}</p>
+          <p className="text-text-secondary">{t('app.ask.structured.partialNarrow')}</p>
+        </Notice>
       )}
 
       <section aria-labelledby="review-checklist-heading" className="flex min-w-0 flex-col gap-3">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <h2 id="review-checklist-heading" className="text-base font-bold">
+            <h2 id="review-checklist-heading" className="type-section-title">
               {t('app.ask.structured.checklist.heading')}
             </h2>
-            <p className="text-muted-foreground text-sm leading-5">
+            <p className="type-supporting text-text-secondary">
               {t('app.ask.structured.checklist.helper')}
             </p>
           </div>
-          <Badge>
+          <span className="type-meta text-text-secondary shrink-0" aria-live="polite">
             {t('app.ask.structured.checklist.progress', {
               checked: String(checkedCount),
               total: String(fixture.checklist.length),
             })}
-          </Badge>
+          </span>
         </div>
         <Card>
           <ul className="divide-border divide-y">
@@ -346,56 +337,52 @@ function StructuredReviewResult({
 
       <section aria-labelledby="review-facts-heading" className="flex min-w-0 flex-col gap-3">
         <div className="space-y-1">
-          <h2 id="review-facts-heading" className="text-base font-bold">
+          <h2 id="review-facts-heading" className="type-section-title">
             {t('app.ask.structured.fact.heading')}
           </h2>
-          <p className="text-muted-foreground text-sm leading-5">
+          <p className="type-supporting text-text-secondary">
             {t('app.ask.structured.fact.helper')}
           </p>
         </div>
-        <ul className="flex min-w-0 flex-col gap-3">
-          {fixture.facts.map((fact) => (
-            <li key={fact.id} className="min-w-0">
-              <Card className="flex min-w-0 flex-col gap-3 p-4">
-                <p className="min-w-0 text-sm leading-6 font-semibold [overflow-wrap:anywhere]">
+        <Card>
+          <ul className="divide-border divide-y">
+            {fixture.facts.map((fact) => (
+              <li key={fact.id} className="flex min-w-0 flex-col gap-2 p-4">
+                <p className="type-body min-w-0 font-semibold wrap-anywhere">
                   {localize(fact.claim, locale)}
                 </p>
-                <dl className="text-muted-foreground grid min-w-0 gap-2 text-xs leading-5 sm:grid-cols-2">
+                <dl className="type-meta text-text-secondary grid min-w-0 gap-x-4 gap-y-1 sm:grid-cols-2">
                   <div className="min-w-0">
                     <dt className="font-semibold">{t('app.ask.structured.fact.sourceLabel')}</dt>
-                    <dd className="[overflow-wrap:anywhere]">{localize(fact.source, locale)}</dd>
+                    <dd className="wrap-anywhere">{localize(fact.source, locale)}</dd>
                   </div>
                   <div>
                     <dt className="font-semibold">{t('app.ask.structured.fact.asOfLabel')}</dt>
                     <dd>
-                      <time dateTime={fact.asOf}>{fact.asOf}</time>
+                      <time dateTime={fact.asOf}>{formatAsOfDate(fact.asOf)}</time>
                     </dd>
                   </div>
                 </dl>
-              </Card>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </section>
 
       {fixture.inferences.length > 0 && (
         <section aria-labelledby="review-inference-heading" className="flex min-w-0 flex-col gap-3">
-          <div className="space-y-1">
-            <h2 id="review-inference-heading" className="text-base font-bold">
-              {t('app.ask.structured.inference.heading')}
-            </h2>
-            <p className="text-muted-foreground text-sm leading-5">
-              {t('app.ask.structured.inference.helper')}
-            </p>
-          </div>
+          <h2 id="review-inference-heading" className="type-section-title">
+            {t('app.ask.structured.inference.heading')}
+          </h2>
           <ul className="flex min-w-0 flex-col gap-3">
             {fixture.inferences.map((inference) => (
               <li key={inference.id} className="min-w-0">
-                <Card className="border-primary/20 bg-primary/5 flex min-w-0 flex-col gap-3 p-4">
-                  <p className="min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">
+                <Card className="flex min-w-0 flex-col gap-3 p-4">
+                  <Badge tone="information">{t('app.ask.structured.inference.helper')}</Badge>
+                  <p className="type-body min-w-0 wrap-anywhere">
                     {localize(inference.text, locale)}
                   </p>
-                  <p className="text-muted-foreground text-xs leading-5">
+                  <p className="type-meta text-text-secondary">
                     <span className="font-semibold">
                       {t('app.ask.structured.inference.basisLabel')}:
                     </span>{' '}
@@ -410,32 +397,30 @@ function StructuredReviewResult({
 
       <section aria-labelledby="review-unknown-heading" className="flex min-w-0 flex-col gap-3">
         <div className="space-y-1">
-          <h2 id="review-unknown-heading" className="text-base font-bold">
+          <h2 id="review-unknown-heading" className="type-section-title">
             {t('app.ask.structured.unknown.heading')}
           </h2>
-          <p className="text-muted-foreground text-sm leading-5">
+          <p className="type-supporting text-text-secondary">
             {t('app.ask.structured.unknown.helper')}
           </p>
         </div>
-        <ul className="flex min-w-0 flex-col gap-3">
-          {fixture.unknowns.map((unknown) => (
-            <li key={unknown.id} className="min-w-0">
-              <Card className="flex min-w-0 flex-col gap-2 p-4">
+        <Card>
+          <ul className="divide-border divide-y">
+            {fixture.unknowns.map((unknown) => (
+              <li key={unknown.id} className="flex min-w-0 flex-col gap-2 p-4">
                 <Badge tone="neutral">{localize(unknown.tag, locale)}</Badge>
-                <p className="min-w-0 text-sm leading-6 [overflow-wrap:anywhere]">
-                  {localize(unknown.text, locale)}
-                </p>
-              </Card>
-            </li>
-          ))}
-        </ul>
+                <p className="type-body min-w-0 wrap-anywhere">{localize(unknown.text, locale)}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </section>
 
       <section aria-labelledby="review-time-heading" className="flex min-w-0 flex-col gap-3">
-        <h2 id="review-time-heading" className="text-base font-bold">
+        <h2 id="review-time-heading" className="type-section-title">
           {t('app.ask.structured.timestampsHeading')}
         </h2>
-        <dl className="text-muted-foreground grid gap-2 text-xs leading-5 sm:grid-cols-2">
+        <dl className="type-meta text-text-secondary grid gap-2 sm:grid-cols-2">
           <div>
             <dt className="font-semibold">
               {t('app.ask.structured.generatedAt', { timestamp: '' }).trim()}
@@ -453,57 +438,36 @@ function StructuredReviewResult({
             </dd>
           </div>
         </dl>
-        <PolicyNotice>
-          <p>{t('app.ask.structured.provenance')}</p>
-        </PolicyNotice>
+        <Card className="p-4">
+          <Notice tone="neutral" className="p-0">
+            <p>{t('app.ask.structured.provenance')}</p>
+          </Notice>
+        </Card>
       </section>
 
-      <section
-        aria-labelledby="review-handoff-heading"
-        className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-xl border p-5"
-      >
+      <section aria-labelledby="review-handoff-heading" className="flex min-w-0 flex-col gap-3">
         <header className="flex min-w-0 flex-col gap-1">
-          <h2 id="review-handoff-heading" className="text-base font-bold">
+          <h2 id="review-handoff-heading" className="type-section-title">
             {t('app.ask.handoff.heading')}
           </h2>
-          <p className="text-muted-foreground text-sm leading-6">
-            {t('app.ask.handoff.description')}
-          </p>
+          <p className="type-supporting text-text-secondary">{t('app.ask.handoff.description')}</p>
         </header>
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-          <Link
-            ref={investmentLinkRef}
-            className={cn(
-              buttonVariants({ variant: 'outline' }),
-              'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
-            )}
-            to={investmentDestination}
-            onClick={(event) => {
-              if (
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
-              event.preventDefault();
-              navigate(investmentDestination, {
-                state: transientState(investmentDestinationState),
-              });
-            }}
-          >
-            <span className="text-base font-semibold">{t('app.ask.handoff.investment.title')}</span>
-            <span className="text-muted-foreground text-sm leading-5">
-              {t('app.ask.handoff.investment.description')}
-            </span>
-          </Link>
+        <Card className="flex min-w-0 flex-col gap-1 p-4">
+          <h3 className="type-content-title">{t('app.ask.handoff.investment.title')}</h3>
+          <p className="type-supporting text-text-secondary">
+            {t('app.ask.handoff.investment.description')}
+          </p>
+        </Card>
+        <Card className="flex min-w-0 flex-col gap-3 p-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="type-content-title">{t('app.ask.handoff.study.title')}</h3>
+            <p className="type-supporting text-text-secondary">
+              {t('app.ask.handoff.study.description')}
+            </p>
+          </div>
           <Link
             ref={studyLinkRef}
-            className={cn(
-              buttonVariants({ variant: 'default' }),
-              'h-auto min-h-24 flex-col items-start gap-1 p-4 text-left whitespace-normal',
-            )}
+            className={cn(buttonVariants({ variant: 'subtle' }), 'w-full md:w-fit')}
             to={studyDestination}
             onClick={(event) => {
               if (
@@ -518,13 +482,24 @@ function StructuredReviewResult({
               navigate(studyDestination, { state: transientState(studyDestinationState) });
             }}
           >
-            <span className="text-base font-semibold">{t('app.ask.handoff.study.title')}</span>
-            <span className="text-primary-foreground/80 text-sm leading-5">
-              {t('app.ask.handoff.study.description')}
-            </span>
+            {t('app.ask.handoff.study.title')}
           </Link>
-        </div>
+        </Card>
       </section>
+
+      {/* 화면의 Strong 1개. 긴 결과를 끝까지 내리지 않아도 보이도록 하단에 붙인다(폰 전폭, 태블릿 이상 내용 폭). */}
+      <div
+        data-testid="review-primary-action"
+        className="bg-background border-border sticky bottom-0 z-10 -mx-5 border-t px-5 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
+        <Link
+          ref={investmentLinkRef}
+          className={cn(buttonVariants({ variant: 'strong' }), 'w-full md:w-fit')}
+          {...investmentLinkProps}
+        >
+          {t('app.ask.handoff.investment.title')}
+        </Link>
+      </div>
     </div>
   );
 }

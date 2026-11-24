@@ -37,7 +37,9 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     const question = '검토에서 기록으로 이어가기';
 
     await startReview(page, question);
-    await expect(page.getByRole('heading', { name: ko.app.ask.handoff.heading })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: ko.app.ask.handoff.heading, exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
     ).toBeVisible();

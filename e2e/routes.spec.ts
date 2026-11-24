@@ -191,7 +191,7 @@ test.describe('공개/앱 라우트 경계 스모크 테스트', () => {
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: ko.app.ask.structured.resultTitle,
+        name: question,
         exact: true,
       }),
     ).toBeVisible();

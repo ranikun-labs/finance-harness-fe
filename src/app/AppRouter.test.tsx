@@ -427,10 +427,7 @@ describe('AppRouter', () => {
 
     it.each([
       [APP_ROUTE_PATHS.appHome, ko.app.home.hero.heading],
-      [
-        `${buildAppAskPath()}?ref=${holdTransient('게스트 검토 결과')}`,
-        ko.app.ask.structured.resultTitle,
-      ],
+      [`${buildAppAskPath()}?ref=${holdTransient('게스트 검토 결과')}`, '게스트 검토 결과'],
     ])('keeps the guest Review surface public at %s', async (path, heading) => {
       renderAt(path, { state: 'guest' });
 
