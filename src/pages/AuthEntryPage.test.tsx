@@ -199,6 +199,26 @@ describe('AuthEntryPage presentation seam', () => {
     expect(screen.getByText(ko.auth.entry.resumeNotice)).toBeInTheDocument();
   });
 
+  it('explains a direct entry failure and focuses the editor after retry', async () => {
+    const intent: AuthResumeIntent = {
+      targetRoute: buildAppJournalNewPath('investment'),
+      recordType: 'investment',
+      returnTarget: APP_ROUTE_PATHS.journalNew,
+    };
+    const driver: AuthPresentationDriver = {
+      resolve: vi.fn().mockResolvedValueOnce('guest').mockResolvedValueOnce('authenticated'),
+    };
+    renderAuth(intent, driver);
+    fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.providerAction }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      ko.auth.entry.directFailureDescription,
+    );
+    fireEvent.click(screen.getByRole('button', { name: ko.auth.entry.retry }));
+    const heading = await screen.findByRole('heading', { name: ko.app.journalNew.investment });
+    await waitFor(() => expect(heading).toHaveFocus());
+    expect(screen.queryByText(ko.auth.entry.resumeNotice)).not.toBeInTheDocument();
+  });
+
   it('resumes an investment Editor with Decision Context ON and focuses its heading only for explicit auth', async () => {
     const intent = createReviewIntent();
     const driver: AuthPresentationDriver = {

@@ -52,6 +52,7 @@ export const ko: Messages = {
       loading: '로그인 정보를 확인하고 있어요',
       failure: '로그인하지 못했습니다',
       failureDescription: '잠시 후 다시 시도하거나 검토 결과로 돌아갈 수 있어요.',
+      directFailureDescription: '잠시 후 다시 시도하거나 이전 화면으로 돌아갈 수 있어요.',
       retry: '다시 시도',
       noIntent: '계속할 화면을 선택하면 원래 작업으로 돌아갈 수 있어요.',
       resumeNotice: '검토 결과를 이어서 작성할 수 있어요.',

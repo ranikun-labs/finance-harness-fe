@@ -2,6 +2,7 @@ import { CircleCheckBig, NotebookText } from 'lucide-react';
 import { Link, matchPath, useLocation } from 'react-router';
 
 import { BOTTOM_TABS, type BottomTabConfig } from '@/constants/navigation';
+import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
 import { APP_ROUTE_PATHS } from '@/constants/routes';
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
@@ -22,7 +23,8 @@ const NAV_ICON = {
 } satisfies Record<BottomTabConfig['id'], typeof CircleCheckBig>;
 
 export function BottomNavigation() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const { dirty } = useRetrospectiveDraft();
   const { pathname } = useLocation();
   const mobileVisible =
     pathname === APP_ROUTE_PATHS.appHome || pathname === APP_ROUTE_PATHS.journalList;
@@ -50,6 +52,27 @@ export function BottomNavigation() {
           <Link
             key={tab.id}
             to={tab.path}
+            onClick={(event) => {
+              if (
+                !dirty ||
+                event.defaultPrevented ||
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                (event.currentTarget.target && event.currentTarget.target !== '_self')
+              )
+                return;
+              if (
+                !window.confirm(
+                  locale === 'ko'
+                    ? '작성 중인 내용이 사라집니다. 이동할까요?'
+                    : 'Your unsaved work will be lost. Leave this page?',
+                )
+              )
+                event.preventDefault();
+            }}
             aria-current={activeTab === tab.id ? 'page' : undefined}
             className={cn(
               'relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs',
