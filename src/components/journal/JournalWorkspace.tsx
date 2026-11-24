@@ -55,10 +55,10 @@ export function JournalWorkspace() {
           <Outlet />
         ) : hasSelectableRecords ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-3 p-8 text-center">
-            <h2 className="text-foreground text-lg font-bold">
+            <h2 className="type-section-title text-foreground">
               {t('app.journalWorkspace.detailPrompt.heading')}
             </h2>
-            <p className="text-muted-foreground max-w-sm text-sm leading-6">
+            <p className="type-supporting text-text-secondary max-w-sm break-keep">
               {t('app.journalWorkspace.detailPrompt.description')}
             </p>
           </div>
