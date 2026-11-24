@@ -135,6 +135,41 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     }
   });
 
+  test('places primary navigation by the width/orientation contract at the 1280 boundary', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    const cases = [
+      { width: 1280, height: 1366, placement: 'rail' },
+      { width: 1279, height: 1366, placement: 'top' },
+      { width: 1024, height: 1366, placement: 'top' },
+      { width: 1024, height: 768, placement: 'rail' },
+      { width: 1280, height: 800, placement: 'rail' },
+    ] as const;
+
+    for (const { width, height, placement } of cases) {
+      await page.setViewportSize({ width, height });
+      await page.goto(APP_ROUTE_PATHS.journalList);
+
+      const navigation = page.getByTestId('primary-navigation');
+      await expect(navigation).toBeVisible();
+      const navBox = await navigation.boundingBox();
+      expect(navBox, `${width}x${height}`).not.toBeNull();
+      const direction = await navigation.evaluate((node) => getComputedStyle(node).flexDirection);
+      if (placement === 'rail') {
+        expect(navBox!.width, `${width}x${height} rail width`).toBe(224);
+        expect(navBox!.x).toBe(0);
+        expect(direction).toBe('column');
+      } else {
+        expect(navBox!.width, `${width}x${height} top width`).toBe(width);
+        expect(navBox!.height, `${width}x${height} top height`).toBeLessThan(100);
+        expect(direction).toBe('row');
+      }
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
   test('uses the approved contextual two-pane workspace on Tablet Landscape and Desktop', async ({
     page,
   }, testInfo) => {

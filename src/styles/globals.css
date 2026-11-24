@@ -295,9 +295,11 @@
  * a top primary navigation and a readable single-column surface. The desktop
  * rail utilities remain the default for landscape/tablet-wide and desktop; this
  * narrow media query only corrects the 1024px portrait edge where `lg:` alone
- * would otherwise classify the device as a rail layout.
+ * would otherwise classify the device as a rail layout. The upper bound (1279px)
+ * keeps this in lockstep with the `(min-width: 1280px)` rail rules below and
+ * `getPrimaryNavPlacement`: >=1280 is a rail regardless of orientation.
  */
-@media (min-width: 1024px) and (orientation: portrait) {
+@media (min-width: 1024px) and (max-width: 1279px) and (orientation: portrait) {
   .adaptive-shell-layout {
     flex-direction: column;
   }
