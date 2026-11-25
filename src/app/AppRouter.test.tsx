@@ -18,6 +18,7 @@ import { ko } from '@/i18n/messages/ko';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
 import type { AuthPresentationConsumer } from '@/features/auth/authPresentation';
 import type { FinanceReferenceFetch } from '@/features/auth/financeReferenceAuth';
+import type { FinanceReferenceSignupFn } from '@/features/auth/financeReferenceSignup';
 import { JOURNAL_ENTRIES } from '@/mocks/journalEntries';
 
 const APP_NOT_FOUND = '페이지를 찾을 수 없어요';
@@ -663,29 +664,97 @@ describe('AppRouter', () => {
   });
 });
 
-describe('AppRouter DEV reference signup wiring', () => {
-  function renderEntry(signupEnabled: boolean) {
+describe('AppRouter DEV acceptance wiring', () => {
+  function renderEntry(financeReferenceSignup?: FinanceReferenceSignupFn) {
     const fetchMock = vi.fn<FinanceReferenceFetch>();
     return render(
       <MemoryRouter initialEntries={[AUTH_ROUTE_PATHS.entry]}>
         <AppRouter
           financeReferenceAuthEnabled
-          financeReferenceSignupEnabled={signupEnabled}
+          financeReferenceSignup={financeReferenceSignup}
           financeReferenceFetchImpl={fetchMock}
         />
       </MemoryRouter>,
     );
   }
 
-  it('does not offer account creation when the signup flag is OFF (default)', async () => {
-    renderEntry(false);
+  it('does not offer account creation when no signup capability is injected (default)', async () => {
+    renderEntry(undefined);
     await screen.findByTestId('finance-reference-login');
     expect(screen.queryByTestId('finance-reference-signup')).not.toBeInTheDocument();
   });
 
-  it('offers DEV account creation inside the reference panel when the signup flag is ON', async () => {
-    renderEntry(true);
+  it('offers DEV account creation inside the reference panel when a signup capability is injected', async () => {
+    renderEntry(vi.fn<FinanceReferenceSignupFn>(async () => undefined));
     await screen.findByTestId('finance-reference-login');
     expect(screen.getByTestId('finance-reference-signup')).toBeInTheDocument();
+  });
+});
+
+describe('AppRouter DEV Journal create switch on the reference-auth path', () => {
+  function renderNewJournalWithFlag(createEnabled: boolean) {
+    const fetchMock = vi.fn<FinanceReferenceFetch>(async (input) => {
+      if (String(input) === '/api/v1/auth/finance-reference/login') {
+        return new Response(
+          JSON.stringify({
+            status: 200,
+            message: 'ok',
+            data: {
+              accessToken: 'fixture-access-token',
+              tokenType: 'Bearer',
+              expiresAt: new Date(Date.now() + 120_000).toISOString(),
+            },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      return new Response(JSON.stringify({ items: [], nextCursor: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    render(
+      <MemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
+        <AppRouter
+          financeReferenceAuthEnabled
+          financeJournalCreateEnabled={createEnabled}
+          financeReferenceFetchImpl={fetchMock}
+        />
+      </MemoryRouter>,
+    );
+    return fetchMock;
+  }
+
+  async function signIn() {
+    fireEvent.change(await screen.findByLabelText(ko.auth.entry.referenceUserId), {
+      target: { value: 'synthetic-account-a' },
+    });
+    fireEvent.change(await screen.findByLabelText(ko.auth.entry.referencePassword), {
+      target: { value: 'public-fixture-password' },
+    });
+    fireEvent.click(screen.getByTestId('finance-reference-login'));
+  }
+
+  it('enables the save flow (production copy) when the DEV switch is on', async () => {
+    renderNewJournalWithFlag(true);
+    await signIn();
+
+    expect(await screen.findByText(ko.app.journalNew.form.saveFlowNotice)).toBeInTheDocument();
+    expect(screen.queryByText(ko.app.journalNew.form.testFlowNotice)).toBeNull();
+    expect(
+      screen.getByRole('button', { name: ko.app.journalNew.form.submitSave }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps Journal create closed when the DEV switch is off', async () => {
+    renderNewJournalWithFlag(false);
+    await signIn();
+
+    expect(
+      await screen.findByRole('button', { name: ko.app.journalNew.form.checkEntries }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ko.app.journalNew.form.submitSave })).toBeNull();
+    expect(screen.queryByText(ko.app.journalNew.form.saveFlowNotice)).toBeNull();
+    expect(screen.queryByText(ko.app.journalNew.form.testFlowNotice)).toBeNull();
   });
 });

@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FinanceReferenceAuthError,
-  FinanceReferenceAuthSession,
-  FinanceReferenceSignupPort,
   type FinanceReferenceFetch,
-  isFinanceReferenceAuthEnabled,
-  isFinanceReferenceSignupEnabled,
-  validateFinanceReferenceSignup,
 } from '@/features/auth/financeReferenceAuth';
+import {
+  createFinanceReferenceSignup,
+  FinanceReferenceSignupPort,
+  validateFinanceReferenceSignup,
+} from '@/features/auth/financeReferenceSignup';
 
 const SIGNUP_URL = '/api/v1/auth/finance-reference/signup';
 const VALID = { email: 'Dev.Account@Example.test', password: 'devpass2026' };
@@ -29,22 +29,19 @@ async function codeOf(promise: Promise<unknown>) {
   return 'resolved';
 }
 
+/** A fetch that only settles when its signal aborts, like a hung network request. */
+function hangingFetch(): FinanceReferenceFetch {
+  return (_input, init) =>
+    new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () =>
+        reject(new DOMException('aborted', 'AbortError')),
+      );
+    });
+}
+
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
-});
-
-describe('DEV flags for the reference panel (default OFF, never PROD)', () => {
-  it('signup is enabled only with flag true and a non-production build', () => {
-    expect(isFinanceReferenceSignupEnabled(undefined, false)).toBe(false);
-    expect(isFinanceReferenceSignupEnabled('false', false)).toBe(false);
-    expect(isFinanceReferenceSignupEnabled('true', true)).toBe(false);
-    expect(isFinanceReferenceSignupEnabled('true', false)).toBe(true);
-  });
-
-  it('reference auth keeps the same gate, so a PROD build never shows the reference panel', () => {
-    expect(isFinanceReferenceAuthEnabled('true', true)).toBe(false);
-    expect(isFinanceReferenceAuthEnabled('true', false)).toBe(true);
-  });
 });
 
 describe('validateFinanceReferenceSignup (client mirror of platform policy)', () => {
@@ -63,12 +60,22 @@ describe('validateFinanceReferenceSignup (client mirror of platform policy)', ()
     ['no letter', { email: 'a@b.test', password: '1234567890' }],
     ['password equals email', { email: 'a@b.test', password: 'A@B.TEST' }],
     ['over 72 bytes', { email: 'a@b.test', password: `a1${'x'.repeat(71)}` }],
-    ['control character', { email: 'a@b.test', password: 'devpass2026\n' }],
+    ['C0 control character (LF)', { email: 'a@b.test', password: 'devpass2026\n' }],
+    ['C0 control character (NUL)', { email: 'a@b.test', password: 'devpass2026\u0000' }],
+    ['DEL', { email: 'a@b.test', password: 'devpass2026\u007f' }],
+    ['C1 control (U+0085 NEL)', { email: 'a@b.test', password: 'devpass2026\u0085' }],
+    ['C1 control (U+009F)', { email: 'a@b.test', password: 'devpass2026\u009f' }],
   ])('rejects %s before any network call', async (_label, credentials) => {
     const fetchImpl = vi.fn<FinanceReferenceFetch>();
     const port = new FinanceReferenceSignupPort(fetchImpl);
     expect(await codeOf(port.signup(credentials))).toBe('invalid_request');
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('accepts U+00A0 (NBSP), which sits just outside the C1 range', () => {
+    expect(() =>
+      validateFinanceReferenceSignup({ email: 'a@b.test', password: 'devpass2026 ' }),
+    ).not.toThrow();
   });
 });
 
@@ -87,6 +94,7 @@ describe('FinanceReferenceSignupPort', () => {
     expect(url).toBe(SIGNUP_URL);
     expect(init?.method).toBe('POST');
     expect(init?.credentials).toBe('omit');
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.parse(String(init?.body))).toEqual(VALID);
   });
 
@@ -108,42 +116,40 @@ describe('FinanceReferenceSignupPort', () => {
     });
     expect(await codeOf(port.signup(VALID))).toBe('unavailable');
   });
-});
 
-describe('FinanceReferenceAuthSession.signup', () => {
-  it('does not sign in or change the in-memory session', async () => {
-    const fetchImpl = vi.fn<FinanceReferenceFetch>(async () => jsonResponse(201, {}));
-    const session = new FinanceReferenceAuthSession(true, fetchImpl);
-    await session.signup(VALID);
-
-    expect(session.getSnapshot()).toEqual({ state: 'guest', session: null });
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  it('aborts a hung request after the timeout and maps it to unavailable', async () => {
+    vi.useFakeTimers();
+    const pending = codeOf(new FinanceReferenceSignupPort(hangingFetch()).signup(VALID));
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(await pending).toBe('unavailable');
   });
 
-  it('is refused when reference auth is disabled', async () => {
+  it('aborts the request when the caller cancels and maps it to stale_attempt', async () => {
+    const controller = new AbortController();
+    const pending = codeOf(
+      new FinanceReferenceSignupPort(hangingFetch()).signup(VALID, controller.signal),
+    );
+    controller.abort();
+    expect(await pending).toBe('stale_attempt');
+  });
+
+  it('does not call the network when the caller has already cancelled', async () => {
     const fetchImpl = vi.fn<FinanceReferenceFetch>();
-    const session = new FinanceReferenceAuthSession(false, fetchImpl);
-    expect(await codeOf(session.signup(VALID))).toBe('disabled');
+    const controller = new AbortController();
+    controller.abort();
+    expect(
+      await codeOf(new FinanceReferenceSignupPort(fetchImpl).signup(VALID, controller.signal)),
+    ).toBe('stale_attempt');
     expect(fetchImpl).not.toHaveBeenCalled();
   });
+});
 
-  it('keeps the access token in memory only: no Web Storage write on login', async () => {
-    const setItem = vi.spyOn(Storage.prototype, 'setItem');
-    const fetchImpl = vi.fn<FinanceReferenceFetch>(async () =>
-      jsonResponse(200, {
-        status: 200,
-        data: {
-          accessToken: 'memory-only-token',
-          tokenType: 'Bearer',
-          expiresAt: new Date(Date.now() + 120_000).toISOString(),
-        },
-      }),
-    );
-    const session = new FinanceReferenceAuthSession(true, fetchImpl);
-    await session.login({ userId: 'dev.account@example.test', password: 'devpass2026' });
+describe('createFinanceReferenceSignup', () => {
+  it('returns a callback that posts to the signup endpoint and resolves on 201', async () => {
+    const fetchImpl = vi.fn<FinanceReferenceFetch>(async () => jsonResponse(201, {}));
+    await createFinanceReferenceSignup(fetchImpl)(VALID);
 
-    expect(session.getSnapshot().state).toBe('authenticated');
-    expect(setItem).not.toHaveBeenCalled();
-    expect(window.localStorage.length + window.sessionStorage.length).toBe(0);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toBe(SIGNUP_URL);
   });
 });

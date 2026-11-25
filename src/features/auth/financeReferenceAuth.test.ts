@@ -4,7 +4,6 @@ import {
   FinanceReferenceAuthError,
   FinanceReferenceAuthSession,
   FinanceReferenceLoginPort,
-  isFinanceReferenceAuthEnabled,
   type FinanceReferenceFetch,
 } from '@/features/auth/financeReferenceAuth';
 
@@ -23,12 +22,6 @@ function loginResponse(
 }
 
 describe('Finance reference auth', () => {
-  it('enables only an explicit nonproduction opt-in', () => {
-    expect(isFinanceReferenceAuthEnabled(undefined, false)).toBe(false);
-    expect(isFinanceReferenceAuthEnabled('true', true)).toBe(false);
-    expect(isFinanceReferenceAuthEnabled('true', false)).toBe(true);
-  });
-
   it('uses the exact access-only login request and rejects token-pair fields', async () => {
     const fetchMock = vi.fn<FinanceReferenceFetch>();
     fetchMock.mockResolvedValueOnce(loginResponse());

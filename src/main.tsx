@@ -3,17 +3,27 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
 import { AppRouter } from '@/app/AppRouter';
+import { createFinanceReferenceSignup } from '@/features/auth/financeReferenceSignup';
 import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
+import { isDevAcceptanceFlagEnabled } from '@/features/finance-api/devAcceptanceGate';
 import { shouldHydrate } from '@/prerender/shouldHydrate';
 
 import '@/styles/globals.css';
 
 const rootElement = document.getElementById('root')!;
-// Journal Create stays off by default; an explicit deployment/local opt-in enables the
-// existing same-origin HTTP adapter without changing the server-owned request contract.
-const journalCreatePort =
-  import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED === 'true'
-    ? createProductionJournalCreatePort()
+// DEV acceptance switches are honored only in the `dev-acceptance` build mode, never in PROD.
+const journalCreatePort = isDevAcceptanceFlagEnabled(
+  import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED,
+  import.meta.env.MODE,
+)
+  ? createProductionJournalCreatePort()
+  : undefined;
+// Signup is injected only behind a literal build-time gate: Vite folds it to `undefined` in PROD,
+// which lets the bundler drop the signup module and its endpoint string from the output.
+const financeReferenceSignup =
+  import.meta.env.MODE === 'dev-acceptance' &&
+  import.meta.env.VITE_FINANCE_REFERENCE_SIGNUP_ENABLED === 'true'
+    ? createFinanceReferenceSignup()
     : undefined;
 
 const tree = (
@@ -22,6 +32,7 @@ const tree = (
       <AppRouter
         journalCreatePort={journalCreatePort}
         journalCreateMode={journalCreatePort ? 'production' : undefined}
+        financeReferenceSignup={financeReferenceSignup}
       />
     </BrowserRouter>
   </StrictMode>

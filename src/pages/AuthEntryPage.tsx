@@ -12,8 +12,8 @@ import type {
 import {
   FinanceReferenceAuthError,
   type FinanceReferenceCredentials,
-  type FinanceReferenceSignupCredentials,
 } from '@/features/auth/financeReferenceAuth';
+import type { FinanceReferenceSignupCredentials } from '@/features/auth/financeReferenceSignup';
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
@@ -28,7 +28,7 @@ interface AuthEntryPageProps {
   financeReferenceAuth?: {
     enabled: boolean;
     login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
-    /** DEV-only account creation. Omitted unless the signup flag is on in a non-PROD build. */
+    /** DEV-only account creation. Omitted outside the dev-acceptance build (see main.tsx). */
     signup?: (
       credentials: FinanceReferenceSignupCredentials,
       signal?: AbortSignal,

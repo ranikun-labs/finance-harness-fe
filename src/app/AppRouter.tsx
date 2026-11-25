@@ -34,13 +34,11 @@ import { createProductionJournalCreatePort } from '@/features/journal-new/adapte
 import { createProductionJournalReadPort } from '@/features/journal-read/adapter/productionJournalReadPort';
 import {
   FinanceReferenceAuthSession,
-  isFinanceReferenceAuthEnabled,
-  isFinanceReferenceSignupEnabled,
   type FinanceReferenceCredentials,
   type FinanceReferenceFetch,
-  type FinanceReferenceSignupCredentials,
 } from '@/features/auth/financeReferenceAuth';
-import { isFinanceJournalCreateDevEnabled } from '@/features/finance-api/devAcceptanceFlags';
+import type { FinanceReferenceSignupFn } from '@/features/auth/financeReferenceSignup';
+import { isDevAcceptanceFlagEnabled } from '@/features/finance-api/devAcceptanceGate';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -86,10 +84,7 @@ function AuthEntryRoute({
   financeReferenceAuth?: {
     enabled: boolean;
     login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
-    signup?: (
-      credentials: FinanceReferenceSignupCredentials,
-      signal?: AbortSignal,
-    ) => Promise<void>;
+    signup?: FinanceReferenceSignupFn;
   };
 }) {
   return (
@@ -173,9 +168,12 @@ interface AppRouterProps {
   journalCreateMode?: 'test' | 'production';
   /** Explicit nonproduction-only test seam; omitted production composition uses Vite env. */
   financeReferenceAuthEnabled?: boolean;
-  /** DEV-only account creation inside the reference panel. Default OFF. */
-  financeReferenceSignupEnabled?: boolean;
-  /** DEV-only Journal create on the reference-auth path. Default OFF. */
+  /**
+   * DEV-only account creation capability. Composition passes it only in the dev-acceptance build;
+   * when omitted the reference panel offers no signup form.
+   */
+  financeReferenceSignup?: FinanceReferenceSignupFn;
+  /** Overrides the DEV-acceptance Journal create switch on the reference-auth path. */
   financeJournalCreateEnabled?: boolean;
   financeReferenceFetchImpl?: FinanceReferenceFetch;
 }
@@ -186,28 +184,21 @@ export function AppRouter({
   journalCreatePort,
   journalCreateMode,
   financeReferenceAuthEnabled,
-  financeReferenceSignupEnabled,
+  financeReferenceSignup,
   financeJournalCreateEnabled,
   financeReferenceFetchImpl,
 }: AppRouterProps = {}) {
   const referenceAuthEnabled =
     financeReferenceAuthEnabled ??
-    isFinanceReferenceAuthEnabled(
+    isDevAcceptanceFlagEnabled(
       import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
-      import.meta.env.PROD,
+      import.meta.env.MODE,
     );
-  const referenceSignupEnabled =
-    referenceAuthEnabled &&
-    (financeReferenceSignupEnabled ??
-      isFinanceReferenceSignupEnabled(
-        import.meta.env.VITE_FINANCE_REFERENCE_SIGNUP_ENABLED,
-        import.meta.env.PROD,
-      ));
   const referenceJournalCreateEnabled =
     financeJournalCreateEnabled ??
-    isFinanceJournalCreateDevEnabled(
+    isDevAcceptanceFlagEnabled(
       import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED,
-      import.meta.env.PROD,
+      import.meta.env.MODE,
     );
   const [financeAuth] = useState(
     () => new FinanceReferenceAuthSession(referenceAuthEnabled, financeReferenceFetchImpl),
@@ -274,9 +265,7 @@ export function AppRouter({
                     ? {
                         enabled: true,
                         login: (credentials, signal) => financeAuth.login(credentials, signal),
-                        signup: referenceSignupEnabled
-                          ? (credentials, signal) => financeAuth.signup(credentials, signal)
-                          : undefined,
+                        signup: financeReferenceSignup,
                       }
                     : undefined
                 }

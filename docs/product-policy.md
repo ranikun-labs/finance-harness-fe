@@ -74,12 +74,15 @@ Home dashboard와 legacy three-destination navigation은 P0 Primary Surface로 �
 
 - 참조 패널(`VITE_FINANCE_REFERENCE_AUTH_ENABLED`), DEV 계정 생성
   (`VITE_FINANCE_REFERENCE_SIGNUP_ENABLED`), 저널 생성(`VITE_FINANCE_JOURNAL_CREATE_ENABLED`)은
-  모두 기본 OFF다. 세 값 모두 `import.meta.env.PROD` 빌드에서는 효력이 없다.
+  모두 기본 OFF다. 세 값은 `dev-acceptance` 빌드 모드(`pnpm build:dev-acceptance`)에서만 효력이 있다.
+  분기 기준은 `import.meta.env.MODE`이며 `PROD`는 쓰지 않는다(acceptance 빌드도 `PROD=true`다).
+  운영 빌드와 `pnpm dev`에서는 값과 무관하게 무효다.
 - 계정 생성은 참조 패널 안에서만 노출되며 로그인 토큰을 발급하지 않는다. 운영 Auth Entry의
   OAuth-first 경로와 production 문구는 변하지 않는다.
 - 액세스 토큰은 메모리에만 둔다(localStorage/sessionStorage 금지). 새로고침 후에는 재로그인한다.
 - Finance API 기준 경로는 `VITE_FINANCE_API_BASE`로 정한다(기본 `/finance`, DEV `/api/finance`).
-  단일 원본은 `src/features/finance-api/financeApiBase.ts`다.
+  same-origin 절대 경로만 허용하며 모든 빌드에 적용된다. 값이 잘못되면 `vite.config.ts`가 build를 실패시킨다.
+  단일 원본은 `src/features/finance-api/financeApiBasePolicy.ts`(검증), `financeApiBase.ts`(상수)다.
 - 열린 항목: 중복 가입 409가 이메일 존재 여부를 노출한다. 공개 DEV 배포 전에 검토가 필요하다
   (platform `FinanceReferenceSignupController`의 주석과 같은 조건). 상세는
   [`frontend-roadmap.md`](./frontend-roadmap.md)의 STEP 11 DEV-only acceptance slice를 본다.
