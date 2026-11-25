@@ -37,7 +37,13 @@ export interface Messages {
   common: {
     appName: string;
     loading: string;
-    leaveGuard: { title: string; description: string; stay: string; leave: string };
+    leaveGuard: {
+      title: string;
+      description: string;
+      stay: string;
+      leave: string;
+      saving: { title: string; description: string; stay: string };
+    };
   };
   theme: {
     trigger: string;

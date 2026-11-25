@@ -30,6 +30,11 @@ export const en: Messages = {
       description: 'If you leave now, what you entered cannot be recovered.',
       stay: 'Keep writing',
       leave: 'Leave',
+      saving: {
+        title: 'Saving',
+        description: 'You can leave once saving finishes. If it fails, you can save again here.',
+        stay: 'OK',
+      },
     },
   },
   theme: {

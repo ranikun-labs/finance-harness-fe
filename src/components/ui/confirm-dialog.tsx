@@ -9,9 +9,9 @@ type ConfirmDialogProps = {
   /** 머무르는 쪽(취소·ESC). 열릴 때 초기 포커스가 여기에 간다. */
   stayLabel: string;
   /** 진행하는 쪽. 되돌릴 수 없는 결과면 `destructive`로 위험색 확인 버튼이 된다. */
-  confirmLabel: string;
+  confirmLabel?: string;
   onStay: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   destructive?: boolean;
 };
 

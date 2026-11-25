@@ -7,12 +7,23 @@ import { LeaveGuard } from '@/components/common/LeaveGuard';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { ko } from '@/i18n/messages/ko';
 
-function Editor({ guard = true, byRef }: { guard?: boolean; byRef?: { current: boolean } }) {
+function Editor({
+  guard = true,
+  byRef,
+  saving = false,
+}: {
+  guard?: boolean;
+  byRef?: { current: boolean };
+  saving?: boolean;
+}) {
   const [value, setValue] = useState('');
   const navigate = useNavigate();
   return (
     <I18nProvider locale="ko">
-      <LeaveGuard when={byRef ? () => value !== '' && !byRef.current : guard && value !== ''} />
+      <LeaveGuard
+        when={byRef ? () => value !== '' && !byRef.current : guard && value !== ''}
+        saving={saving}
+      />
       <label>
         내용
         <input value={value} onChange={(event) => setValue(event.target.value)} />
@@ -105,6 +116,25 @@ describe('LeaveGuard', () => {
     fireEvent.click(screen.getByRole('link', { name: '다른 화면' }));
     expect(await screen.findByText('다른 화면입니다')).toBeInTheDocument();
     expect(dialog()).toBeNull();
+  });
+
+  it('저장 중에는 나가기 없이 저장이 끝나기를 기다리라고 안내하고, 머무르면 입력이 그대로다', async () => {
+    renderEditor({ saving: true });
+    const input = screen.getByLabelText('내용');
+    fireEvent.change(input, { target: { value: '저장 중인 내용' } });
+    fireEvent.click(screen.getByRole('link', { name: '다른 화면' }));
+    const savingDialog = () =>
+      screen.queryByRole('alertdialog', { name: ko.common.leaveGuard.saving.title });
+    await waitFor(() => expect(savingDialog()).toBeInTheDocument());
+    const scoped = within(savingDialog()!);
+    expect(savingDialog()).toHaveAccessibleDescription(ko.common.leaveGuard.saving.description);
+    // 저장 중에는 떠날 수 있는 버튼을 주지 않는다.
+    expect(scoped.queryByRole('button', { name: ko.common.leaveGuard.leave })).toBeNull();
+    expect(scoped.queryByText(ko.common.leaveGuard.description)).toBeNull();
+    fireEvent.click(scoped.getByRole('button', { name: ko.common.leaveGuard.saving.stay }));
+    await waitFor(() => expect(savingDialog()).toBeNull());
+    expect(input).toHaveValue('저장 중인 내용');
+    expect(screen.queryByText('다른 화면입니다')).toBeNull();
   });
 
   it('data router가 아니면 아무것도 하지 않는다(렌더 오류 없음)', () => {

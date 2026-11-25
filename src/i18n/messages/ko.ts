@@ -34,6 +34,11 @@ export const ko: Messages = {
       description: '지금 나가면 입력한 내용을 다시 볼 수 없어요.',
       stay: '계속 작성',
       leave: '나가기',
+      saving: {
+        title: '저장 중이에요',
+        description: '저장이 끝나면 이동할 수 있어요. 실패하면 이 화면에서 다시 저장할 수 있어요.',
+        stay: '확인',
+      },
     },
   },
   theme: {

@@ -326,7 +326,10 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         };
   return (
     <section className="flex min-h-full flex-col">
-      <LeaveGuard when={() => dirty && !leaveAllowedRef.current} />
+      <LeaveGuard
+        when={() => dirty && !leaveAllowedRef.current}
+        saving={submitState.status === 'submitting'}
+      />
       <ConfirmDialog
         open={newSubmissionConfirmOpen}
         title={t('app.journalNew.form.newSubmissionConfirmTitle')}
