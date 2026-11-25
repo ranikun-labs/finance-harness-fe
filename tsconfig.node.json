@@ -1,35 +1,26 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023",
-      "DOM"
-    ],
+    "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
+
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    }
+    "noUncheckedSideEffectImports": true
   },
   "include": [
     "vite.config.ts",
     "playwright.config.ts",
     "playwright.backend-integration.config.ts",
-    "capacitor.config.ts",
-    "playwright.same-origin.config.ts",
-    "worker/**/*.ts",
-    "e2e-same-origin/**/*.ts"
+    "capacitor.config.ts"
   ]
 }

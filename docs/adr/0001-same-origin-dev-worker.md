@@ -18,8 +18,8 @@
 
 - A Worker serves the `dist-dev-acceptance/` SPA and answers `/api` requests itself. Known Finance routes are forwarded
   to the shared Gateway at the same path. The Gateway's StripPrefix routing for `/api/finance` is unchanged.
-- `PUBLIC_ORIGIN` is the exact browser origin of the Worker. It is sent as `Origin` only on
-  `POST /api/v1/auth/finance-reference/signup`. `GATEWAY_ORIGIN` is the exact HTTPS origin of the DEV Gateway, with no path.
+- `PUBLIC_ORIGIN` is the exact browser origin of the Worker. It is validated at startup (missing or malformed fails closed) but is not forwarded upstream.
+  The client's `Origin` is never forwarded. `GATEWAY_ORIGIN` is the exact HTTPS origin of the DEV Gateway, with no path.
   Both are Worker secrets. Missing or malformed values answer every `/api` request with JSON 500.
 - Forwarded routes (exact method and path, anything else under `/api/finance` is JSON 404, a wrong method is JSON 405 with `Allow`):
 
@@ -52,8 +52,7 @@
 
 ### Differences from the Carelog Worker
 
-- No `Origin` rewrite on the finance login route, and the registration CORS allowlist does not exist here. The signup `Origin` rewrite is a
-  defensive mirror. Whether the Gateway's finance signup path checks `Origin` is not verified in this repository (open item).
+- No `Origin` rewrite on any finance route. Carelog's registration CORS allowlist has no finance counterpart: Gateway and Core (platform-services f9adfd3) have no CORS or Origin check on finance-reference signup. Origin 검사 없음 (f9adfd3 기준).
 - Route table is per-method and per-path. Carelog forwards any non-auth path under `/api` to the Gateway. Finance answers unknown `/api/finance/*` paths with 404.
 - `idempotency-key` is forwarded (see above).
 
@@ -120,7 +119,6 @@
 - **Signup 409 exposes account existence (open, must resolve before public DEV).** `POST /api/v1/auth/finance-reference/signup` answers 409 when the email is already
   registered, and the UI shows it (`signupExists`). Anyone who can reach the DEV host can probe which emails have accounts. Options for the DEV host: rate limit (checklist 4) only,
   a neutral response for both cases, or restricting the route to a known network. This is not decided here.
-- Confirm whether the Gateway's finance signup path checks `Origin`. The Worker sends `PUBLIC_ORIGIN` on signup as a defensive mirror of the Carelog path.
 - Confirm the Gateway env-binding name and trusted-hop count against the deployed chain (checklist 2 and 3).
 - Tune the WAF rate-limit values after DEV traffic is observed. The starting values above are not measured.
 - The live path has not been exercised: no Worker deploy, no DEV Gateway call, no CI run on this branch.

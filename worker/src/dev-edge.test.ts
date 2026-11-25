@@ -288,7 +288,7 @@ describe('DEV same-origin edge API proxy', () => {
     expect(await response.json()).toEqual({ journalId: JOURNAL_ID });
   });
 
-  it('sends the public origin on reference signup, and none on login', async () => {
+  it('never forwards a client Origin, on signup or login', async () => {
     const upstream = vi.fn(async () => json(201, { status: 201 }));
     await handleDevEdgeRequest(
       browser('/api/v1/auth/finance-reference/signup', {
@@ -299,7 +299,7 @@ describe('DEV same-origin edge API proxy', () => {
       env,
       upstream,
     );
-    expect((upstreamInit(upstream).headers as Headers).get('origin')).toBe(PUBLIC);
+    expect((upstreamInit(upstream).headers as Headers).has('origin')).toBe(false);
 
     await handleDevEdgeRequest(
       browser('/api/v1/auth/finance-reference/login', {
@@ -310,7 +310,7 @@ describe('DEV same-origin edge API proxy', () => {
       env,
       upstream,
     );
-    expect((upstreamInit(upstream, 1).headers as Headers).get('origin')).toBeNull();
+    expect((upstreamInit(upstream, 1).headers as Headers).has('origin')).toBe(false);
   });
 
   it('drops cookies, X-Finance-*, X-User-*, X-Forwarded-* and other client headers', async () => {
@@ -345,6 +345,7 @@ describe('DEV same-origin edge API proxy', () => {
       expect(headers.has(name)).toBe(false);
     }
     expect(headers.get('accept')).toBe('application/json');
+    expect(upstreamInit(upstream).body).toBeUndefined();
   });
 
   it('overwrites client X-Forwarded-For with cf-connecting-ip', async () => {

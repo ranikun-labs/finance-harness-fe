@@ -6,7 +6,7 @@
 export interface DevEdgeEnv {
   /** Exact HTTPS origin of the shared Gateway, no path (set per environment). */
   GATEWAY_ORIGIN?: string;
-  /** Exact origin the browser sees for this Worker (set per environment). */
+  /** Exact origin the browser sees for this Worker. Validated at startup; not forwarded upstream. */
   PUBLIC_ORIGIN?: string;
   /** Upstream timeout in milliseconds: a whole number from 1 to 60000. Unset means 10000. */
   UPSTREAM_TIMEOUT_MS?: string;
@@ -269,11 +269,11 @@ export async function handleDevEdgeRequest(
   }
 
   let gatewayOrigin: string;
-  let publicOrigin: string;
   let timeoutMs: number;
   try {
     gatewayOrigin = parseExactOrigin(env.GATEWAY_ORIGIN, 'GATEWAY_ORIGIN');
-    publicOrigin = parseExactOrigin(env.PUBLIC_ORIGIN, 'PUBLIC_ORIGIN');
+    // Validated so a missing or malformed public origin fails closed like the other settings.
+    parseExactOrigin(env.PUBLIC_ORIGIN, 'PUBLIC_ORIGIN');
     timeoutMs = parseUpstreamTimeout(env.UPSTREAM_TIMEOUT_MS);
   } catch {
     // Fail closed without naming the setting values in the response.
@@ -300,13 +300,15 @@ export async function handleDevEdgeRequest(
   // The Worker's own address is the only client address the Gateway should trust.
   const clientAddress = request.headers.get('cf-connecting-ip');
   if (clientAddress) headers.set('x-forwarded-for', clientAddress);
-  // The reference signup is a browser POST. Send the exact public origin, like the Carelog registration path.
-  if (url.pathname === SIGNUP_PATH) headers.set('origin', publicOrigin);
-
-  const read = await readRequestBody(request, MAX_REQUEST_BODY_BYTES);
-  if (read === 'too-large') return jsonResponse(413, 'Request body is too large.');
-  if (read === 'unreadable') return jsonResponse(400, 'The request body could not be read.');
-  const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : read;
+  // The client's Origin is never forwarded. The Gateway and Core (platform-services f9adfd3) have no
+  // Origin check on the finance reference routes, so no Origin header is sent upstream.
+  let body: ArrayBuffer | undefined;
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    const read = await readRequestBody(request, MAX_REQUEST_BODY_BYTES);
+    if (read === 'too-large') return jsonResponse(413, 'Request body is too large.');
+    if (read === 'unreadable') return jsonResponse(400, 'The request body could not be read.');
+    body = read;
+  }
 
   let upstream: Response;
   try {
