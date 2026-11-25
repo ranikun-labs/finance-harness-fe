@@ -149,7 +149,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   const backToJournalLink = (
     <Link
       to={APP_ROUTE_PATHS.journalList}
-      className="text-primary focus-visible:ring-ring/50 inline-flex min-h-11 items-center self-start rounded-md text-sm font-semibold underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:outline-none"
+      className="text-primary inline-flex min-h-11 items-center self-start rounded-md text-sm font-semibold underline-offset-4 hover:underline"
     >
       <span aria-hidden="true">←</span> {t('app.journalNew.backToJournal')}
     </Link>
@@ -176,7 +176,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           <Link
-            className="bg-card text-foreground hover:bg-brand-subtle focus-visible:ring-ring/50 rounded-card flex flex-col gap-2 p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            className="bg-card text-foreground hover:bg-brand-subtle rounded-card flex flex-col gap-2 p-5 text-left transition-colors"
             to={directEntryTarget('investment')}
             state={directEntryState('investment')}
           >
@@ -188,7 +188,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
             </span>
           </Link>
           <Link
-            className="bg-card text-foreground hover:bg-brand-subtle focus-visible:ring-ring/50 rounded-card flex flex-col gap-2 p-5 text-left transition-colors outline-none focus-visible:ring-3"
+            className="bg-card text-foreground hover:bg-brand-subtle rounded-card flex flex-col gap-2 p-5 text-left transition-colors"
             to={directEntryTarget('study')}
             state={directEntryState('study')}
           >
@@ -339,7 +339,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
             type="button"
             onClick={returnToJournal}
             disabled={submitState.status === 'submitting'}
-            className="text-primary focus-visible:ring-ring/50 mb-2 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:outline-none"
+            className="text-primary mb-2 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline"
           >
             <span aria-hidden="true">←</span> {t('app.journalNew.cancelDirectEntry')}
           </button>
@@ -383,7 +383,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
               type="button"
               onClick={returnToReview}
               disabled={submitState.status === 'submitting'}
-              className="text-primary focus-visible:ring-ring/50 min-h-11 self-start rounded-md text-left text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+              className="text-primary min-h-11 self-start rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline"
             >
               {t('app.journalNew.handoff.returnToReview')}
             </button>
@@ -393,7 +393,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
           type="button"
           onClick={goToEntryChoice}
           disabled={submitState.status === 'submitting'}
-          className="text-primary focus-visible:ring-ring/50 mt-3 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+          className="text-primary mt-3 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline"
         >
           {t('app.journalNew.typeChange.action')}
         </button>
@@ -470,7 +470,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
             <button
               type="button"
               onClick={startNewSubmission}
-              className="text-primary focus-visible:ring-ring/50 mt-2 min-h-11 rounded-md text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+              className="text-primary mt-2 min-h-11 rounded-md text-sm font-semibold underline-offset-4 hover:underline"
             >
               {t('app.journalNew.form.newSubmission')}
             </button>

@@ -74,10 +74,8 @@ export function DecisionContextCapturePanel({
           aria-controls={panelId}
           onClick={() => onEnabledChange(!enabled)}
           className={cn(
-            'relative mt-0.5 inline-flex h-6 w-11 shrink-0 rounded-full p-1 transition-colors outline-none focus-visible:ring-3',
-            enabled
-              ? 'bg-primary focus-visible:ring-primary/30'
-              : 'bg-muted focus-visible:ring-ring/50',
+            'relative mt-0.5 inline-flex h-6 w-11 shrink-0 rounded-full p-1 transition-colors',
+            enabled ? 'bg-primary' : 'bg-muted',
           )}
         >
           <span

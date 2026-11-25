@@ -51,7 +51,7 @@ function AppHeader({ onNavSlot }: { onNavSlot: (node: HTMLDivElement | null) => 
       ) : (
         <Link
           to={APP_ROUTE_PATHS.appHome}
-          className="text-foreground focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-bold focus-visible:ring-3 focus-visible:outline-none"
+          className="text-foreground inline-flex min-h-11 items-center rounded-md px-2 text-sm font-bold"
         >
           {t('common.appName')}
         </Link>
@@ -69,7 +69,7 @@ function AppHeader({ onNavSlot }: { onNavSlot: (node: HTMLDivElement | null) => 
             fallbackCancelTarget: APP_ROUTE_PATHS.appHome,
             fallbackCancelLabel: 'auth.entry.cancelReviewStart',
           }}
-          className="text-primary focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold hover:underline focus-visible:ring-3 focus-visible:outline-none"
+          className="text-primary inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold hover:underline"
         >
           {t('nav.signIn')}
         </Link>

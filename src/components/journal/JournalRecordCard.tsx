@@ -93,7 +93,7 @@ export function JournalRecordCard({
     <Link
       to={buildAppJournalDetailPath(entry.id)}
       aria-current={selected ? 'page' : undefined}
-      className="focus-visible:ring-ring/50 block rounded-xl outline-none focus-visible:ring-3"
+      className="block rounded-xl"
     >
       {content}
     </Link>

@@ -40,7 +40,7 @@ export function JournalChoiceGroup({
         {choices.map((choice) => (
           <label
             key={choice.value}
-            className="border-input has-[:checked]:border-primary has-[:checked]:bg-primary/10 focus-within:ring-ring flex min-h-11 cursor-pointer items-center rounded-md border px-3 text-sm font-medium focus-within:ring-2"
+            className="border-input has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:focus-visible]:outline-ring flex min-h-11 cursor-pointer items-center rounded-md border px-3 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
           >
             <input
               ref={(node) => {
