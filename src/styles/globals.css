@@ -403,6 +403,14 @@
     border-right: 1px solid var(--border);
   }
 
+  /* 상세 열은 pane이 넓어져도(≥1360 host) 최대 720(padding 포함)에서 가운데에 묶는다. 값 = layout.ts
+   * `JOURNAL_DETAIL_MAX_WIDTH_PX`(layout.test가 대조). 안쪽 읽기 본문 672(max-w-2xl) + padding 24×2. */
+  .journal-detail-page {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
   /* 2-pane 상세: 목록이 옆에 있으니 뒤로 가기는 숨기고(display:none이라 탭 순서에서도 빠진다),
    * 가운데 제목(h1)은 문서 구조·스크린리더용으로만 남겨 본문 머리가 위에서 시작하게 한다. */
   .journal-detail-header {

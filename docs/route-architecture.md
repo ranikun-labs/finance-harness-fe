@@ -282,7 +282,7 @@ RPL-68은 STEP 5·6의 URL 소유권, BrowserRouter, Pre-render, SPA fallback을
 - Phone은 단일 column과 검토/저널 Bottom Navigation을 사용한다. 내부 결과·작성·상세·
   복기에서는 context navigation을 사용하며 Bottom Navigation은 숨긴다.
 - Tablet Portrait는 480px frame을 사용하지 않고 최대 760px readable content host를
-  가진다. 검토/저널 primary navigation은 상단에 유지된다.
+  가진다. 검토/저널 primary navigation은 상단에 유지되며 앱 헤더의 제품 이름·로그인과 한 줄을 이룬다.
 - Tablet Landscape와 Desktop은 rail navigation foundation을 사용한다. 내부 저널 신규·
   상세·복기 화면도 동일한 primary navigation을 유지한다. 앱 host는 viewport를 사용하되
   Desktop에서 최대 1360px다.

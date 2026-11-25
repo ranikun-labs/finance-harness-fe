@@ -60,6 +60,30 @@ describe('saved retrospectives', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
 
+  it('shows the saved time in the record time zone with the single notation and no zone name', async () => {
+    const item = {
+      retrospectiveId: 'r1',
+      journalId: 'j1',
+      sourceRevision: 3,
+      createdAt: '2026-11-20T00:00:00Z',
+      body: '복기 내용',
+      outcomeObservation: null,
+      decisionQuality: null,
+      nextCheck: null,
+    };
+    const fetchImpl = vi.fn().mockResolvedValue(response({ items: [item], hasMore: false }));
+    render(
+      <JournalEditFetchContext.Provider value={fetchImpl}>
+        <I18nProvider locale="en">
+          <SavedRetrospectives journalId="j1" revision={3} timeZone="America/New_York" />
+        </I18nProvider>
+      </JournalEditFetchContext.Provider>,
+    );
+    const time = await screen.findByText('11/19/2026, 07:00 PM');
+    expect(time).toHaveAttribute('dateTime', '2026-11-20T00:00:00Z');
+    expect(time.textContent).not.toMatch(/New_York|EST|GMT|UTC/);
+  });
+
   it('keeps drafts and stable request keys after HTML success and A/B/A retries', async () => {
     const fetchImpl = vi
       .fn()

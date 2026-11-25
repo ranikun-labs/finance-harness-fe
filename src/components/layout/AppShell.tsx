@@ -1,7 +1,8 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Link, Outlet, matchPath, useLocation } from 'react-router';
 
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
+import { HeaderNavSlotContext } from '@/components/layout/HeaderNavSlot';
 import { SkipLink } from '@/components/layout/SkipLink';
 import { APP_SHELL_MAX_WIDTH_PX } from '@/constants/layout';
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
@@ -20,7 +21,7 @@ export const APP_SHELL_MAX_WIDTH = `${APP_SHELL_MAX_WIDTH_PX}px`;
  * navigator.language → DEFAULT_LOCALE 우선순위로 복원)을 제공한다. URL에는 locale
  * prefix가 없다 — 공개 웹과 무관한 별도 상태다.
  */
-function AppHeader() {
+function AppHeader({ onNavSlot }: { onNavSlot: (node: HTMLDivElement | null) => void }) {
   const { state } = useAuthPresentation();
   const { t } = useTranslation();
   const { pathname } = useLocation();
@@ -36,7 +37,7 @@ function AppHeader() {
   return (
     <header
       className={cn(
-        'border-border bg-background flex min-h-14 shrink-0 items-center justify-between border-b px-4 sm:px-6',
+        'border-border bg-background flex min-h-14 shrink-0 items-center gap-3 border-b px-4 sm:px-6',
         // 폰의 안쪽 화면(작성·상세·복기)은 화면 자체의 뒤로 가기 줄이 머리다. 제품 이름 줄이 위에 겹치면
         // 본문이 112px 아래에서 시작하므로 폰에서만 접는다(태블릿 이상은 내비와 함께 유지).
         mayContainJournalEdits && 'max-md:hidden',
@@ -54,6 +55,12 @@ function AppHeader() {
           {t('common.appName')}
         </Link>
       )}
+      {/*
+        상단 내비 viewport(태블릿 768~1279 세로)에서 TabLayout이 primary navigation을 이 자리로 옮겨
+        제품 이름 · 내비 · 로그인을 한 줄에 둔다. DOM 순서도 이름 → 내비 → 로그인으로 시각 순서와 같다.
+        비어 있으면(폰·rail) 로그인 링크를 오른쪽 끝으로 미는 여백일 뿐이다.
+      */}
+      <div ref={onNavSlot} className="ml-auto flex items-center" />
       {showSignIn && (
         <Link
           to={AUTH_ROUTE_PATHS.entry}
@@ -71,6 +78,7 @@ function AppHeader() {
 }
 
 export function AppShell() {
+  const [navSlot, setNavSlot] = useState<HTMLElement | null>(null);
   return (
     <AppLocaleProvider>
       <RouteDocumentTitle />
@@ -81,10 +89,12 @@ export function AppShell() {
           style={{ maxWidth: APP_SHELL_MAX_WIDTH }}
         >
           <SkipLink />
-          <AppHeader />
-          <Suspense fallback={<LazyLoadingFallback asMain />}>
-            <Outlet />
-          </Suspense>
+          <AppHeader onNavSlot={setNavSlot} />
+          <HeaderNavSlotContext.Provider value={navSlot}>
+            <Suspense fallback={<LazyLoadingFallback asMain />}>
+              <Outlet />
+            </Suspense>
+          </HeaderNavSlotContext.Provider>
         </div>
       </div>
     </AppLocaleProvider>

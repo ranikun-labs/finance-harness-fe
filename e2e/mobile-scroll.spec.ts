@@ -1,4 +1,5 @@
 import { startReview } from './review-test-flow';
+import { expectOneLineShell } from './support/oneLineShell';
 import { expect, test } from '@playwright/test';
 
 import {
@@ -350,8 +351,8 @@ test.describe('Adaptive app shell', () => {
         expect(navBox.width).toBe(contract.width);
         expect(navBox.y + navBox.height).toBe(contract.height);
       } else if (contract.navPlacement === 'top') {
-        expect(navBox.width).toBe(contract.width);
-        expect(navBox.height).toBeLessThan(100);
+        // 상단 내비는 헤더 안에서 제품 이름·로그인과 한 줄을 이룬다(자체 전폭 막대가 아니다).
+        await expectOneLineShell(page, `${contract.width}x${contract.height}`);
       } else {
         expect(navBox.width).toBe(224);
         const headerBox = await page.locator('[data-testid=app-shell-host] > header').boundingBox();
@@ -408,6 +409,10 @@ test.describe('Adaptive app shell', () => {
     ]) {
       await page.setViewportSize(viewport);
       await startReview(page, 'adaptive readable result width');
+      // URL이 바뀐 직후에는 host가 아직 이전 화면 폭일 수 있다 — 결과가 그려진 뒤에 잰다.
+      await expect(page.getByTestId('adaptive-content-host')).toContainText(
+        'adaptive readable result width',
+      );
 
       const hostBox = (await page.getByTestId('app-shell-host').boundingBox())!;
       const contentBox = (await page.getByTestId('adaptive-content-host').boundingBox())!;
@@ -424,6 +429,71 @@ test.describe('Adaptive app shell', () => {
       } else {
         expect(contentBox.width).toBe(760);
       }
+    }
+  });
+
+  test('keeps the 1280+ Review Result aside inside short windows and centers the header on the body column', async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 1280, height: 800 },
+      { width: 1280, height: 480 },
+      { width: 1440, height: 900 },
+      { width: 1920, height: 1080 },
+    ]) {
+      const label = `${viewport.width}x${viewport.height}`;
+      await page.setViewportSize(viewport);
+      await startReview(page, 'aside and header alignment');
+
+      // 보조 열은 보이는 높이 안에서 끝나고, 넘치면 열 안에서 스크롤해 끝 행동까지 닿는다.
+      const aside = page.getByTestId('review-result-aside');
+      // sticky로 붙은 상태(본문을 내린 뒤)에서 잰다. 붙기 전에는 머리 줄 아래에서 시작한다.
+      await page.locator('main').evaluate((el) => {
+        el.scrollTop = 400;
+      });
+      const asideBox = (await aside.boundingBox())!;
+      expect(asideBox.y + asideBox.height, `${label} aside bottom`).toBeLessThanOrEqual(
+        viewport.height,
+      );
+      const study = aside.getByRole('link', { name: ko.app.ask.handoff.study.title });
+      if (viewport.height < 500) {
+        const scroll = await aside.evaluate((el) => ({
+          scrollHeight: el.scrollHeight,
+          clientHeight: el.clientHeight,
+        }));
+        expect(scroll.scrollHeight, `${label} aside scrolls internally`).toBeGreaterThan(
+          scroll.clientHeight,
+        );
+        await aside.evaluate((el) => {
+          el.scrollTop = el.scrollHeight;
+        });
+      }
+      const studyBox = (await study.boundingBox())!;
+      expect(studyBox.y + studyBox.height, `${label} last action reachable`).toBeLessThanOrEqual(
+        viewport.height,
+      );
+
+      // 뒤로·"검토" 머리 줄의 중심은 본문 열의 중심이다(보조 열 포함 host의 중심이 아니다).
+      const title = page
+        .getByTestId('adaptive-content-host')
+        .getByText(ko.app.ask.header.title, { exact: true });
+      const titleBox = (await title.boundingBox())!;
+      const bodyBox = (await page
+        .getByTestId('review-result-layout')
+        .locator('> div')
+        .first()
+        .boundingBox())!;
+      expect(
+        Math.abs(titleBox.x + titleBox.width / 2 - (bodyBox.x + bodyBox.width / 2)),
+        `${label} header center vs body column`,
+      ).toBeLessThanOrEqual(1);
+      const back = (await page
+        .getByRole('link', { name: ko.app.ask.header.backLabel })
+        .boundingBox())!;
+      expect(
+        Math.abs(back.x - bodyBox.x),
+        `${label} back link at body column start`,
+      ).toBeLessThanOrEqual(1);
     }
   });
 });

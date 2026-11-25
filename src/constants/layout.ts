@@ -39,8 +39,28 @@ export const CONTENT_MAX_WIDTH_PX = {
 /** 결과 화면 보조 열("기록으로 이어가기") 폭(px). 본문 끝 블록만 옆으로 옮긴다. */
 export const RESULT_ASIDE_WIDTH_PX = 300;
 
+/** 결과 화면 본문 열과 보조 열 사이 간격(px). 본문 열 정렬(머리 폭)과 host 폭 계산이 함께 쓴다. */
+export const RESULT_COLUMN_GAP_PX = 32;
+
+/**
+ * 2-pane(List | Detail) 상세 열의 최대 폭(px, 좌우 padding 포함). 상세 pane이 이보다 넓어져도
+ * (≥1360 host) 줄 길이가 늘지 않도록 열을 가운데에 묶는다. 안쪽 읽기 본문은 `max-w-2xl`(672)이라
+ * 720 − padding 24×2 = 672로 열 폭과 줄 길이가 같다. 값은 Tailwind 스케일 밖이라 CSS
+ * (`.journal-detail-page`)가 쓰고, `layout.test.ts`가 CSS 리터럴과 이 상수를 대조한다.
+ */
+export const JOURNAL_DETAIL_MAX_WIDTH_PX = 720;
+
 /** WCAG 2.5.8 하한(24)이 아니라 Foundation 터치 최소(44)를 따른다. */
 export const TOUCH_TARGET_MIN_PX = 44;
+
+/**
+ * Primary navigation이 상단에 놓이는 viewport(`getPrimaryNavPlacement`의 `'top'`)의 media query.
+ * 상단일 때 내비는 앱 헤더의 제품 이름·로그인과 같은 한 줄에 놓인다(DOM도 헤더 안으로 옮겨진다).
+ */
+export const TOP_NAV_MEDIA_QUERY = [
+  `(min-width: ${BREAKPOINTS.tablet}px) and (max-width: ${BREAKPOINTS.rail - 1}px)`,
+  `(min-width: ${BREAKPOINTS.rail}px) and (max-width: ${BREAKPOINTS.desktop - 1}px) and (orientation: portrait)`,
+].join(', ');
 
 /** Primary navigation이 놓이는 위치. viewport 폭·orientation으로 결정된다. */
 export type PrimaryNavPlacement = 'bottom' | 'top' | 'rail';
