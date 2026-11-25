@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FormEvent, MouseEvent, RefObject } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent, RefObject } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
+import { LeaveGuard } from '@/components/common/LeaveGuard';
 import { Stack } from '@/components/layout/Stack';
 import { DecisionContextSnapshotView } from '@/components/journal/DecisionContextPanel';
 import { RecordTagText } from '@/components/common/RecordTagText';
@@ -40,10 +40,9 @@ interface ReviewHeaderProps {
   title: string;
   backLabel: string;
   backTo: string;
-  onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
+function ReviewHeader({ title, backLabel, backTo }: ReviewHeaderProps) {
   return (
     <header className="retrospective-header flex min-h-14 items-center gap-1">
       <Link
@@ -53,7 +52,6 @@ function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
           'retrospective-header-back type-section-title shrink-0',
         )}
         to={backTo}
-        onClick={onBack}
       >
         <span aria-hidden="true">←</span>
       </Link>
@@ -455,6 +453,10 @@ function ExampleJournalReviewPage({ savePort }: JournalReviewPageProps) {
     }
   };
 
+  // 저장 뒤에는 남길 입력이 없다. 저장 전 작성 중인 입력이 있으면 이탈 확인을 띄운다.
+  const exampleDraftDirty =
+    status !== 'saved' && Object.values(draft).some((value) => value !== '');
+
   if (!entry) {
     return (
       <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6">
@@ -486,6 +488,7 @@ function ExampleJournalReviewPage({ savePort }: JournalReviewPageProps) {
 
   return (
     <div className="retrospective-route flex min-h-full w-full min-w-0 flex-col">
+      <LeaveGuard when={exampleDraftDirty} />
       <div className="px-5 pt-4 sm:px-6 sm:pt-6">
         <ReviewHeader
           title={t('app.journalReview.headerTitle')}
@@ -690,36 +693,9 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
   const { t, locale } = useTranslation();
   const detail = state.data;
   const originalTouched = useRef(false);
+  // 작성 중인 복기가 있으면 모든 이탈(내비·링크·뒤로 가기)에 LeaveGuard가 같은 확인을 띄운다.
   const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
-  const { setDirty } = useRetrospectiveDraft();
-  const handleDirtyChange = useCallback(
-    (dirty: boolean) => {
-      setRetrospectiveDirty(dirty);
-      setDirty(dirty);
-    },
-    [setDirty],
-  );
-  const confirmBack = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      (event.currentTarget.target && event.currentTarget.target !== '_self')
-    )
-      return;
-    if (
-      retrospectiveDirty &&
-      !window.confirm(
-        locale === 'ko'
-          ? '작성 중인 복기가 사라집니다. 돌아갈까요?'
-          : 'Your unsaved reflection will be lost. Go back?',
-      )
-    )
-      event.preventDefault();
-  };
+  const handleDirtyChange = setRetrospectiveDirty;
   const [originalOpen, setOriginalOpen] = useState(() =>
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(min-width: 1024px) and (orientation: landscape), (min-width: 1280px)')
@@ -743,6 +719,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
 
   return (
     <div className="retrospective-route flex min-h-full w-full min-w-0 flex-col">
+      <LeaveGuard when={retrospectiveDirty} />
       <div className="px-5 pt-4 sm:px-6 sm:pt-6">
         <ReviewHeader
           title={
@@ -758,7 +735,6 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
               ? buildAppJournalDetailPath(id)
               : APP_ROUTE_PATHS.journalList
           }
-          onBack={confirmBack}
         />
       </div>
       {state.status === 'loading' && (
@@ -891,7 +867,6 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
               <Link
                 className={buttonVariants({ variant: 'neutral' })}
                 to={buildAppJournalDetailPath(detail.journalId)}
-                onClick={confirmBack}
               >
                 {t('app.journalReview.backLabel')}
               </Link>

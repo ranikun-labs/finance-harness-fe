@@ -29,6 +29,17 @@ export const ko: Messages = {
   common: {
     appName: 'AI 투자 체크리스트',
     loading: '불러오는 중이에요',
+    leaveGuard: {
+      title: '작성 중인 내용이 사라져요',
+      description: '지금 나가면 입력한 내용을 다시 볼 수 없어요.',
+      stay: '계속 작성',
+      leave: '나가기',
+      saving: {
+        title: '저장 중이에요',
+        description: '저장이 끝나면 이동할 수 있어요. 실패하면 이 화면에서 다시 저장할 수 있어요.',
+        stay: '확인',
+      },
+    },
   },
   theme: {
     trigger: '화면 모드',
@@ -363,7 +374,6 @@ export const ko: Messages = {
     journalNew: {
       cancelDirectEntry: '취소',
       backToJournal: '저널로 돌아가기',
-      backToJournalDirtyConfirm: '작성 중인 내용이 사라집니다. 저널로 돌아갈까요?',
       investment: '판단 기록',
       study: '학습 노트',
       entryChoice: {
@@ -382,7 +392,6 @@ export const ko: Messages = {
       },
       typeChange: {
         action: '기록 유형 변경',
-        dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
       },
       handoff: {
         originHeading: '검토에서 이어진 기록',
@@ -392,7 +401,6 @@ export const ko: Messages = {
         learningDraftNotice:
           '검토 결과에서 가져온 초안입니다. 저장하기 전에 자유롭게 수정하거나 지울 수 있습니다.',
         returnToReview: '검토 결과로 돌아가기',
-        returnToReviewDirtyConfirm: '작성 중인 내용이 사라집니다. 검토 결과로 돌아갈까요?',
       },
       decisionContext: {
         title: '검토 맥락 (참고용)',
@@ -428,6 +436,8 @@ export const ko: Messages = {
         idempotencyConflict:
           '제출 키가 다른 요청에 사용되었습니다. 별도 기록을 만들려면 새 요청 시작을 선택하세요.',
         networkError: '연결에 실패했습니다. 같은 제출을 다시 시도하면 안전하게 재요청합니다.',
+        newSubmissionConfirmTitle: '새 요청을 시작할까요?',
+        newSubmissionKeep: '이전 요청 유지',
         newSubmission: '새 요청 시작',
         newSubmissionConfirm:
           '이전 요청이 이미 저장되었을 수 있습니다. 새 요청으로 제출하면 같은 내용의 기록이 추가로 생성될 수 있습니다. 새 요청을 시작할까요?',
