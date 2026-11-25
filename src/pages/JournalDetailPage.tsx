@@ -1,7 +1,8 @@
 import { JournalDeleteControl } from '@/features/journal-delete/JournalLifecycleControls';
+import { DetailActionsSlotContext } from '@/features/journal-edit/DetailActionsSlotContext';
 import { JournalEditor } from '@/features/journal-edit/JournalEditor';
 import { Link, useParams } from 'react-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { RecordTagText } from '@/components/common/RecordTagText';
 import { Stack } from '@/components/layout/Stack';
@@ -32,11 +33,14 @@ function DetailHeader({
   title,
   backLabel,
   collapseTitle,
+  actionsRef,
 }: {
   title: string;
   backLabel: string;
   /** 본문 머리(유형·제목)가 이미 있는 성공 상태에서만 2-pane 제목 줄을 접는다. 없음·오류 상태는 제목이 곧 상태 안내다. */
   collapseTitle: boolean;
+  /** 수정·삭제 같은 텍스트 행동이 들어오는 앱바 오른쪽 자리. */
+  actionsRef: (node: HTMLDivElement | null) => void;
 }) {
   return (
     // `journal-detail-*`: 2-pane(List | Detail)에서는 목록이 항상 옆에 있어 뒤로 가기가 필요 없다.
@@ -62,6 +66,7 @@ function DetailHeader({
       >
         {title}
       </h1>
+      <div ref={actionsRef} className="ml-auto flex shrink-0 items-center" />
     </header>
   );
 }
@@ -328,6 +333,8 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
   const contextPort = useJournalReadPort();
   const { state, retry } = useJournalDetail(readPort ?? contextPort, id);
   const { t } = useTranslation();
+  // 수정·삭제는 기록 머리(앱바)의 텍스트 행동이다. 자리가 마운트되면 그 안으로 옮겨 그린다.
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
   const headerTitle =
     state.error?.code === 'journal_not_found'
       ? t('app.journalDetail.notFound.heading')
@@ -339,6 +346,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
         title={headerTitle}
         backLabel={t('app.journalDetail.backLabel')}
         collapseTitle={state.status === 'success'}
+        actionsRef={setActionsSlot}
       />
       {state.status === 'loading' && (
         <DetailStatus
@@ -350,7 +358,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
         <DetailError error={state.error} onRetry={retry} />
       )}
       {state.status === 'success' && state.data && (
-        <>
+        <DetailActionsSlotContext.Provider value={actionsSlot}>
           <JournalDeleteControl
             key={`delete:${state.data.journalId}:${state.data.revision}`}
             detail={state.data}
@@ -364,7 +372,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
           <div className="pt-4">
             <JournalDetailContent detail={state.data} />
           </div>
-        </>
+        </DetailActionsSlotContext.Provider>
       )}
     </Stack>
   );
