@@ -90,6 +90,19 @@ describe.each(['light', 'dark'] as const)('Foundation v1 %s theme contrast (>= 4
   });
 });
 
+// 포커스 표시(F3 X-01): 2px --ring(color.focus) 실선이 놓일 수 있는 모든 면 위에서 비텍스트 3:1 이상이어야 한다.
+describe.each(['light', 'dark'] as const)(
+  'Focus indicator (--ring) on %s surfaces (>= 3:1)',
+  (theme) => {
+    it.each(['page', 'card', 'inset', 'control', 'brand-subtle'])('ring on %s', (surface) => {
+      const ring = token(theme, 'ring');
+      const bg = token(theme, surface);
+      expect(ring).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(contrastRatio(ring, bg)).toBeGreaterThanOrEqual(3);
+    });
+  },
+);
+
 describe('Foundation v1 token values (Finance)', () => {
   it.each([
     ['light', 'page', '#f2f4f6'],

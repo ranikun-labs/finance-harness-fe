@@ -306,7 +306,7 @@ function StructuredReviewResult({
                     type="button"
                     aria-pressed={checked}
                     onClick={() => toggleChecklistItem(item.id)}
-                    className="focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-11 w-full min-w-0 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-3"
+                    className="flex min-h-11 w-full min-w-0 items-start gap-3 rounded-lg text-left"
                   >
                     <span
                       aria-hidden="true"
@@ -610,7 +610,7 @@ export function AskPage() {
       >
         <Link
           aria-label={t('app.ask.header.backLabel')}
-          className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"
+          className="text-text-secondary absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold"
           to={APP_ROUTE_PATHS.appHome}
         >
           <span aria-hidden="true">←</span>

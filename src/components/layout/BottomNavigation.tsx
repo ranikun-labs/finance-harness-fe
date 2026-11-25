@@ -100,8 +100,7 @@ export function BottomNavigation({
             }}
             aria-current={activeTab === tab.id ? 'page' : undefined}
             className={cn(
-              'relative flex items-center justify-center rounded-lg outline-none',
-              'focus-visible:ring-ring/50 focus-visible:ring-3',
+              'relative flex items-center justify-center rounded-lg',
               inHeader
                 ? 'min-h-11 flex-none flex-row gap-1 px-5 py-0 text-sm'
                 : [

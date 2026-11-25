@@ -29,7 +29,7 @@ export function LocaleSwitcher() {
             key={target}
             to={{ pathname: peerPathname, search: location.search, hash: location.hash }}
             aria-current={isCurrent ? 'true' : undefined}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 aria-[current=true]:text-foreground flex min-h-11 items-center rounded-md px-3 focus-visible:ring-3 focus-visible:outline-none aria-[current=true]:font-bold"
+            className="text-muted-foreground hover:text-foreground aria-[current=true]:text-foreground flex min-h-11 items-center rounded-md px-3 aria-[current=true]:font-bold"
           >
             {LOCALE_LABELS[target]}
           </Link>
