@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router';
+import { createBrowserRouter, RouterProvider } from 'react-router';
 
 import { AppRouter } from '@/app/AppRouter';
 import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
@@ -20,14 +20,23 @@ const journalCreatePort =
     ? createProductionJournalCreatePort()
     : undefined;
 
-const tree = (
-  <StrictMode>
-    <BrowserRouter>
+// 이탈 보호(`useBlocker`)가 data router에서만 동작해 `createBrowserRouter`로 연다. 경로 트리는 그대로
+// `AppRouter`의 `<Routes>`가 소유하므로 로더·액션 없이 splat 라우트 하나가 전체를 위임한다.
+const router = createBrowserRouter([
+  {
+    path: '*',
+    element: (
       <AppRouter
         journalCreatePort={journalCreatePort}
         journalCreateMode={journalCreatePort ? 'production' : undefined}
       />
-    </BrowserRouter>
+    ),
+  },
+]);
+
+const tree = (
+  <StrictMode>
+    <RouterProvider router={router} />
   </StrictMode>
 );
 

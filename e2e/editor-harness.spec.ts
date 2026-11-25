@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buildAppJournalNewPath } from '@/constants/routes';
+import { buildAppJournalNewPath, buildAppJournalReviewPath } from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
 
 async function expectNoHorizontalOverflow(page: Page) {
@@ -104,6 +104,9 @@ test.describe('Authenticated editor presentation fixture', () => {
   });
 });
 
+const leaveDialog = (page: Page) =>
+  page.getByRole('alertdialog', { name: ko.common.leaveGuard.title });
+
 test('dirty editor cancel retains input when dismissed and leaves when confirmed', async ({
   page,
 }) => {
@@ -115,11 +118,113 @@ test('dirty editor cancel retains input when dismissed and leaves when confirmed
   const cancel = page.getByRole('button', { name: '취소' });
   await cancel.focus();
   await expect(cancel).toBeFocused();
-  page.once('dialog', (dialog) => dialog.dismiss());
   await page.keyboard.press('Enter');
+  // window.confirm이 아니라 공통 확인 Dialog다. 안전한 쪽(계속 작성)이 초기 포커스를 받는다.
+  const dialog = leaveDialog(page);
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: ko.common.leaveGuard.stay })).toBeFocused();
+  await dialog.getByRole('button', { name: ko.common.leaveGuard.stay }).click();
+  await expect(dialog).toBeHidden();
   await expect(field).toHaveValue('유지할 기록');
   await expect(cancel).toBeFocused();
-  page.once('dialog', (dialog) => dialog.accept());
   await cancel.click();
+  await leaveDialog(page).getByRole('button', { name: ko.common.leaveGuard.leave }).click();
   await expect(page.getByRole('heading', { name: ko.app.journalList.title })).toBeVisible();
+});
+
+test.describe('이탈 보호: 브라우저 history·내비·링크 (실제 BrowserRouter, fixture)', () => {
+  const browserHarness = (path: string) =>
+    `http://localhost:49183/e2e/support/editor-harness/?history=browser&path=${encodeURIComponent(path)}`;
+
+  async function openDraftFromList(page: Page) {
+    await page.route('**/finance/journals**', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              journalId: '550e8400-e29b-41d4-a716-446655440000',
+              type: 'investment',
+              occurredAt: '2026-08-12T14:30:15.123',
+              timeZone: 'Asia/Seoul',
+              assetName: '반도체 기업 A',
+              action: 'interest',
+            },
+          ],
+          nextCursor: null,
+        },
+      }),
+    );
+    await page.goto(browserHarness('/app/journal'));
+    await page.getByRole('link', { name: ko.app.journalList.newRecord }).first().click();
+    await page
+      .getByRole('link', { name: new RegExp(ko.app.journalNew.entryChoice.investment.title) })
+      .click();
+    await expect(page).toHaveURL(/\/app\/journal\/new\?type=investment/);
+  }
+
+  test('입력 후 page.goBack()은 확인을 띄우고, 계속 작성하면 입력과 포커스가 그대로다', async ({
+    page,
+  }) => {
+    await openDraftFromList(page);
+    const target = page.getByLabel('대상');
+    await target.fill('보존할 입력');
+    await target.focus();
+
+    await page.goBack();
+    const dialog = leaveDialog(page);
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\/app\/journal\/new\?type=investment/);
+
+    await dialog.getByRole('button', { name: ko.common.leaveGuard.stay }).click();
+    await expect(dialog).toBeHidden();
+    await expect(target).toHaveValue('보존할 입력');
+    await expect(target).toBeFocused();
+    await expect(page).toHaveURL(/\/app\/journal\/new\?type=investment/);
+
+    await page.goBack();
+    await leaveDialog(page).getByRole('button', { name: ko.common.leaveGuard.leave }).click();
+    await expect(page).toHaveURL(/\/app\/journal\/new$/);
+  });
+
+  test('입력이 없으면 page.goBack()에 확인이 없다', async ({ page }) => {
+    await openDraftFromList(page);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/app\/journal\/new$/);
+    await expect(leaveDialog(page)).toHaveCount(0);
+  });
+
+  test('입력 후 내비 탭에도 같은 확인이 뜬다 (태블릿 834)', async ({ page }) => {
+    await page.setViewportSize({ width: 834, height: 1060 });
+    await openDraftFromList(page);
+    const target = page.getByLabel('대상');
+    await target.fill('보존할 입력');
+    await page.getByTestId('primary-navigation').getByRole('link', { name: '검토' }).click();
+    const dialog = leaveDialog(page);
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAccessibleDescription(ko.common.leaveGuard.description);
+    await dialog.getByRole('button', { name: ko.common.leaveGuard.stay }).click();
+    await expect(target).toHaveValue('보존할 입력');
+    await expect(page).toHaveURL(/\/app\/journal\/new\?type=investment/);
+  });
+
+  test('복기 작성 중 브라우저 앞으로 가기(history 이동)도 같은 확인을 띄운다', async ({ page }) => {
+    await page.route('**/finance/journals**', (route) =>
+      route.fulfill({ status: 404, json: { error: 'journal_not_found' } }),
+    );
+    await page.goto(browserHarness(buildAppJournalReviewPath('journal-2026-06-28-01')));
+    const reviewUrl = page.url();
+    await page.getByRole('link', { name: ko.app.journalReview.backLabel }).first().click();
+    await expect(page).not.toHaveURL(reviewUrl);
+    await page.goBack();
+    await expect(page).toHaveURL(reviewUrl);
+
+    const body = page.getByLabel(ko.app.journalReview.retrospective.bodyLabel);
+    await body.fill('쓰던 복기');
+    await page.goForward();
+    await expect(leaveDialog(page)).toBeVisible();
+    await expect(page).toHaveURL(reviewUrl);
+    await leaveDialog(page).getByRole('button', { name: ko.common.leaveGuard.stay }).click();
+    await expect(body).toHaveValue('쓰던 복기');
+    await expect(page).toHaveURL(reviewUrl);
+  });
 });
