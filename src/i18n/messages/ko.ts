@@ -101,7 +101,7 @@ export const ko: Messages = {
       title: 'Home',
       hero: {
         eyebrow: '검토',
-        heading: '지금 판단하려는 것을 검토해 보세요',
+        heading: '어떤 판단을 검토할까요?',
         description:
           '예시를 통해 투자 판단 전에 확인할 항목과 근거를 어떤 순서로 살펴보는지 알아보세요.',
         action: '검토 시작',
@@ -255,14 +255,16 @@ export const ko: Messages = {
       },
       handoff: {
         heading: '기록으로 이어가기',
-        description: '검토한 내용을 바탕으로 내 기록을 직접 작성해보세요.',
+        description: '검토를 참고해 내 기록을 직접 작성해요. 자동으로 저장되지 않아요.',
         investment: {
           title: '판단 기록 남기기',
-          description: '검토한 내용을 바탕으로 내 판단과 이유를 기록합니다.',
+          description:
+            '내 판단과 이유를 직접 적어요. 검토 질문과 확인 상태를 함께 남길지는 작성 화면에서 골라요.',
         },
         study: {
           title: '학습 노트로 남기기',
-          description: '검토에서 배운 내용과 더 확인할 질문을 정리합니다.',
+          description:
+            '해석과 아직 모르는 것이 초안으로 채워져요. 저장 전에 고치거나 지울 수 있어요.',
         },
       },
       navigation: {

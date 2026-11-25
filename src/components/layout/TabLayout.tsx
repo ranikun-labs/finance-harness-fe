@@ -61,6 +61,8 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
               size={isReviewResult ? 'result' : 'reading'}
               className={cn(
                 'adaptive-readable-host',
+                // 1280 이상 결과 화면은 본문 + 보조 열 폭까지 넓힌다(좁은 상태는 AskPage가 760으로 되돌린다).
+                isReviewResult && 'xl:max-w-[1132px]',
                 isJournalWorkspace && 'journal-workspace-host',
                 isRetrospectiveWorkspace && 'retrospective-workspace-host',
               )}

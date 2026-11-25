@@ -104,7 +104,7 @@ export const en: Messages = {
       title: 'Home',
       hero: {
         eyebrow: 'Review',
-        heading: 'Review what you are deciding now',
+        heading: 'Which decision do you want to review?',
         description:
           'Explore an example of how to review checks and evidence before making an investment decision.',
         action: 'Start review',
@@ -261,14 +261,17 @@ export const en: Messages = {
       },
       handoff: {
         heading: 'Continue to a record',
-        description: 'Use what you reviewed to write your own record.',
+        description:
+          'Write your own record with this review as a reference. Nothing is saved automatically.',
         investment: {
           title: 'Leave a decision record',
-          description: 'Record your own judgment and reasoning from the review.',
+          description:
+            'Write your judgment and reasoning yourself. You choose on the next screen whether to keep the review question and check status with it.',
         },
         study: {
           title: 'Leave a learning note',
-          description: 'Organize what you learned and what you want to check next.',
+          description:
+            'Interpretations and open unknowns come pre-filled as a draft. Edit or remove them before saving.',
         },
       },
       navigation: {

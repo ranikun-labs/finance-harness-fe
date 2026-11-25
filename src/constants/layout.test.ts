@@ -6,6 +6,7 @@ import {
   BREAKPOINTS,
   CONTENT_MAX_WIDTH_PX,
   getPrimaryNavPlacement,
+  RESULT_ASIDE_WIDTH_PX,
 } from '@/constants/layout';
 
 describe('adaptive layout contract', () => {
@@ -38,5 +39,18 @@ describe('adaptive layout contract', () => {
     expect(APP_SHELL_MAX_WIDTH_PX).toBe(1360);
     expect(CONTENT_MAX_WIDTH_PX.reading).toBeLessThan(CONTENT_MAX_WIDTH_PX.result);
     expect(CONTENT_MAX_WIDTH_PX.result).toBeLessThan(APP_SHELL_MAX_WIDTH_PX);
+    expect(CONTENT_MAX_WIDTH_PX.result).toBeLessThan(CONTENT_MAX_WIDTH_PX.resultWithAside);
+    expect(CONTENT_MAX_WIDTH_PX.resultWithAside).toBeLessThan(APP_SHELL_MAX_WIDTH_PX);
+  });
+
+  it('derives the result-with-aside width from body, gap, aside and padding', () => {
+    // 본문 760 + 간격 32 + 보조 열 300 + 좌우 padding 20×2 = 1132.
+    expect(CONTENT_MAX_WIDTH_PX.resultWithAside).toBe(
+      CONTENT_MAX_WIDTH_PX.result + 32 + RESULT_ASIDE_WIDTH_PX + 40,
+    );
+    const tabLayout = readFileSync('src/components/layout/TabLayout.tsx', 'utf8');
+    expect(tabLayout).toContain(`xl:max-w-[${CONTENT_MAX_WIDTH_PX.resultWithAside}px]`);
+    // 보조 열은 desktop breakpoint(xl, 1280)에서만 켜진다.
+    expect(BREAKPOINTS.desktop).toBe(1280);
   });
 });
