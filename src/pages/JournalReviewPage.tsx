@@ -20,7 +20,7 @@ import { useTranslation } from '@/i18n/I18nContext';
 import { SavedRetrospectives } from '@/features/retrospective/SavedRetrospectives';
 import { JournalRevisionReviewBoundary } from '@/features/journal-edit/JournalRevisionReviewBoundary';
 import type { UseJournalDetailResult } from '@/features/journal-read/model/useJournalDetail';
-import { formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
+import { formatJournalInstant, formatJournalOccurredAt, formatLocalizedDate } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import {
   createLocalRetrospectiveSavePort,
@@ -65,14 +65,6 @@ function ReviewHeader({ title, backLabel, backTo, onBack }: ReviewHeaderProps) {
 /** 사용자가 쓴 글·원본 본문: reading 16/27, 한글은 어절 단위로 줄바꿈하고 긴 무공백 문자열은 끊어 넘침을 막는다. */
 const READING_TEXT_CLASS =
   'type-reading text-foreground min-w-0 max-w-2xl wrap-break-word break-keep';
-
-function formatRetrospectiveTimestamp(value: string, locale: 'ko' | 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Seoul',
-  }).format(new Date(value));
-}
 
 function ReviewSummary({ entry }: { entry: JournalEntry }) {
   const { t, locale } = useTranslation();
@@ -239,7 +231,7 @@ function RetrospectiveEditor({
           <div className="flex flex-col gap-1">
             <span className="type-meta text-text-secondary block">{copy.savedAtLabel}</span>
             <time className="type-body text-foreground" dateTime={savedRecord.createdAt}>
-              {formatRetrospectiveTimestamp(savedRecord.createdAt, locale)}
+              {formatJournalInstant(savedRecord.createdAt, undefined, locale)}
             </time>
           </div>
           <div className="flex flex-col gap-1">
@@ -887,6 +879,7 @@ function SavedJournalReviewPage({ state, retry }: UseJournalDetailResult) {
                     key={`${detail.journalId}:${detail.revision}`}
                     journalId={detail.journalId}
                     revision={detail.revision}
+                    timeZone={detail.timeZone}
                     onDirtyChange={handleDirtyChange}
                   />
                 </Card>

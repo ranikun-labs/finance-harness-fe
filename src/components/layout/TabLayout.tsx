@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from 'react-router';
 
 import { BottomNavigation, type NavFocusMemory } from '@/components/layout/BottomNavigation';
+import { useHeaderNavSlot } from '@/components/layout/HeaderNavSlot';
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
@@ -9,7 +11,7 @@ import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
 import type { JournalReadPort } from '@/features/journal-read/model/journalReadPort';
-import { BREAKPOINTS, MAIN_LANDMARK_ID } from '@/constants/layout';
+import { BREAKPOINTS, MAIN_LANDMARK_ID, TOP_NAV_MEDIA_QUERY } from '@/constants/layout';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +25,10 @@ const LazyJournalWorkspace = lazy(() =>
 export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPort }) {
   // Tablet 이상은 내비가 본문 앞(상단·좌측)에 보이므로 DOM도 내비가 먼저다. Phone은 하단이라 본문이 먼저.
   const navFirst = useMediaQuery(`(min-width: ${BREAKPOINTS.tablet}px)`);
+  // 상단 내비 viewport(태블릿 768~1279 세로)에서는 내비를 앱 헤더 안으로 옮겨 한 줄 셸을 만든다.
+  const headerNavSlot = useHeaderNavSlot();
+  const isTopNav = useMediaQuery(TOP_NAV_MEDIA_QUERY);
+  const navHost = isTopNav ? headerNavSlot : null;
   const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
   // 내비가 body 앞/뒤로 옮겨 다시 마운트돼도 포커스 위치(탭)를 이어받기 위한 기억.
   const navFocusMemory: NavFocusMemory = useRef(null);
@@ -46,7 +52,12 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
     >
       <JournalReadPortProvider port={journalReadPort}>
         <div className="adaptive-shell-layout flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          {navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
+          {navHost &&
+            createPortal(
+              <BottomNavigation focusMemory={navFocusMemory} placement="header" />,
+              navHost,
+            )}
+          {!navHost && navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
           <main
             id={MAIN_LANDMARK_ID}
             className={cn(
@@ -84,7 +95,7 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
               )}
             </PageContainer>
           </main>
-          {!navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
+          {!navHost && !navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
         </div>
       </JournalReadPortProvider>
     </RetrospectiveDraftContext.Provider>

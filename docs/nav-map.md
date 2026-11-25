@@ -41,7 +41,7 @@ navigation은 current contract가 아니다.
 | Viewport | Primary navigation | Content contract |
 | --- | --- | --- |
 | Phone | 하단 검토/저널 | 단일 column. 검토 결과·작성·상세·복기는 context back navigation 사용 |
-| Tablet Portrait | 상단 검토/저널 | 480px phone cap 없는 readable single column |
+| Tablet Portrait | 상단 검토/저널 — 앱 헤더의 제품 이름·내비·로그인과 **한 줄** | 480px phone cap 없는 readable single column |
 | Tablet Landscape | 좌측 rail 검토/저널 | 필요한 맥락에서만 2-pane |
 | Desktop | 좌측 rail 검토/저널, Bottom Navigation 없음 | 최대 2 major surfaces |
 
@@ -50,6 +50,15 @@ Breakpoint·콘텐츠 폭 값은 [`src/constants/layout.ts`](../src/constants/la
 내비가 본문 앞이고, Phone은 본문 뒤(하단)다. 모든 `/app` 화면 첫 포커스는 본문 건너뛰기 링크이고,
 그 대상은 `<main id="main">`(`MAIN_LANDMARK_ID`)이다. 768 경계에서 내비가 다시 마운트돼도
 직전에 내비 링크에 있던 포커스는 같은 탭으로 이어받는다.
+
+상단 내비 viewport(`TOP_NAV_MEDIA_QUERY`: 768~1023, 1024~1279 세로)에서는 `TabLayout`이
+내비를 앱 헤더 안(`HeaderNavSlotContext`)으로 옮겨 **제품 이름 → 내비 → 로그인** 한 줄을
+만든다(DOM 순서 = 시각 순서). 내비는 자체 막대를 갖지 않고, 계약(`BOTTOM_TABS`·`aria-current`·
+단일 `<nav>`·본문 건너뛰기)은 그대로다. 헤더 밖 내비는 Phone 하단과 rail(1024 가로·1280+)뿐이다.
+
+2-pane 저널 상세 열은 pane이 넓어져도 최대 720(`JOURNAL_DETAIL_MAX_WIDTH_PX`, padding 포함)에서
+가운데에 묶는다. 1280+ 검토 결과의 보조 열은 보이는 높이(100dvh − 헤더 − 여백)를 넘으면 열 안에서
+스크롤하고, 뒤로·"검토" 머리 줄은 본문 열 기준으로 정렬한다.
 
 Tablet Portrait·Landscape·Desktop에서는 저널 목록뿐 아니라 저널 신규·상세·복기 화면에도
 동일한 `BOTTOM_TABS` 기반 검토/저널 primary navigation을 유지한다. Phone의 내부 결과·작성·

@@ -1,4 +1,5 @@
 import { startReview } from './review-test-flow';
+import { expectOneLineShell } from './support/oneLineShell';
 import { expect, test, type Page } from '@playwright/test';
 
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS, buildAppJournalDetailPath } from '@/constants/routes';
@@ -170,19 +171,23 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
 
     for (const viewport of [
+      { width: 768, height: 1024 },
       { width: 834, height: 1060 },
       { width: 1024, height: 1366 },
+      { width: 1279, height: 1366 },
     ]) {
       await page.setViewportSize(viewport);
       await page.goto(APP_ROUTE_PATHS.journalList);
 
       const navigation = page.getByTestId('primary-navigation');
       await expect(navigation).toBeVisible();
-      const navBox = await navigation.boundingBox();
-      expect(navBox).not.toBeNull();
-      expect(navBox!.width).toBe(viewport.width);
-      expect(navBox!.height).toBeLessThan(100);
+      await expectOneLineShell(page, `${viewport.width}x${viewport.height}`);
       expect(await navigation.evaluate((node) => getComputedStyle(node).flexDirection)).toBe('row');
+      // 로그인 링크가 있는 검토 시작 화면에서도 이름 · 내비 · 로그인이 한 줄이다.
+      await page.goto(APP_ROUTE_PATHS.appHome);
+      await expect(page.getByRole('link', { name: ko.nav.signIn })).toBeVisible();
+      await expectOneLineShell(page, `${viewport.width}x${viewport.height} home`);
+      await page.goto(APP_ROUTE_PATHS.journalList);
       await expect(page.locator('.journal-workspace-list-pane')).toBeVisible();
       await expect(page.locator('.journal-workspace-detail-pane')).toBeHidden();
       await expect(page.getByTestId('adaptive-content-host')).toHaveCSS('max-width', '660px');
@@ -218,8 +223,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
         expect(navBox!.x).toBe(0);
         expect(direction).toBe('column');
       } else {
-        expect(navBox!.width, `${width}x${height} top width`).toBe(width);
-        expect(navBox!.height, `${width}x${height} top height`).toBeLessThan(100);
+        await expectOneLineShell(page, `${width}x${height}`);
         expect(direction).toBe('row');
       }
       await expectNoHorizontalOverflow(page);
@@ -325,6 +329,42 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     ).toBeVisible();
     // 없음 안내 안의 "목록으로" 링크는 별도 행동이라 남는다. 숨는 것은 머리의 ← 링크뿐이다.
     await expect(page.locator('.journal-detail-back')).toBeHidden();
+  });
+
+  test('caps the two-pane Detail column at 720 and leaves single-column widths alone', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
+
+    const cases = [
+      { width: 1024, height: 768, max: 720 },
+      { width: 1280, height: 800, max: 720 },
+      { width: 1440, height: 900, max: 720 },
+      { width: 1920, height: 1080, max: 720 },
+      { width: 1024, height: 1366, max: 660 },
+    ] as const;
+    for (const { width, height, max } of cases) {
+      const label = `${width}x${height}`;
+      await page.setViewportSize({ width, height });
+      await page.goto(buildAppJournalDetailPath(PRIMARY_ID));
+      await expect(page.getByRole('heading', { level: 2, name: '반도체 기업 A' })).toBeVisible();
+      const column = page.locator('.journal-detail-page');
+      const box = (await column.boundingBox())!;
+      expect(box.width, `${label} detail column`).toBeLessThanOrEqual(max);
+      if (width >= 1440) {
+        // pane이 720보다 넓어지는 폭에서 열은 정확히 720이고 pane 안 가운데에 있다.
+        expect(box.width, `${label} detail column cap`).toBe(720);
+        const pane = (await page.locator('.journal-workspace-detail-pane').boundingBox())!;
+        expect(
+          Math.abs(box.x - pane.x - (pane.x + pane.width - box.x - box.width)),
+          label,
+        ).toBeLessThanOrEqual(1);
+      }
+      // 읽기 본문은 열 안에서 줄 길이 상한(672)을 넘지 않는다.
+      const reading = (await page.getByText(/HBM 수요/).boundingBox())!;
+      expect(reading.width, `${label} reading measure`).toBeLessThanOrEqual(672);
+      await expectNoHorizontalOverflow(page);
+    }
   });
 
   test('filters the loaded journal records without dropping subsequent pages', async ({ page }) => {

@@ -13,6 +13,7 @@ import { AUTH_ROUTE_PATHS, APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/con
 import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
+import { formatJournalInstant } from '@/lib/date';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 import {
@@ -30,14 +31,6 @@ type ReviewPhase = 'loading' | 'result' | 'error';
 interface ReviewLocationState {
   reviewFlow?: 'loading';
   focusReviewHandoff?: 'investment' | 'study';
-}
-
-function formatReviewTime(value: string, locale: 'ko' | 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Seoul',
-  }).format(new Date(value));
 }
 
 /** 기준일은 `YYYY.MM.DD`로 표시한다(ISO 문자열은 `dateTime` 속성에만 둔다). */
@@ -250,8 +243,8 @@ function StructuredReviewResult({
     authPresentationState === 'authenticated'
       ? { reviewHandoff: studyHandoff }
       : { authResumeIntent: studyAuthIntent };
-  const formattedGeneratedAt = formatReviewTime(fixture.generatedAt, locale);
-  const formattedReviewedAt = formatReviewTime(fixture.reviewedAt, locale);
+  const formattedGeneratedAt = formatJournalInstant(fixture.generatedAt, undefined, locale);
+  const formattedReviewedAt = formatJournalInstant(fixture.reviewedAt, undefined, locale);
 
   function toggleChecklistItem(id: string) {
     const next = { ...checkedItems, [id]: !checkedItems[id] };
@@ -466,8 +459,13 @@ function StructuredReviewResult({
    * - 좁은 화면: 본문 끝에 놓고 판단 기록 버튼은 고정 하단 바에 둔다.
    * - 1280 이상: 보조 열에 놓고 판단 기록 버튼을 카드 안에 둔다(고정 하단 바 없음).
    */
+  // 1280+에서는 바깥 `<aside>`가 같은 제목으로 이름을 가진다 — 안쪽까지 landmark·aria-labelledby를 겹치지 않도록 div로 둔다.
+  const HandoffRoot = wide ? 'div' : 'section';
   const handoff = (
-    <section aria-labelledby="review-handoff-heading" className="flex min-w-0 flex-col gap-3">
+    <HandoffRoot
+      {...(wide ? {} : { 'aria-labelledby': 'review-handoff-heading' })}
+      className="flex min-w-0 flex-col gap-3"
+    >
       <header className="flex min-w-0 flex-col gap-1">
         <h2 id="review-handoff-heading" className="type-section-title">
           {t('app.ask.handoff.heading')}
@@ -510,7 +508,7 @@ function StructuredReviewResult({
           {t('app.ask.handoff.study.title')}
         </Link>
       </Card>
-    </section>
+    </HandoffRoot>
   );
 
   if (wide) {
@@ -524,7 +522,9 @@ function StructuredReviewResult({
         <aside
           data-testid="review-result-aside"
           aria-labelledby="review-handoff-heading"
-          className="sticky top-4 min-w-0"
+          // 높이가 낮은 창(<600)에서 카드가 잘리지 않도록 보이는 높이(100dvh − 헤더 56 − 위아래 16)를 넘으면
+          // 열 안에서 스크롤한다. sticky 기준은 main(스크롤 소유자)이다.
+          className="sticky top-4 max-h-[calc(100dvh-5.5rem)] min-w-0 overflow-y-auto"
         >
           {handoff}
         </aside>
@@ -600,7 +600,14 @@ export function AskPage() {
         !showsResult && 'xl:mx-auto xl:max-w-[760px]',
       )}
     >
-      <header className="relative flex min-h-11 items-center justify-center">
+      <header
+        className={cn(
+          'relative flex min-h-11 items-center justify-center',
+          // 1280+ 결과 화면: 뒤로·제목 줄의 중심을 본문 열(host − 간격 32 − 보조 열 300)에 맞춘다.
+          // 리터럴이어야 Tailwind가 읽는다: 332 = RESULT_ASIDE_WIDTH_PX + RESULT_COLUMN_GAP_PX(layout.test가 대조).
+          showsResult && 'xl:w-[calc(100%-332px)]',
+        )}
+      >
         <Link
           aria-label={t('app.ask.header.backLabel')}
           className="text-text-secondary focus-visible:ring-ring/50 absolute left-0 flex size-11 items-center justify-center rounded-md text-xl font-semibold outline-none focus-visible:ring-3"

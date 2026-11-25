@@ -1,5 +1,24 @@
 import type { Locale } from '@/constants/routes';
 
+/**
+ * 화면에 보이는 시각 표기 규칙은 이 파일 하나가 소유한다(규칙 문서: `docs/product-policy.md` "시각 표기").
+ *
+ * - 날짜: 숫자 `YYYY. MM. DD.`(ko) / `MM/DD/YYYY`(en) — 월·일 항상 2자리.
+ * - 시각: 날짜 뒤에 `HH:mm`(분까지, 초 없음). 시간 주기는 locale 기본(ko 오전/오후, en AM/PM).
+ * - 시간대 이름(IANA·약어·오프셋)은 화면에 보이지 않는다(F1-05 공통 AC 5). 시간대는 값을 어느
+ *   벽시계로 읽을지 정할 때만 쓴다.
+ * - 저장 시각·도메인 값은 바꾸지 않는다. 원본 값은 호출부가 `<time dateTime>`에 둔다.
+ * - 화면은 `Intl.DateTimeFormat`·`toLocale*`를 직접 부르지 않고 아래 함수만 쓴다.
+ */
+const DATE_PARTS = { year: 'numeric', month: '2-digit', day: '2-digit' } as const;
+const DATE_TIME_PARTS = { ...DATE_PARTS, hour: '2-digit', minute: '2-digit' } as const;
+
+/**
+ * 서버 instant를 시간대 정보 없이 표시해야 하지만 소속 기록의 시간대가 없는 값(검토 결과·맥락 시점 등)의
+ * 읽기 기준. 제품의 서비스 시간대이며 화면에는 이름이 나오지 않는다.
+ */
+export const DEFAULT_DISPLAY_TIME_ZONE = 'Asia/Seoul';
+
 const ISO_DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 const JOURNAL_LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/;
 
@@ -40,11 +59,7 @@ export function formatLocalizedDate(dateOnly: string, locale: Locale): string {
   if (!isSameCalendarDate) {
     throw new Error(`formatLocalizedDate: "${dateOnly}"는 "YYYY-MM-DD" 형식이 아닙니다.`);
   }
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(localDate);
+  return new Intl.DateTimeFormat(locale, DATE_PARTS).format(localDate);
 }
 
 /**
@@ -74,32 +89,26 @@ export function formatJournalOccurredAt(
     throw new Error(`formatJournalOccurredAt: invalid IANA timeZone "${timeZone}".`);
   }
 
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(surrogate);
+  return new Intl.DateTimeFormat(locale, { ...DATE_TIME_PARTS, timeZone: 'UTC' }).format(surrogate);
 }
 
 /**
- * 서버가 준 instant(ISO-8601, `Z` 포함: createdAt·updatedAt)를 기록의 원래 IANA 시간대 기준
- * 벽시계로 표시한다. 화면에 ISO 문자열이 그대로 나오지 않게 하는 표시용이며 값은 바꾸지 않는다
- * (원본은 호출부가 `<time dateTime>`에 둔다). 해석할 수 없는 값은 던지지 않고 원문을 돌려준다.
+ * 서버가 준 instant(ISO-8601, `Z`·오프셋 포함: createdAt·updatedAt·복기 저장 시각 등)를 지정한 IANA 시간대
+ * 기준 벽시계로 표시한다. 시간대는 소속 기록의 `timeZone`을 넘기고, 소속 기록이 없는 값은 생략해
+ * `DEFAULT_DISPLAY_TIME_ZONE`을 쓴다. 표시용이며 값은 바꾸지 않는다. 해석할 수 없는 값은 던지지 않고
+ * 원문을 돌려준다.
  */
-export function formatJournalInstant(instant: string, timeZone: string, locale: Locale): string {
+export function formatJournalInstant(
+  instant: string,
+  timeZone: string | undefined,
+  locale: Locale,
+): string {
   const parsed = new Date(instant);
   if (Number.isNaN(parsed.getTime())) return instant;
   try {
     return new Intl.DateTimeFormat(locale, {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      ...DATE_TIME_PARTS,
+      timeZone: timeZone ?? DEFAULT_DISPLAY_TIME_ZONE,
     }).format(parsed);
   } catch {
     return instant;

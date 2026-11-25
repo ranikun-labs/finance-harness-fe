@@ -334,7 +334,7 @@ export function JournalDetailPage({ readPort }: JournalDetailPageProps) {
       : t('app.journalDetail.headerTitle');
 
   return (
-    <Stack gap="group" className="min-h-full px-5 pt-4 pb-10 sm:px-6 sm:pt-6">
+    <Stack gap="group" className="journal-detail-page min-h-full px-5 pt-4 pb-10 sm:px-6 sm:pt-6">
       <DetailHeader
         title={headerTitle}
         backLabel={t('app.journalDetail.backLabel')}

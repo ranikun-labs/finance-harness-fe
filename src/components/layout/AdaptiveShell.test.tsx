@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -171,6 +171,45 @@ describe('adaptive app shell', () => {
       const nav = screen.getByRole('navigation', { name: '주요 화면 이동' });
       const main = screen.getByRole('main');
       expect(main.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('puts product name, primary navigation and sign-in on one header line in the tablet top shell', () => {
+      stubViewport(true);
+      renderShell();
+
+      const header = screen.getByRole('banner');
+      const name = within(header).getByRole('link', { name: 'AI 투자 체크리스트' });
+      const nav = within(header).getByRole('navigation', { name: '주요 화면 이동' });
+      const signIn = within(header).getByRole('link', { name: '로그인' });
+      // 의미 순서 = 시각 순서: 제품 이름 → 내비 → 로그인.
+      expect(name.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(nav.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      // 기존 내비 계약(BOTTOM_TABS, aria-current)과 단일 내비·단일 main은 그대로다.
+      expect(
+        within(nav)
+          .getAllByRole('link')
+          .map((link) => link.textContent),
+      ).toEqual(['검토', '저널']);
+      expect(within(nav).getByRole('link', { name: '검토' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      expect(screen.getAllByRole('navigation')).toHaveLength(1);
+      expect(screen.getAllByRole('main')).toHaveLength(1);
+      expect(nav.compareDocumentPosition(screen.getByRole('main'))).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+      // 자체 막대(테두리·높이)를 갖지 않는다 — 한 줄은 헤더가 소유한다.
+      expect(nav).not.toHaveClass('border-b', 'md:min-h-16');
+    });
+
+    it('keeps the skip link first and the navigation outside the header when it is not a top shell', () => {
+      stubViewport(false);
+      renderShell();
+      expect(within(screen.getByRole('banner')).queryByRole('navigation')).toBeNull();
+      expect(document.querySelector('a')).toBe(
+        screen.getByRole('link', { name: '본문으로 건너뛰기' }),
+      );
     });
 
     it('keeps keyboard focus on the same primary tab when the 768 boundary remounts the navigation', () => {

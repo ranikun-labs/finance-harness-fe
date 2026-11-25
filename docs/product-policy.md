@@ -25,6 +25,20 @@ Home dashboard와 legacy three-destination navigation은 P0 Primary Surface로 �
 - 승인된 2-pane은 Journal List | Detail, Original Journal | Retrospective뿐이다.
 - Review Question | Result 강제 2-pane, 3-pane, trading-terminal 밀도는 만들지 않는다.
 
+## 시각 표기
+
+사용자에게 보이는 날짜·시각 표기 규칙은 하나다. 규칙의 코드 소유자는 [`src/lib/date.ts`](../src/lib/date.ts)
+한 곳이며, 화면 코드는 `Intl.DateTimeFormat`·`toLocale*`를 직접 부르지 않는다(`date.test.ts`가 소스를 대조한다).
+
+| 항목        | 규칙                                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 날짜        | 숫자 `YYYY. MM. DD.`(ko) / `MM/DD/YYYY`(en), 월·일 2자리                                                                                                                        |
+| 시각        | 날짜 뒤 `HH:mm`(분까지, 초 없음), 시간 주기는 locale 기본(ko 오전/오후, en AM/PM)                                                                                               |
+| 적용 범위   | 기록 시점 · 생성/수정 · 복기 저장 시각 · 검토 결과·맥락 시점 · 목록 행 — 화면 전체                                                                                              |
+| 읽는 시간대 | 기록 시점은 저장된 벽시계 그대로. instant(생성/수정·복기 저장)는 소속 기록의 시간대, 소속 기록이 없는 값(검토 결과·맥락 시점)은 서비스 기본 시간대(`DEFAULT_DISPLAY_TIME_ZONE`) |
+| 시간대 이름 | 화면에 노출하지 않는다(IANA·약어·오프셋 모두. F1-05 공통 AC 5)                                                                                                                  |
+| 불변        | 저장 시각·도메인 값·`<time dateTime>` 원본은 바꾸지 않는다. 해석 불가 값은 던지지 않고 원문을 보인다                                                                            |
+
 ## 금지 UI
 
 다음과 같이 보이는 UI를 어떤 화면에서도 만들지 않는다:

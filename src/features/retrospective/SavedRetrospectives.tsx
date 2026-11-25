@@ -6,6 +6,7 @@ import { Notice } from '@/components/ui/notice';
 import { TextField } from '@/components/ui/text-field';
 import { useJournalEditFetch } from '@/features/journal-edit/JournalEditContext';
 import { useTranslation } from '@/i18n/I18nContext';
+import { formatJournalInstant } from '@/lib/date';
 
 interface Retrospective {
   retrospectiveId: string;
@@ -23,10 +24,13 @@ type LoadState = 'loading' | 'ready' | 'error';
 export function SavedRetrospectives({
   journalId,
   revision,
+  timeZone,
   onDirtyChange,
 }: {
   journalId: string;
   revision: number;
+  /** 소속 기록의 IANA 시간대. 저장 시각을 기록 상세와 같은 벽시계로 보이게 한다(이름은 보이지 않는다). */
+  timeZone?: string;
   onDirtyChange?: (dirty: boolean) => void;
 }) {
   const fetchOverride = useJournalEditFetch();
@@ -291,10 +295,7 @@ export function SavedRetrospectives({
               className="border-border flex min-w-0 flex-col gap-3 border-t py-5"
             >
               <time className="type-meta text-text-secondary" dateTime={item.createdAt}>
-                {new Intl.DateTimeFormat(korean ? 'ko-KR' : 'en-US', {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                }).format(new Date(item.createdAt))}
+                {formatJournalInstant(item.createdAt, timeZone, locale)}
               </time>
               <dl className="flex flex-col gap-3">
                 {fields.map(([name, label]) => {

@@ -2,16 +2,9 @@ import { Card } from '@/components/ui/card';
 import { InfoList, InfoRow } from '@/components/ui/info-row';
 import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
 import { useTranslation } from '@/i18n/I18nContext';
+import { formatJournalInstant } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { localize, type LocalizedText } from '@/mocks/reviewResult';
-
-function formatCapturedAt(value: string, locale: 'ko' | 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Seoul',
-  }).format(new Date(value));
-}
 
 function StatusMark({ checked, label }: { checked: boolean; label: string }) {
   return (
@@ -166,7 +159,7 @@ export function DecisionContextCapturePanel({
                 </dt>
                 <dd>
                   <time dateTime={context.capturedAt}>
-                    {formatCapturedAt(context.capturedAt, locale)}
+                    {formatJournalInstant(context.capturedAt, undefined, locale)}
                   </time>
                 </dd>
               </div>
@@ -266,7 +259,7 @@ export function DecisionContextSnapshotView({ context }: { context: DecisionCont
           </InfoRow>
           <InfoRow layout="stack" label={t('app.journalDetail.decisionContext.capturedAtLabel')}>
             <time dateTime={context.capturedAt}>
-              {formatCapturedAt(context.capturedAt, locale)}
+              {formatJournalInstant(context.capturedAt, undefined, locale)}
             </time>
           </InfoRow>
         </InfoList>

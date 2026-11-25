@@ -386,6 +386,38 @@ describe('AskPage result layout by breakpoint (F1-G7)', () => {
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
+  it('labels the hand-off block once at 1280+ (aside owns the name, no nested duplicate)', () => {
+    stubDesktopMatchMedia(true);
+    const { container } = renderPage(buildAppAskPath('이름 중복 없음'));
+
+    const aside = screen.getByTestId('review-result-aside');
+    expect(aside).toHaveAttribute('aria-labelledby', 'review-handoff-heading');
+    expect(aside.querySelector('[aria-labelledby]')).toBeNull();
+    expect(container.querySelectorAll('[aria-labelledby="review-handoff-heading"]')).toHaveLength(
+      1,
+    );
+    // 보조 열이 높이가 낮은 창에서 잘리지 않도록 sticky 열 안에서 스크롤한다.
+    expect(aside.className).toContain('sticky');
+    expect(aside.className).toContain('max-h-[calc(100dvh-5.5rem)]');
+    expect(aside.className).toContain('overflow-y-auto');
+  });
+
+  it('keeps the narrow hand-off as one labelled region below 1280', () => {
+    stubDesktopMatchMedia(false);
+    const { container } = renderPage(buildAppAskPath('좁은 화면 이름'));
+    expect(container.querySelectorAll('[aria-labelledby="review-handoff-heading"]')).toHaveLength(
+      1,
+    );
+    expect(screen.getByRole('region', { name: ko.app.ask.handoff.heading })).toBeInTheDocument();
+  });
+
+  it('centers the back/title row on the body column at 1280+ result only', () => {
+    stubDesktopMatchMedia(true);
+    renderPage(buildAppAskPath('머리 정렬'));
+    const header = screen.getByRole('link', { name: ko.app.ask.header.backLabel }).parentElement!;
+    expect(header.className).toContain('xl:w-[calc(100%-332px)]');
+  });
+
   it('keeps the same hand-off behavior from the side column', () => {
     stubDesktopMatchMedia(true);
     renderPage(buildAppAskPath('보조 열 이동'));
