@@ -182,6 +182,8 @@ export function DecisionContextCapturePanel({
                   <input
                     type="checkbox"
                     checked={evidence.included}
+                    // 저장 포함은 아직 지원하지 않으므로 선택을 막는다(표시 전용 참고 사실).
+                    disabled
                     onChange={() => onEvidenceChange(evidence.id)}
                     className="accent-primary mt-1 size-4 shrink-0"
                   />

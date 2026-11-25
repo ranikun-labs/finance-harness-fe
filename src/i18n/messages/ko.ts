@@ -258,7 +258,7 @@ export const ko: Messages = {
         partialNarrow: '부분 결과는 오류가 아니라 정상적인 불완전 결과입니다.',
       },
       recordQuestions: {
-        heading: '다음 기록에 남길 질문',
+        heading: '기록 작성 때 참고할 질문',
         items: {
           businessAssumption: '내가 중요하게 본 사업 전제는 무엇인가?',
           evidenceToCheck: '산업과 실적 기대 중 확인이 더 필요한 것은 무엇인가?',
@@ -271,7 +271,7 @@ export const ko: Messages = {
         investment: {
           title: '판단 기록 남기기',
           description:
-            '내 판단과 이유를 직접 적어요. 검토 질문과 확인 상태를 함께 남길지는 작성 화면에서 골라요.',
+            '내 판단과 이유를 직접 적어요. 검토 질문과 확인 상태는 작성 화면에서 참고로만 보여요. 아직 기록에 저장되지 않아요.',
         },
         study: {
           title: '학습 노트로 남기기',
@@ -395,20 +395,21 @@ export const ko: Messages = {
         returnToReviewDirtyConfirm: '작성 중인 내용이 사라집니다. 검토 결과로 돌아갈까요?',
       },
       decisionContext: {
-        title: '검토 맥락 함께 남기기',
-        switchLabel: '검토 맥락 포함',
-        enabledDescription: '이 판단을 내릴 때 참고한 검토 맥락도 함께 남깁니다.',
-        disabledDescription: '이 판단에는 검토 맥락을 포함하지 않습니다.',
-        minimumLabel: '항상 포함 · 최소 기록',
+        title: '검토 맥락 (참고용)',
+        switchLabel: '검토 맥락 표시',
+        enabledDescription: '이 화면에서 검토 맥락을 참고로 보여 드려요. 기록에는 저장되지 않아요.',
+        disabledDescription: '검토 맥락을 숨기고 있어요.',
+        minimumLabel: '항상 표시 · 저장되지 않음',
         originalQuestionLabel: '그때 내가 한 질문',
         checklistLabel: '확인 항목과 그때의 확인 상태',
-        capturedAtLabel: '저장 시점',
+        capturedAtLabel: '검토 시점',
         checked: '확인함',
         unchecked: '확인하지 않음',
-        optionalLabel: '선택 포함 · 확인된 사실',
-        optionalDescription: '함께 남길 사실만 선택할 수 있어요.',
+        optionalLabel: '참고한 확인된 사실 · 저장되지 않음',
+        optionalDescription:
+          '저장 포함은 아직 지원하지 않아요. 여기서 고른 사실은 기록에 저장되지 않아요.',
         immutableNotice:
-          '질문, 체크리스트 버전, 확인 상태와 기록 시점을 당시 상태 그대로 남깁니다. AI 검토 결과 전체를 저장하지는 않습니다.',
+          '질문, 체크리스트 버전, 확인 상태와 검토 시점을 당시 상태 그대로 보여 드려요. AI 검토 결과 전체는 보관하지 않아요.',
       },
       form: {
         optional: '선택',
