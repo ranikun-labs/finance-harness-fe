@@ -37,6 +37,8 @@ type Props = {
   onFormEdited?: () => void;
   submitState?: JournalSubmitState;
   createMode?: 'test' | 'production';
+  /** 기록 시점 다음, 제출 앞에 놓이는 마지막 필드 묶음(검토 맥락). UX 계약 순서의 끝이다. */
+  contextSection?: React.ReactNode;
 };
 
 export function InvestmentJournalForm({
@@ -45,6 +47,7 @@ export function InvestmentJournalForm({
   onFormEdited,
   submitState,
   createMode = 'test',
+  contextSection,
 }: Props) {
   const { t } = useTranslation();
   const initialValues = useMemo(() => createInitialValues(), []);
@@ -271,6 +274,7 @@ export function InvestmentJournalForm({
         onBlur={() => setTouched((v) => ({ ...v, occurredAt: true }))}
         onChange={(event) => update('occurredAt', event.target.value)}
       />
+      {contextSection}
       {confirmed && !testFlow && (
         <p role="status" className="text-foreground text-sm">
           {t('app.journalNew.form.validUnsaved')}

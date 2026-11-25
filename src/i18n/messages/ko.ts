@@ -407,6 +407,8 @@ export const ko: Messages = {
         unchecked: '확인하지 않음',
         optionalLabel: '선택 포함 · 확인된 사실',
         optionalDescription: '함께 남길 사실만 선택할 수 있어요.',
+        detailsSummary:
+          '맥락 자세히 보기 · 확인 항목 {{checklist}}개 · 선택 가능한 사실 {{facts}}개',
         immutableNotice:
           '질문, 체크리스트 버전, 확인 상태와 기록 시점을 당시 상태 그대로 남깁니다. AI 검토 결과 전체를 저장하지는 않습니다.',
       },

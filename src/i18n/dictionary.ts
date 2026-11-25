@@ -283,6 +283,7 @@ export interface Messages {
         unchecked: string;
         optionalLabel: string;
         optionalDescription: string;
+        detailsSummary: string;
         immutableNotice: string;
       };
       form: {

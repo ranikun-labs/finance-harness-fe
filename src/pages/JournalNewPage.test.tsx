@@ -494,6 +494,46 @@ describe('JournalNewPage', () => {
     expect(within(panel).getAllByRole('checkbox')[0]).not.toBeChecked();
   });
 
+  it('places the review context after the form fields, before the submit action', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: APP_ROUTE_PATHS.journalNew,
+            search: '?type=investment',
+            state: {
+              decisionContext: SAMPLE_DECISION_CONTEXT,
+              reviewHandoff: REVIEW_DECISION_HANDOFF,
+            },
+          },
+        ]}
+      >
+        <I18nProvider locale="ko">
+          <JournalNavigationHarness />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+    const form = document.querySelector('form')!;
+    const context = screen.getByTestId('decision-context-capture');
+    const legend = (text: string) =>
+      screen.getByText(text, { selector: 'legend' }).closest('fieldset')!;
+    const ordered = [
+      screen.getByLabelText('대상'),
+      legend('어떤 판단을 내렸나요?'),
+      screen.getByLabelText('왜 그렇게 판단했나요?'),
+      legend('판단 당시 상태는 어땠나요? (선택)'),
+      screen.getByRole('button', { name: '기록 시점 변경' }),
+      context,
+      screen.getByRole('button', { name: '입력 확인' }),
+    ];
+    expect(form).toContainElement(context);
+    ordered.slice(1).forEach((node, index) => {
+      expect(
+        ordered[index].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+  });
+
   it('guards context selection changes and clears the warning when restored', () => {
     render(
       <MemoryRouter
