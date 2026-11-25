@@ -174,7 +174,7 @@ test('live model answer through Finance reaches the existing analysis view', asy
     }
   });
   try {
-    await startReview(page, 'What basic points should I check when diversifying a synthetic portfolio?');
+    await startReview(page, 'What are the basic factors to consider when diversifying a hypothetical portfolio?');
     await page.getByLabel('I reviewed the checklist').check();
     await page.getByRole('button', { name: 'Analyze', exact: true }).click();
     // 실패 상태여도 증거를 남기도록 응답 도착을 먼저 기다린다.
