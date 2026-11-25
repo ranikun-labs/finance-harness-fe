@@ -105,3 +105,16 @@ describe('검토 → 기록 안내 문구 계약 (F-04)', () => {
     expect(en.app.ask.handoff.investment.description).not.toMatch(/keep the review/);
   });
 });
+
+describe('접힌 맥락 요약 문구 (F-02 · F-04)', () => {
+  it('요약은 참고 사실의 전체 개수와 "저장되지 않음"을 보여 준다', () => {
+    renderPanel();
+    const total = SAMPLE_DECISION_CONTEXT.optionalEvidence.length;
+    const summary = ko.app.journalNew.decisionContext.detailsSummary
+      .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
+      .replace('{{facts}}', String(total));
+    expect(screen.getByText(summary)).toBeInTheDocument();
+    expect(summary).toContain('저장되지 않음');
+    expect(summary).not.toContain('선택');
+  });
+});

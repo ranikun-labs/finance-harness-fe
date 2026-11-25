@@ -414,6 +414,8 @@ export const ko: Messages = {
         checked: '확인함',
         unchecked: '확인하지 않음',
         optionalLabel: '참고한 확인된 사실 · 저장되지 않음',
+        detailsSummary:
+          '맥락 자세히 보기 · 확인 항목 {{checklist}}개 · 참고 사실 {{facts}}개 · 저장되지 않음',
         optionalDescription:
           '저장 포함은 아직 지원하지 않아요. 표시된 사실은 기록에 저장되지 않아요.',
         immutableNotice:

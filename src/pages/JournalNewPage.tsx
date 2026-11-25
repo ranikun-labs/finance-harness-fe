@@ -334,7 +334,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
             type="button"
             onClick={returnToJournal}
             disabled={submitState.status === 'submitting'}
-            className="text-primary mb-2 min-h-11 rounded-md text-left text-sm font-semibold underline-offset-4 hover:underline"
+            className="text-primary mb-2 min-h-11 min-w-11 rounded-md pr-3 text-left text-sm font-semibold underline-offset-4 hover:underline"
           >
             <span aria-hidden="true">←</span> {t('app.journalNew.cancelDirectEntry')}
           </button>
@@ -393,29 +393,31 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
           {t('app.journalNew.typeChange.action')}
         </button>
       </header>
-      {decisionContext && (
-        <DecisionContextCapturePanel
-          context={decisionContext}
-          enabled={decisionContextEnabled}
-          onEnabledChange={setDecisionContextEnabled}
-          onEvidenceChange={(evidenceId) => {
-            setDecisionContext((current) =>
-              current
-                ? {
-                    ...current,
-                    optionalEvidence: current.optionalEvidence.map((evidence) =>
-                      evidence.id === evidenceId
-                        ? { ...evidence, included: !evidence.included }
-                        : evidence,
-                    ),
-                  }
-                : current,
-            );
-          }}
-        />
-      )}
       {resolution.type === 'investment' ? (
         <InvestmentJournalForm
+          contextSection={
+            decisionContext ? (
+              <DecisionContextCapturePanel
+                context={decisionContext}
+                enabled={decisionContextEnabled}
+                onEnabledChange={setDecisionContextEnabled}
+                onEvidenceChange={(evidenceId) => {
+                  setDecisionContext((current) =>
+                    current
+                      ? {
+                          ...current,
+                          optionalEvidence: current.optionalEvidence.map((evidence) =>
+                            evidence.id === evidenceId
+                              ? { ...evidence, included: !evidence.included }
+                              : evidence,
+                          ),
+                        }
+                      : current,
+                  );
+                }}
+              />
+            ) : undefined
+          }
           onDirtyChange={setFormDirty}
           onValidSubmit={createPort ? submit : undefined}
           onFormEdited={createPort ? formEdited : undefined}

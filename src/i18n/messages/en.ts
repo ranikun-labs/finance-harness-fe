@@ -423,6 +423,8 @@ export const en: Messages = {
         checked: 'Checked',
         unchecked: 'Not checked',
         optionalLabel: 'Verified facts for reference · not saved',
+        detailsSummary:
+          'Context details · {{checklist}} checks · {{facts}} facts for reference · not saved',
         optionalDescription:
           'Saving facts is not supported yet. Facts shown here are not saved with this record.',
         immutableNotice:

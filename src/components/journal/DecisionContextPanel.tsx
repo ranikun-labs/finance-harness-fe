@@ -1,7 +1,13 @@
+import { useState } from 'react';
+
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Disclosure } from '@/components/ui/disclosure';
 import { InfoList, InfoRow } from '@/components/ui/info-row';
 import type { DecisionContextSnapshot } from '@/mocks/decisionContext';
+import { BREAKPOINTS } from '@/constants/layout';
 import { useTranslation } from '@/i18n/I18nContext';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { formatJournalInstant } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { localize, type LocalizedText } from '@/mocks/reviewResult';
@@ -49,6 +55,9 @@ export interface DecisionContextCapturePanelProps {
 /**
  * Review → Journal presentation seam. This panel owns no submit/API data; it only
  * displays the context view-model and the local optional-evidence selection.
+ *
+ * 작성 폼의 맨 끝(기록 시점 다음)에 놓이는 마지막 필드 묶음이다(UX 계약 순서). 본문(질문·확인 항목·선택 사실)은
+ * 접는 Disclosure이고, 폰(768 미만)에서는 한 줄 요약만 보이게 접힌 채 시작한다.
  */
 export function DecisionContextCapturePanel({
   context,
@@ -58,14 +67,19 @@ export function DecisionContextCapturePanel({
 }: DecisionContextCapturePanelProps) {
   const { locale, t } = useTranslation();
   const panelId = 'decision-context-capture-details';
+  // 처음 열 때만 viewport를 따른다(폰 접힘 / 태블릿 이상 펼침). 이후 열림 상태는 native <details>가 소유해
+  // 입력 중 회전·리사이즈가 사용자가 고른 상태를 되돌리지 않는다.
+  const wide = useMediaQuery(`(min-width: ${BREAKPOINTS.tablet}px)`);
+  const [initiallyOpen] = useState(wide);
 
   return (
     <section
-      className="bg-card rounded-card mx-4 mb-2 overflow-hidden"
+      className="bg-card rounded-card overflow-hidden"
       aria-labelledby="decision-context-capture-heading"
       data-testid="decision-context-capture"
     >
-      <div className="flex items-start gap-3 p-4">
+      <div className="flex items-start gap-1 p-4 pb-2">
+        {/* 터치 영역은 44×44, 보이는 트랙은 44×24다. 포커스 표시는 전역 2px outline이 이 44×44 버튼에 붙는다. */}
         <button
           type="button"
           role="switch"
@@ -73,18 +87,22 @@ export function DecisionContextCapturePanel({
           aria-checked={enabled}
           aria-controls={panelId}
           onClick={() => onEnabledChange(!enabled)}
-          className={cn(
-            'relative mt-0.5 inline-flex h-6 w-11 shrink-0 rounded-full p-1 transition-colors',
-            enabled ? 'bg-primary' : 'bg-muted',
-          )}
+          className="-mt-1.5 -ml-1 inline-flex size-11 shrink-0 items-center justify-center rounded-xl"
         >
           <span
             aria-hidden="true"
             className={cn(
-              'size-4 rounded-full bg-white shadow-sm transition-transform',
-              enabled && 'translate-x-5',
+              'relative inline-flex h-6 w-11 rounded-full p-1 transition-colors',
+              enabled ? 'bg-primary' : 'bg-muted',
             )}
-          />
+          >
+            <span
+              className={cn(
+                'size-4 rounded-full bg-white shadow-sm transition-transform',
+                enabled && 'translate-x-5',
+              )}
+            />
+          </span>
         </button>
         <div className="min-w-0 flex-1 space-y-1">
           <h2 id="decision-context-capture-heading" className="text-sm font-bold">
@@ -102,107 +120,115 @@ export function DecisionContextCapturePanel({
       </div>
 
       {enabled && (
-        <div id={panelId} className="space-y-5 px-4 pt-1 pb-4">
-          <div className="space-y-3">
-            <p className="text-text-tertiary text-xs font-bold tracking-wider uppercase">
-              {t('app.journalNew.decisionContext.minimumLabel')}
-            </p>
-            <dl className="space-y-3 text-sm">
-              <div className="space-y-1">
-                <dt className="text-muted-foreground text-xs font-semibold">
-                  {t('app.journalNew.decisionContext.originalQuestionLabel')}
-                </dt>
-                <dd className="leading-6 font-semibold wrap-anywhere">
-                  {context.originalQuestion}
-                </dd>
-              </div>
-              <div className="space-y-2">
-                <dt className="text-muted-foreground text-xs font-semibold">
-                  {t('app.journalNew.decisionContext.checklistLabel')} · {context.checklistVersion}
-                </dt>
-                <dd>
-                  <ul className="space-y-2">
-                    {context.checklist.map((item) => (
-                      <li key={item.id} className="flex min-w-0 items-start gap-2">
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md text-xs font-bold',
-                            item.checked
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground',
-                          )}
-                        >
-                          {item.checked ? '✓' : '—'}
-                        </span>
-                        <span className="flex min-w-0 flex-1 items-start justify-between gap-2">
-                          <LocalizedTextBlock text={item.wording} locale={locale} />
-                          <StatusMark
-                            checked={item.checked}
-                            label={
+        <Disclosure
+          id={panelId}
+          className="mx-4 mb-2"
+          open={initiallyOpen}
+          summary={t('app.journalNew.decisionContext.detailsSummary', {
+            checklist: String(context.checklist.length),
+            // 접힌 요약은 참고로 보여 주는 사실의 전체 개수다. 저장되지 않으므로 선택 수를 세지 않는다.
+            facts: String(context.optionalEvidence.length),
+          })}
+        >
+          <div className="space-y-5 pb-2">
+            <div className="space-y-3">
+              <p className="text-text-tertiary text-xs font-bold tracking-wider uppercase">
+                {t('app.journalNew.decisionContext.minimumLabel')}
+              </p>
+              <dl className="space-y-3 text-sm">
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-xs font-semibold">
+                    {t('app.journalNew.decisionContext.originalQuestionLabel')}
+                  </dt>
+                  <dd className="leading-6 font-semibold wrap-anywhere">
+                    {context.originalQuestion}
+                  </dd>
+                </div>
+                <div className="space-y-2">
+                  <dt className="text-muted-foreground text-xs font-semibold">
+                    {t('app.journalNew.decisionContext.checklistLabel')} ·{' '}
+                    {context.checklistVersion}
+                  </dt>
+                  <dd>
+                    <ul className="space-y-2">
+                      {context.checklist.map((item) => (
+                        <li key={item.id} className="flex min-w-0 items-start gap-2">
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md text-xs font-bold',
                               item.checked
-                                ? t('app.journalNew.decisionContext.checked')
-                                : t('app.journalNew.decisionContext.unchecked')
-                            }
-                          />
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-muted-foreground text-xs font-semibold">
-                  {t('app.journalNew.decisionContext.capturedAtLabel')}
-                </dt>
-                <dd>
-                  <time dateTime={context.capturedAt}>
-                    {formatJournalInstant(context.capturedAt, undefined, locale)}
-                  </time>
-                </dd>
-              </div>
-            </dl>
-          </div>
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground',
+                            )}
+                          >
+                            {item.checked ? '✓' : '—'}
+                          </span>
+                          <span className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                            <LocalizedTextBlock text={item.wording} locale={locale} />
+                            <StatusMark
+                              checked={item.checked}
+                              label={
+                                item.checked
+                                  ? t('app.journalNew.decisionContext.checked')
+                                  : t('app.journalNew.decisionContext.unchecked')
+                              }
+                            />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-xs font-semibold">
+                    {t('app.journalNew.decisionContext.capturedAtLabel')}
+                  </dt>
+                  <dd>
+                    <time dateTime={context.capturedAt}>
+                      {formatJournalInstant(context.capturedAt, undefined, locale)}
+                    </time>
+                  </dd>
+                </div>
+              </dl>
+            </div>
 
-          <fieldset className="space-y-3">
-            <legend className="text-text-tertiary text-xs font-bold tracking-wider uppercase">
-              {t('app.journalNew.decisionContext.optionalLabel')}
-            </legend>
-            <p className="text-muted-foreground text-xs leading-5">
-              {t('app.journalNew.decisionContext.optionalDescription')}
-            </p>
-            <div className="space-y-2">
-              {context.optionalEvidence.map((evidence) => (
-                <label
-                  key={evidence.id}
-                  className="bg-inset rounded-inset flex min-w-0 cursor-pointer items-start gap-3 p-3"
-                >
-                  <input
-                    type="checkbox"
+            <fieldset className="space-y-1">
+              <legend className="text-text-tertiary text-xs font-bold tracking-wider uppercase">
+                {t('app.journalNew.decisionContext.optionalLabel')}
+              </legend>
+              <p className="text-muted-foreground pt-2 text-xs leading-5">
+                {t('app.journalNew.decisionContext.optionalDescription')}
+              </p>
+              <div>
+                {context.optionalEvidence.map((evidence) => (
+                  <Checkbox
+                    key={evidence.id}
                     checked={evidence.included}
                     // 저장 포함은 아직 지원하지 않으므로 선택을 막는다(표시 전용 참고 사실).
                     disabled
                     onChange={() => onEvidenceChange(evidence.id)}
-                    className="accent-primary mt-1 size-4 shrink-0"
+                    label={
+                      <span className="block min-w-0 space-y-1 text-sm">
+                        <span className="block leading-5 font-semibold">
+                          <LocalizedTextBlock text={evidence.claim} locale={locale} />
+                        </span>
+                        <span className="text-muted-foreground block text-xs leading-5">
+                          <LocalizedTextBlock text={evidence.source} locale={locale} /> ·{' '}
+                          {evidence.asOf}
+                        </span>
+                      </span>
+                    }
                   />
-                  <span className="min-w-0 flex-1 space-y-1 text-sm">
-                    <span className="block leading-5 font-semibold">
-                      <LocalizedTextBlock text={evidence.claim} locale={locale} />
-                    </span>
-                    <span className="text-muted-foreground block text-xs leading-5">
-                      <LocalizedTextBlock text={evidence.source} locale={locale} /> ·{' '}
-                      {evidence.asOf}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+                ))}
+              </div>
+            </fieldset>
 
-          <p className="text-muted-foreground border-border border-t border-dashed pt-3 text-xs leading-5">
-            {t('app.journalNew.decisionContext.immutableNotice')}
-          </p>
-        </div>
+            <p className="text-muted-foreground border-border border-t border-dashed pt-3 text-xs leading-5">
+              {t('app.journalNew.decisionContext.immutableNotice')}
+            </p>
+          </div>
+        </Disclosure>
       )}
     </section>
   );
