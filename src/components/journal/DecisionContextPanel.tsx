@@ -79,7 +79,7 @@ export function DecisionContextCapturePanel({
       data-testid="decision-context-capture"
     >
       <div className="flex items-start gap-1 p-4 pb-2">
-        {/* 터치 영역은 44×44, 보이는 트랙은 44×24다. */}
+        {/* 터치 영역은 44×44, 보이는 트랙은 44×24다. 포커스 표시는 전역 2px outline이 이 44×44 버튼에 붙는다. */}
         <button
           type="button"
           role="switch"
@@ -87,12 +87,12 @@ export function DecisionContextCapturePanel({
           aria-checked={enabled}
           aria-controls={panelId}
           onClick={() => onEnabledChange(!enabled)}
-          className="group -mt-1.5 -ml-1 inline-flex size-11 shrink-0 items-center justify-center rounded-full outline-none"
+          className="-mt-1.5 -ml-1 inline-flex size-11 shrink-0 items-center justify-center rounded-xl"
         >
           <span
             aria-hidden="true"
             className={cn(
-              'relative inline-flex h-6 w-11 rounded-full p-1 transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2',
+              'relative inline-flex h-6 w-11 rounded-full p-1 transition-colors',
               enabled ? 'bg-primary' : 'bg-muted',
             )}
           >
