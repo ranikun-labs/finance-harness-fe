@@ -68,7 +68,6 @@ function JournalListPageContent({
 
   return (
     <>
-      <DeletedJournalList />
       <JournalList
         entries={state.items}
         filter={filter}
@@ -84,6 +83,8 @@ function JournalListPageContent({
         onLoadMore={loadMore}
         onSelectableRecordsChange={setHasSelectableRecords}
       />
+      {/* 삭제한 기록은 목록 끝의 텍스트 링크다(첫 줄은 목록 머리). */}
+      <DeletedJournalList />
     </>
   );
 }
