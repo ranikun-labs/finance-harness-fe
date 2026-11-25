@@ -26,6 +26,19 @@ export const en: Messages = {
     appName: 'AI Investment Checklist',
     loading: 'Loading…',
   },
+  theme: {
+    trigger: 'Appearance',
+    title: 'Appearance',
+    description:
+      'Saved only in this browser on this device. It does not apply to your account or other devices.',
+    close: 'Close',
+    system: 'Follow system',
+    light: 'Light',
+    dark: 'Dark',
+    systemHint: 'Changes with your device light/dark setting.',
+    current: 'Current: {{mode}}',
+    notPersisted: 'This browser blocked saving, so the choice applies to this screen only.',
+  },
   nav: {
     review: 'Review',
     journal: 'Journal',

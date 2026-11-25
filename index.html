@@ -3,6 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2f4f6" />
+    <!--
+      첫 페인트 전에 화면 모드를 적용해 라이트→다크 깜빡임을 막는다. 규칙·키·색은 src/theme/theme.ts와
+      같아야 하며 theme.test.ts가 둘의 결과를 대조한다. 실패는 모두 삼키고 라이트로 둔다.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = null;
+          try {
+            stored = window.localStorage.getItem('finance-harness:theme');
+          } catch (e) {}
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              typeof window.matchMedia === 'function' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          if (dark) root.classList.add('dark');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          var scheme = document.querySelector('meta[name="color-scheme"]');
+          if (scheme) scheme.setAttribute('content', dark ? 'dark' : 'light');
+          var color = document.querySelector('meta[name="theme-color"]');
+          if (color) color.setAttribute('content', dark ? '#0f1114' : '#f2f4f6');
+        } catch (e) {}
+      })();
+    </script>
     <title>AI 투자 체크리스트</title>
   </head>
   <body>

@@ -38,6 +38,18 @@ export interface Messages {
     appName: string;
     loading: string;
   };
+  theme: {
+    trigger: string;
+    title: string;
+    description: string;
+    close: string;
+    system: string;
+    light: string;
+    dark: string;
+    systemHint: string;
+    current: string;
+    notPersisted: string;
+  };
   nav: {
     review: string;
     journal: string;

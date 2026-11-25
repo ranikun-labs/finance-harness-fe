@@ -4,6 +4,7 @@ import { Link, Outlet, matchPath, useLocation } from 'react-router';
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
 import { HeaderNavSlotContext } from '@/components/layout/HeaderNavSlot';
 import { SkipLink } from '@/components/layout/SkipLink';
+import { ThemeSwitcher } from '@/components/layout/ThemeSwitcher';
 import { APP_SHELL_MAX_WIDTH_PX } from '@/constants/layout';
 import { APP_ROUTE_PATHS, AUTH_ROUTE_PATHS } from '@/constants/routes';
 import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
@@ -73,6 +74,7 @@ function AppHeader({ onNavSlot }: { onNavSlot: (node: HTMLDivElement | null) => 
           {t('nav.signIn')}
         </Link>
       )}
+      <ThemeSwitcher />
     </header>
   );
 }
