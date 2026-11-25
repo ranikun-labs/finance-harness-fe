@@ -1,3 +1,4 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
 import type { JournalCreateCommand } from '@/features/journal-new/model/journalCreateCommand';
 import {
   JournalCreatePortError,
@@ -40,7 +41,7 @@ export class HttpJournalCreatePort implements JournalCreatePort {
     let response: Response;
 
     try {
-      response = await this.fetchImpl('/finance/journals', {
+      response = await this.fetchImpl(FINANCE_JOURNALS_PATH, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,36 +2,42 @@ import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { configDefaults, defineConfig } from 'vitest/config';
+import type { ProxyOptions } from 'vite';
 
 const financeApiProxyTarget = process.env.FINANCE_API_PROXY_TARGET?.trim();
+// Optional DEV seam for the reference-login/signup endpoints (/api/v1/auth/finance-reference/*).
+const financeAuthProxyTarget = process.env.FINANCE_AUTH_PROXY_TARGET?.trim();
+
+function buildFinanceProxy(): Record<string, ProxyOptions> {
+  const proxy: Record<string, ProxyOptions> = {};
+  const shared = { changeOrigin: false, secure: false };
+  if (financeApiProxyTarget) {
+    // Legacy same-origin contract (production shape) and the DEV `VITE_FINANCE_API_BASE=/api/finance`
+    // path, rewritten onto the same backend `/finance/**` routes.
+    proxy['/finance'] = { target: financeApiProxyTarget, ...shared };
+    proxy['/api/finance'] = {
+      target: financeApiProxyTarget,
+      ...shared,
+      rewrite: (requestPath) => requestPath.replace(/^\/api\/finance/, '/finance'),
+    };
+  }
+  if (financeAuthProxyTarget) {
+    proxy['/api/v1/auth/finance-reference'] = { target: financeAuthProxyTarget, ...shared };
+  }
+  return proxy;
+}
+
+const financeProxy = buildFinanceProxy();
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Development-only LAN seam. The browser and application code keep the same-origin
-  // `/finance/**` contract; the backend origin is supplied by the local environment once the
-  // Mac mini target is known. No host or port is invented in the repository.
-  ...(financeApiProxyTarget
+  // Development-only LAN seam. The browser and application code keep the same-origin contract;
+  // backend origins are supplied by the local environment. No host or port is invented here.
+  // Used by the local Playwright harness beside `vite preview` as well as `vite` dev.
+  ...(Object.keys(financeProxy).length > 0
     ? {
-        server: {
-          proxy: {
-            '/finance': {
-              target: financeApiProxyTarget,
-              changeOrigin: false,
-              secure: false,
-            },
-          },
-        },
-        // Used only by the local Playwright harness, which starts a test API beside preview.
-        // Normal preview runs remain same-origin and do not invent a backend target.
-        preview: {
-          proxy: {
-            '/finance': {
-              target: financeApiProxyTarget,
-              changeOrigin: false,
-              secure: false,
-            },
-          },
-        },
+        server: { proxy: financeProxy },
+        preview: { proxy: financeProxy },
       }
     : {}),
   resolve: {

@@ -1,3 +1,4 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
 import {
   parseJournalDetailResponse,
   parseJournalListResponse,
@@ -35,7 +36,7 @@ export class HttpJournalReadPort implements JournalReadPort {
     params.set('limit', String(validation.limit));
     if (request.cursor !== undefined) params.set('cursor', request.cursor);
 
-    const result = await this.get(`/finance/journals?${params.toString()}`, request.signal);
+    const result = await this.get(`${FINANCE_JOURNALS_PATH}?${params.toString()}`, request.signal);
     if (result.ok === false) return result;
 
     try {
@@ -54,7 +55,7 @@ export class HttpJournalReadPort implements JournalReadPort {
     }
 
     const result = await this.get(
-      `/finance/journals/${encodeURIComponent(journalId)}`,
+      `${FINANCE_JOURNALS_PATH}/${encodeURIComponent(journalId)}`,
       signal,
       true,
     );

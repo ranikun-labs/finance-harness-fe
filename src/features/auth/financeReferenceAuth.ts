@@ -1,3 +1,5 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
+
 export interface FinanceReferenceCredentials {
   userId: string;
   password: string;
@@ -22,7 +24,8 @@ export type FinanceReferenceAuthErrorCode =
   | 'invalid_response'
   | 'stale_attempt'
   | 'external_request'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'account_exists';
 
 export class FinanceReferenceAuthError extends Error {
   constructor(readonly code: FinanceReferenceAuthErrorCode) {
@@ -42,15 +45,96 @@ interface Snapshot {
 }
 
 const LOGIN_PATH = '/api/v1/auth/finance-reference/login';
-const JOURNAL_PATH = '/finance/journals';
+const SIGNUP_PATH = '/api/v1/auth/finance-reference/signup';
+const JOURNAL_PATH = FINANCE_JOURNALS_PATH;
+const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const JOURNAL_DETAIL_PATTERN = new RegExp(`^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}$`);
+const JOURNAL_LIFECYCLE_PATTERN = new RegExp(
+  `^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}/(delete|restore)$`,
+);
 const MAX_LOGIN_BODY_BYTES = 2048;
 const MAX_USER_ID_BYTES = 128;
 const MAX_PASSWORD_BYTES = 72;
+const MIN_SIGNUP_PASSWORD_BYTES = 10; // Mirrors platform FinanceReferenceSignupService policy.
 const MAX_RESPONSE_TOKEN_BYTES = 8192;
 const MAX_CLIENT_LIFETIME_MS = 330_000; // 300s token lifetime plus the 30s issuer clock skew.
 
 export function isFinanceReferenceAuthEnabled(flag: string | undefined, production: boolean) {
   return flag === 'true' && !production;
+}
+
+/** DEV-only account creation inside the reference panel. Default OFF; never effective in PROD. */
+export function isFinanceReferenceSignupEnabled(flag: string | undefined, production: boolean) {
+  return flag === 'true' && !production;
+}
+
+/**
+ * Client-side mirror of the platform signup policy, for fast feedback only. The server is
+ * authoritative and still answers 400 for anything this misses.
+ */
+export interface FinanceReferenceSignupCredentials {
+  email: string;
+  password: string;
+}
+
+export function validateFinanceReferenceSignup(credentials: FinanceReferenceSignupCredentials) {
+  const email = credentials.email.trim();
+  const passwordBytes = new TextEncoder().encode(credentials.password).byteLength;
+  const hasLetter = /[A-Za-z]/.test(credentials.password);
+  const hasDigit = /[0-9]/.test(credentials.password);
+  if (
+    email === '' ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    new TextEncoder().encode(email).byteLength > 254 ||
+    passwordBytes < MIN_SIGNUP_PASSWORD_BYTES ||
+    passwordBytes > MAX_PASSWORD_BYTES ||
+    !hasLetter ||
+    !hasDigit ||
+    credentials.password.toLowerCase() === email.toLowerCase() ||
+    [...credentials.password].some((ch) => ch.charCodeAt(0) < 0x20 || ch.charCodeAt(0) === 0x7f)
+  ) {
+    throw new FinanceReferenceAuthError('invalid_request');
+  }
+  return { email, password: credentials.password };
+}
+
+/** DEV signup only. Creates an account; it never issues a token, so the user logs in afterwards. */
+export class FinanceReferenceSignupPort {
+  constructor(
+    private readonly fetchImpl: FinanceReferenceFetch = globalThis.fetch.bind(globalThis),
+  ) {}
+
+  async signup(
+    credentials: FinanceReferenceSignupCredentials,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const validated = validateFinanceReferenceSignup(credentials);
+
+    const init: RequestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(validated),
+      credentials: 'omit',
+      cache: 'no-store',
+    };
+    if (signal) init.signal = signal;
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(SIGNUP_PATH, init);
+    } catch {
+      throw new FinanceReferenceAuthError('unavailable');
+    }
+
+    if (response.status === 201) return;
+    if (response.status === 400) throw new FinanceReferenceAuthError('invalid_request');
+    if (response.status === 409) throw new FinanceReferenceAuthError('account_exists');
+    if (response.status === 404 || response.status >= 500) {
+      throw new FinanceReferenceAuthError('unavailable');
+    }
+    throw new FinanceReferenceAuthError('invalid_response');
+  }
 }
 
 export class FinanceReferenceLoginPort {
@@ -150,6 +234,7 @@ export class FinanceReferenceAuthSession {
   private loginAttempt = 0;
   private expiryTimer: ReturnType<typeof setTimeout> | undefined;
   readonly loginPort: FinanceReferenceLoginPort;
+  readonly signupPort: FinanceReferenceSignupPort;
 
   constructor(
     readonly enabled: boolean,
@@ -157,6 +242,7 @@ export class FinanceReferenceAuthSession {
   ) {
     this.snapshot = { state: enabled ? 'guest' : 'unknown', session: null };
     this.loginPort = new FinanceReferenceLoginPort(fetchImpl);
+    this.signupPort = new FinanceReferenceSignupPort(fetchImpl);
     this.fetch = createFinanceReferenceJournalFetch(
       fetchImpl,
       () => this.getValidSession(),
@@ -172,6 +258,15 @@ export class FinanceReferenceAuthSession {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   };
+
+  /** Creates a DEV account only. It neither logs in nor touches the in-memory session. */
+  async signup(
+    credentials: FinanceReferenceSignupCredentials,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    if (!this.enabled) throw new FinanceReferenceAuthError('disabled');
+    await this.signupPort.signup(credentials, signal);
+  }
 
   async login(credentials: FinanceReferenceCredentials, signal?: AbortSignal): Promise<void> {
     if (!this.enabled) throw new FinanceReferenceAuthError('disabled');
@@ -267,15 +362,9 @@ export function createFinanceReferenceJournalFetch(
       (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET')
     ).toUpperCase();
     const isJournalBase = target.pathname === JOURNAL_PATH;
-    const isJournalDetail =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
-        target.pathname,
-      );
-    const isDeletedList = target.pathname === '/finance/journals/deleted';
-    const isLifecycle =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(delete|restore)$/.test(
-        target.pathname,
-      );
+    const isJournalDetail = JOURNAL_DETAIL_PATTERN.test(target.pathname);
+    const isDeletedList = target.pathname === `${JOURNAL_PATH}/deleted`;
+    const isLifecycle = JOURNAL_LIFECYCLE_PATTERN.test(target.pathname);
     const protectedPath = isJournalBase || target.pathname.startsWith(`${JOURNAL_PATH}/`);
     if (!protectedPath) {
       return fetchImpl(input, { ...init, credentials: 'omit' });

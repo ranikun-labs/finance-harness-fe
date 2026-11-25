@@ -1,3 +1,4 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
 export type JournalEditFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export class JournalEditError extends Error {
   constructor(readonly code: 'conflict' | 'failed') {
@@ -32,13 +33,16 @@ export function createJournalEditPort(fetchImpl: JournalEditFetch) {
       ref.revision < 0
     )
       throw new JournalEditError('failed');
-    const response = await fetchImpl(`/finance/journals/${encodeURIComponent(ref.journalId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expectedRevision: ref.revision, fields }),
-      signal,
-      credentials: 'omit',
-    });
+    const response = await fetchImpl(
+      `${FINANCE_JOURNALS_PATH}/${encodeURIComponent(ref.journalId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expectedRevision: ref.revision, fields }),
+        signal,
+        credentials: 'omit',
+      },
+    );
     if (response.status === 409) throw new JournalEditError('conflict');
     if (!response.ok) throw new JournalEditError('failed');
     const data: unknown = await response.json();

@@ -69,6 +69,15 @@ export interface Messages {
       referenceAction: string;
       referenceSession: string;
       referenceLogout: string;
+      signupHeading: string;
+      signupNotice: string;
+      signupEmail: string;
+      signupPassword: string;
+      signupAction: string;
+      signupDone: string;
+      signupExists: string;
+      signupInvalid: string;
+      signupUnavailable: string;
     };
   };
   public: {

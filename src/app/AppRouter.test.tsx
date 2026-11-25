@@ -662,3 +662,30 @@ describe('AppRouter', () => {
     });
   });
 });
+
+describe('AppRouter DEV reference signup wiring', () => {
+  function renderEntry(signupEnabled: boolean) {
+    const fetchMock = vi.fn<FinanceReferenceFetch>();
+    return render(
+      <MemoryRouter initialEntries={[AUTH_ROUTE_PATHS.entry]}>
+        <AppRouter
+          financeReferenceAuthEnabled
+          financeReferenceSignupEnabled={signupEnabled}
+          financeReferenceFetchImpl={fetchMock}
+        />
+      </MemoryRouter>,
+    );
+  }
+
+  it('does not offer account creation when the signup flag is OFF (default)', async () => {
+    renderEntry(false);
+    await screen.findByTestId('finance-reference-login');
+    expect(screen.queryByTestId('finance-reference-signup')).not.toBeInTheDocument();
+  });
+
+  it('offers DEV account creation inside the reference panel when the signup flag is ON', async () => {
+    renderEntry(true);
+    await screen.findByTestId('finance-reference-login');
+    expect(screen.getByTestId('finance-reference-signup')).toBeInTheDocument();
+  });
+});

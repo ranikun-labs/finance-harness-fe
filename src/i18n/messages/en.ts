@@ -59,6 +59,16 @@ export const en: Messages = {
       referenceAction: 'Continue with nonproduction reference login',
       referenceSession: 'Nonproduction Finance reference session',
       referenceLogout: 'Sign out locally',
+      signupHeading: 'DEV account creation',
+      signupNotice:
+        'Public DEV acceptance account creation with email and password only, no invite. This is not production signup. Sign in above after creating the account.',
+      signupEmail: 'Email',
+      signupPassword: 'Password (10-72 bytes, letters and digits)',
+      signupAction: 'Create account',
+      signupDone: 'Account created. Sign in using the form above.',
+      signupExists: 'An account with this email already exists.',
+      signupInvalid: 'Check the email and password format.',
+      signupUnavailable: 'Accounts cannot be created right now. Try again later.',
     },
   },
   public: {

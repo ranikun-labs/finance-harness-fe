@@ -62,6 +62,16 @@ export const ko: Messages = {
       referenceAction: '비운영 참조 로그인으로 계속하기',
       referenceSession: '비운영 Finance 참조 세션',
       referenceLogout: '이 탭에서 로그아웃',
+      signupHeading: 'DEV 계정 만들기',
+      signupNotice:
+        '공개 DEV 검증용 합성 계정 생성입니다. 초대 없이 이메일과 비밀번호만 사용하며, 운영 가입이 아닙니다. 가입 후 위에서 로그인해 주세요.',
+      signupEmail: '이메일',
+      signupPassword: '비밀번호 (10~72바이트, 영문과 숫자 포함)',
+      signupAction: '계정 만들기',
+      signupDone: '계정을 만들었습니다. 위 입력란에서 로그인해 주세요.',
+      signupExists: '이미 가입된 이메일입니다.',
+      signupInvalid: '이메일과 비밀번호 형식을 확인해 주세요.',
+      signupUnavailable: '지금은 계정을 만들 수 없습니다. 잠시 후 다시 시도해 주세요.',
     },
   },
   public: {

@@ -405,6 +405,45 @@ passed.
 - `No Driver != Success`; `/auth` remains presentation-only.
 - Shared Identity/Gateway remains unconnected; Backend/API change for STEP 12 is `0`.
 
+## STEP 11 DEV-only acceptance slice (FE-F)
+
+> Product/UX 기준은 [`product-policy.md`](./product-policy.md)의 DEV guard와 canonical
+> `finance-harness-docs`를 따른다. 이 절은 STEP 11의 DEV 전용 검증 슬라이스만 기록한다.
+
+- 목적: 공개 DEV 환경에서 계정 생성 → 로그인 → 저널 생성 → 재로그인 후 같은 저널을 다시 찾는
+  흐름을 실제 Gateway 경로(`/api/finance/journals`)로 검증한다. 운영 동작은 바꾸지 않는다.
+- 범위:
+  1. 참조 패널 안의 DEV 계정 생성 폼(이메일·비밀번호, 초대 없음) → `POST /api/v1/auth/finance-reference/signup`.
+     로그인은 기존 `POST /api/v1/auth/finance-reference/login`을 그대로 쓴다.
+  2. 토큰은 메모리에만 둔다. 새로고침 후 재로그인한다.
+  3. 저널 생성은 `VITE_FINANCE_JOURNAL_CREATE_ENABLED`(기본 OFF, PROD 무효)로만 열린다. 목록·상세는
+     기존 화면과 읽기 API를 재사용한다.
+  4. 브라우저 Finance API base는 `VITE_FINANCE_API_BASE`(기본 `/finance`, DEV `/api/finance`)로 설정한다.
+     Vite dev/preview 프록시는 `FINANCE_API_PROXY_TARGET`(`/finance`와 `/api/finance`를 rewrite)과
+     `FINANCE_AUTH_PROXY_TARGET`(`/api/v1/auth/finance-reference`)으로 구성한다.
+- 플래그 (모두 기본 OFF, PROD 빌드에서 무효):
+
+  | 변수                                         | 효과                                                           |
+  | -------------------------------------------- | -------------------------------------------------------------- |
+  | `VITE_FINANCE_REFERENCE_AUTH_ENABLED=true`   | 참조 로그인 패널 노출                                          |
+  | `VITE_FINANCE_REFERENCE_SIGNUP_ENABLED=true` | 참조 패널 안 DEV 계정 생성 폼 노출 (참조 패널 전제)            |
+  | `VITE_FINANCE_JOURNAL_CREATE_ENABLED=true`   | 저널 생성 제출 활성 (참조 인증 경로에서는 DEV 플래그로만 열림) |
+  | `VITE_FINANCE_API_BASE=/api/finance`         | 브라우저 Finance API base 경로 (미설정 시 `/finance`)          |
+
+- 검증 가드: 운영 Auth Entry에는 가입 진입점이 없다(`AuthEntryPage.test.tsx`의 "without a primary signup
+  journey" 테스트). DEV 패널은 플래그가 켜지고 non-PROD일 때만 나타난다(`financeReferenceSignup.test.ts`).
+- 열린 항목 (공개 DEV 배포 전 검토): 중복 가입 `409 Account already exists`는 이메일 존재 여부를
+  노출한다. 플랫폼 컨트롤러 주석대로 non-DEV 노출 전에는 일반화된 응답(예: 202 + 비동기 검증)으로 바꿔야
+  하며, 그때 signup 통합 테스트 기대값도 함께 바뀐다.
+- DEV 배포 계약 (same-origin edge): 브라우저는 FE 한 origin만 보며 상대 경로를 쓴다. edge는 SPA를 서빙하고
+  `/api/v1/auth/finance-reference/**`와 `/api/finance/**`만 Gateway로 전달한다. 그 밖의 `/api/*`는 JSON 404이며
+  `/api/*` 응답이 SPA HTML이 되는 일은 없다. 인증 응답과 API 응답은 `Cache-Control: no-store`다. hop-by-hop
+  헤더는 양방향으로 제거하고, 로그에는 method·path·status만 남기며 토큰이나 헤더를 남기지 않는다.
+- DEV 빌드: 참조 패널은 `import.meta.env.PROD`가 false일 때만 열린다. 따라서 DEV 번들은 `NODE_ENV=development`로
+  빌드해야 하며(압축되지 않은 번들), 운영형 minified 빌드에는 패널이 나타나지 않는 것이 의도된 동작이다.
+- 기존 한계(이번 변경 없음): `main.tsx`의 `VITE_FINANCE_JOURNAL_CREATE_ENABLED` 직접 경로에는 PROD 가드가
+  없다. 참조 인증 경로에서만 PROD 무효화가 적용된다. 별도 정리 대상이다.
+
 ## STEP 11 dependency state
 
 - Raw Read는 완료했다.

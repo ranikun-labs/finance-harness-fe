@@ -64,3 +64,22 @@ Home dashboard와 legacy three-destination navigation은 P0 Primary Surface로 �
 - 프로덕션 빌드에서 로그가 항상 노출되지 않도록 `loggingBehavior`는 `'debug'`를
   유지한다 (`'production'` 금지 — 이름과 달리 빌드 타입과 무관하게 항상 로그를
   출력하는 옵션이기 때문).
+
+## DEV 참조 인증·저널 생성 acceptance guard (STEP 11, DEV-only)
+
+> Product/UX canonical은 `finance-harness-docs/service-policy/finance-product-policy.md`와
+> `finance-ux-delta-auth-journal-handoff.md`다. Auth Entry는 OAuth-first이며 Login/Signup을
+> 별도 primary journey로 나누지 않는다. 이 절은 DEV 검증용 구현 guard만 정의하고 canonical을
+> 복제하지 않는다.
+
+- 참조 패널(`VITE_FINANCE_REFERENCE_AUTH_ENABLED`), DEV 계정 생성
+  (`VITE_FINANCE_REFERENCE_SIGNUP_ENABLED`), 저널 생성(`VITE_FINANCE_JOURNAL_CREATE_ENABLED`)은
+  모두 기본 OFF다. 세 값 모두 `import.meta.env.PROD` 빌드에서는 효력이 없다.
+- 계정 생성은 참조 패널 안에서만 노출되며 로그인 토큰을 발급하지 않는다. 운영 Auth Entry의
+  OAuth-first 경로와 production 문구는 변하지 않는다.
+- 액세스 토큰은 메모리에만 둔다(localStorage/sessionStorage 금지). 새로고침 후에는 재로그인한다.
+- Finance API 기준 경로는 `VITE_FINANCE_API_BASE`로 정한다(기본 `/finance`, DEV `/api/finance`).
+  단일 원본은 `src/features/finance-api/financeApiBase.ts`다.
+- 열린 항목: 중복 가입 409가 이메일 존재 여부를 노출한다. 공개 DEV 배포 전에 검토가 필요하다
+  (platform `FinanceReferenceSignupController`의 주석과 같은 조건). 상세는
+  [`frontend-roadmap.md`](./frontend-roadmap.md)의 STEP 11 DEV-only acceptance slice를 본다.

@@ -35,9 +35,12 @@ import { createProductionJournalReadPort } from '@/features/journal-read/adapter
 import {
   FinanceReferenceAuthSession,
   isFinanceReferenceAuthEnabled,
+  isFinanceReferenceSignupEnabled,
   type FinanceReferenceCredentials,
   type FinanceReferenceFetch,
+  type FinanceReferenceSignupCredentials,
 } from '@/features/auth/financeReferenceAuth';
+import { isFinanceJournalCreateDevEnabled } from '@/features/finance-api/devAcceptanceFlags';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -83,6 +86,10 @@ function AuthEntryRoute({
   financeReferenceAuth?: {
     enabled: boolean;
     login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
+    signup?: (
+      credentials: FinanceReferenceSignupCredentials,
+      signal?: AbortSignal,
+    ) => Promise<void>;
   };
 }) {
   return (
@@ -166,6 +173,10 @@ interface AppRouterProps {
   journalCreateMode?: 'test' | 'production';
   /** Explicit nonproduction-only test seam; omitted production composition uses Vite env. */
   financeReferenceAuthEnabled?: boolean;
+  /** DEV-only account creation inside the reference panel. Default OFF. */
+  financeReferenceSignupEnabled?: boolean;
+  /** DEV-only Journal create on the reference-auth path. Default OFF. */
+  financeJournalCreateEnabled?: boolean;
   financeReferenceFetchImpl?: FinanceReferenceFetch;
 }
 
@@ -175,12 +186,27 @@ export function AppRouter({
   journalCreatePort,
   journalCreateMode,
   financeReferenceAuthEnabled,
+  financeReferenceSignupEnabled,
+  financeJournalCreateEnabled,
   financeReferenceFetchImpl,
 }: AppRouterProps = {}) {
   const referenceAuthEnabled =
     financeReferenceAuthEnabled ??
     isFinanceReferenceAuthEnabled(
       import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
+      import.meta.env.PROD,
+    );
+  const referenceSignupEnabled =
+    referenceAuthEnabled &&
+    (financeReferenceSignupEnabled ??
+      isFinanceReferenceSignupEnabled(
+        import.meta.env.VITE_FINANCE_REFERENCE_SIGNUP_ENABLED,
+        import.meta.env.PROD,
+      ));
+  const referenceJournalCreateEnabled =
+    financeJournalCreateEnabled ??
+    isFinanceJournalCreateDevEnabled(
+      import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED,
       import.meta.env.PROD,
     );
   const [financeAuth] = useState(
@@ -199,14 +225,20 @@ export function AppRouter({
         : journalReadPort,
     [financeAuth, journalReadPort, referenceAuthEnabled],
   );
-  const activeJournalCreatePort = useMemo(
-    () =>
-      referenceAuthEnabled
-        ? createProductionJournalCreatePort({ fetchImpl: financeAuth.fetch })
-        : journalCreatePort,
-    [financeAuth, journalCreatePort, referenceAuthEnabled],
-  );
-  const activeCreateMode = referenceAuthEnabled ? 'test' : journalCreateMode;
+  // Reference-auth path: Journal create is server-authenticated and only exists behind the DEV flag.
+  // With the flag off the create route stays unavailable rather than falling back to an unauthenticated port.
+  const activeJournalCreatePort = useMemo(() => {
+    if (!referenceAuthEnabled) return journalCreatePort;
+    return referenceJournalCreateEnabled
+      ? createProductionJournalCreatePort({ fetchImpl: financeAuth.fetch })
+      : undefined;
+  }, [financeAuth, journalCreatePort, referenceAuthEnabled, referenceJournalCreateEnabled]);
+  // Reference path saves to the DEV backend when the create flag is on, so it must not claim a test-only save.
+  const activeCreateMode = referenceAuthEnabled
+    ? referenceJournalCreateEnabled
+      ? 'production'
+      : 'test'
+    : journalCreateMode;
   const activePresentation = authPresentation ?? { state: authSnapshot.state };
 
   return (
@@ -242,6 +274,9 @@ export function AppRouter({
                     ? {
                         enabled: true,
                         login: (credentials, signal) => financeAuth.login(credentials, signal),
+                        signup: referenceSignupEnabled
+                          ? (credentials, signal) => financeAuth.signup(credentials, signal)
+                          : undefined,
                       }
                     : undefined
                 }
