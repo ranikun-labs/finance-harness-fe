@@ -39,6 +39,15 @@ Home dashboard와 legacy three-destination navigation은 P0 Primary Surface로 �
 | 시간대 이름 | 화면에 노출하지 않는다(IANA·약어·오프셋 모두. F1-05 공통 AC 5)                                                                                                                  |
 | 불변        | 저장 시각·도메인 값·`<time dateTime>` 원본은 바꾸지 않는다. 해석 불가 값은 던지지 않고 원문을 보인다                                                                            |
 
+## 화면 모드 (시스템/라이트/다크)
+
+Product 정책에 화면 모드 규칙은 없다(무언급). 구현 guard는 다음 하나다.
+
+- 기본은 시스템 설정(`prefers-color-scheme`) 추종이고, 앱 헤더의 화면 모드 선택(시스템/라이트/다크)이 이를 덮어쓴다.
+- 선택은 이 브라우저의 `localStorage`(`finance-harness:theme`)에만 저장한다. 서버 API·계정 동기화를 만들지 않으며, 화면 문구도 "이 기기의 이 브라우저에만 저장"이라는 실제 동작만 말한다.
+- 규칙의 코드 소유자는 [`src/theme/theme.ts`](../src/theme/theme.ts) 한 곳이고, `index.html`의 첫 페인트 인라인 스크립트가 같은 키·규칙을 복제한다(`theme.test.ts`가 대조).
+- Dark 색 값은 Foundation v1.0.0 값을 그대로 쓴다.
+
 ## 금지 UI
 
 다음과 같이 보이는 UI를 어떤 화면에서도 만들지 않는다:

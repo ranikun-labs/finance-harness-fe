@@ -15,6 +15,7 @@
 :root {
   /* Foundation 반경 세트. --radius(card 16)는 shadcn 파생(rounded-lg)의 기준이므로 유지. */
   --radius: 1rem;
+  color-scheme: light;
 
   /* 크기: 기본 컨트롤 48, 터치 최소 44. */
   --control-h: 48px;
@@ -86,6 +87,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --page: #0f1114;
   --inset: #22262b;
   --control: #2a2f35;

@@ -30,6 +30,18 @@ export const ko: Messages = {
     appName: 'AI 투자 체크리스트',
     loading: '불러오는 중이에요',
   },
+  theme: {
+    trigger: '화면 모드',
+    title: '화면 모드',
+    description: '이 기기의 이 브라우저에만 저장돼요. 계정이나 다른 기기에는 적용되지 않아요.',
+    close: '닫기',
+    system: '시스템 설정 따름',
+    light: '라이트',
+    dark: '다크',
+    systemHint: '기기의 라이트/다크 설정이 바뀌면 함께 바뀌어요.',
+    current: '현재: {{mode}}',
+    notPersisted: '이 브라우저가 저장을 허용하지 않아 지금 화면에만 적용돼요.',
+  },
   nav: {
     review: '검토',
     journal: '저널',

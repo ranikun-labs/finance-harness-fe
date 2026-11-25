@@ -5,8 +5,12 @@ import { BrowserRouter } from 'react-router';
 import { AppRouter } from '@/app/AppRouter';
 import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
 import { shouldHydrate } from '@/prerender/shouldHydrate';
+import { initTheme } from '@/theme/theme';
 
 import '@/styles/globals.css';
+
+// 인라인 스크립트가 첫 페인트에 적용한 화면 모드를 이어받아 시스템 변경·다른 탭 선택을 구독한다.
+initTheme();
 
 const rootElement = document.getElementById('root')!;
 // Journal Create stays off by default; an explicit deployment/local opt-in enables the
