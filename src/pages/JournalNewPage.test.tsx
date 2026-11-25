@@ -1,7 +1,7 @@
 import { resolveTransient } from '@/lib/transientNavigation';
-import { StrictMode, useState } from 'react';
+import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router';
+import { Route, Routes, useLocation, useNavigationType } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -20,13 +20,13 @@ import {
 } from '@/features/journal-new/adapter/HttpJournalCreatePort';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
-import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT, type DecisionContextSnapshot } from '@/mocks/decisionContext';
 import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
 import { AuthEntryPage } from '@/pages/AuthEntryPage';
 import { JournalNewPage } from '@/pages/JournalNewPage';
+import { DataMemoryRouter } from '@/test/DataMemoryRouter';
 
 function DetailDestination() {
   const location = useLocation();
@@ -52,18 +52,24 @@ function ReviewDestination() {
 }
 
 function JournalNavigationHarness() {
-  const [dirty, setDirty] = useState(false);
   return (
-    <RetrospectiveDraftContext.Provider value={{ dirty, setDirty }}>
+    <>
       <BottomNavigation />
       <Routes>
         <Route path={APP_ROUTE_PATHS.journalNew} element={<JournalNewPage />} />
         <Route path={APP_ROUTE_PATHS.appHome} element={<p>Review destination</p>} />
         <Route path={APP_ROUTE_PATHS.journalList} element={<p>Journal destination</p>} />
       </Routes>
-    </RetrospectiveDraftContext.Provider>
+    </>
   );
 }
+
+/** 이탈 보호 확인(공통 ConfirmDialog). 열려 있지 않으면 null이다. */
+const leaveDialog = () => screen.queryByRole('alertdialog', { name: ko.common.leaveGuard.title });
+const chooseInLeaveDialog = (label: string) =>
+  fireEvent.click(within(leaveDialog()!).getByRole('button', { name: label }));
+const stayInDraft = () => chooseInLeaveDialog(ko.common.leaveGuard.stay);
+const leaveDraft = () => chooseInLeaveDialog(ko.common.leaveGuard.leave);
 
 function renderPage(
   path: string,
@@ -89,11 +95,11 @@ function renderPage(
     </Routes>
   );
   return render(
-    <MemoryRouter initialEntries={[{ pathname, search: search ? `?${search}` : '', state }]}>
+    <DataMemoryRouter initialEntries={[{ pathname, search: search ? `?${search}` : '', state }]}>
       <I18nProvider locale={locale}>
         {strict ? <StrictMode>{routes}</StrictMode> : routes}
       </I18nProvider>
-    </MemoryRouter>,
+    </DataMemoryRouter>,
   );
 }
 
@@ -172,13 +178,13 @@ function ambiguousHttpPort(failure: 'network' | 'timeout' | 'invalid_result' | '
 }
 
 describe('JournalNewPage', () => {
-  it('protects an edited journal draft on primary navigation and unload', () => {
+  it('protects an edited journal draft on primary navigation and unload', async () => {
     render(
-      <MemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
+      <DataMemoryRouter initialEntries={[buildAppJournalNewPath('investment')]}>
         <I18nProvider locale="ko">
           <JournalNavigationHarness />
         </I18nProvider>
-      </MemoryRouter>,
+      </DataMemoryRouter>,
     );
     const field = screen.getByLabelText('대상');
     const cleanUnload = new Event('beforeunload', { cancelable: true });
@@ -189,26 +195,25 @@ describe('JournalNewPage', () => {
     window.dispatchEvent(dirtyUnload);
     expect(dirtyUnload.defaultPrevented).toBe(true);
 
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    try {
-      for (const name of ['검토', '저널']) {
-        const link = screen.getByRole('link', { name });
-        fireEvent.click(link, { ctrlKey: true });
-        expect(confirm).not.toHaveBeenCalled();
-        fireEvent.click(link);
-        expect(confirm).toHaveBeenCalledTimes(1);
-        expect(field).toHaveValue('보존할 초안');
-        confirm.mockClear();
-      }
-      confirm.mockReturnValue(true);
-      fireEvent.click(screen.getByRole('link', { name: '검토' }));
-      expect(screen.getByText('Review destination')).toBeInTheDocument();
-      const afterLeaving = new Event('beforeunload', { cancelable: true });
-      window.dispatchEvent(afterLeaving);
-      expect(afterLeaving.defaultPrevented).toBe(false);
-    } finally {
-      confirm.mockRestore();
+    for (const name of ['검토', '저널']) {
+      // 새 탭·창으로 여는 클릭은 이 화면을 떠나지 않으므로 확인이 없다.
+      fireEvent.click(screen.getByRole('link', { name }), { ctrlKey: true });
+      expect(leaveDialog()).toBeNull();
+      fireEvent.click(screen.getByRole('link', { name }));
+      await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+      // 같은 확인이 뜨고, 머무르면 입력이 그대로다.
+      expect(leaveDialog()).toHaveAccessibleDescription(ko.common.leaveGuard.description);
+      stayInDraft();
+      await waitFor(() => expect(leaveDialog()).toBeNull());
+      expect(field).toHaveValue('보존할 초안');
     }
+    fireEvent.click(screen.getByRole('link', { name: '검토' }));
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    leaveDraft();
+    expect(await screen.findByText('Review destination')).toBeInTheDocument();
+    const afterLeaving = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(afterLeaving);
+    expect(afterLeaving.defaultPrevented).toBe(false);
   });
   it.each(['network', 'timeout', 'invalid_result', 'server_error'] as const)(
     'replays a committed investment after %s and edit/revert without another Journal',
@@ -256,17 +261,24 @@ describe('JournalNewPage', () => {
     fireEvent.change(screen.getByLabelText('왜 그렇게 판단했나요?'), {
       target: { value: '근거를 적는다.' },
     });
-    const confirm = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    const confirm = screen.getByRole('dialog', {
+      name: ko.app.journalNew.form.newSubmissionConfirmTitle,
+    });
+    expect(confirm).toHaveAccessibleDescription(ko.app.journalNew.form.newSubmissionConfirm);
+    fireEvent.click(
+      within(confirm).getByRole('button', { name: ko.app.journalNew.form.newSubmissionKeep }),
+    );
     expect(
       screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }),
     ).toBeEnabled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
-    expect(confirm).toHaveBeenCalledWith(ko.app.journalNew.form.newSubmissionConfirm);
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', { name: ko.app.journalNew.form.newSubmissionConfirmTitle }),
+      ).getByRole('button', { name: ko.app.journalNew.form.newSubmission }),
+    );
     expect(screen.queryByRole('button', { name: ko.app.journalNew.form.newSubmission })).toBeNull();
     expect(screen.getByLabelText('대상')).toHaveValue(' 기업 A ');
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -278,7 +290,6 @@ describe('JournalNewPage', () => {
     await screen.findByTestId('detail-destination');
     expect(fetchMock.mock.calls[2][1]).toEqual(fetchMock.mock.calls[1][1]);
     expect(journals.size).toBe(2);
-    confirm.mockRestore();
   });
 
   it('preserves the key when cancelling new submission after a lost response', async () => {
@@ -287,13 +298,12 @@ describe('JournalNewPage', () => {
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
     await screen.findByRole('alert');
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
+    fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmissionKeep }));
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
     await screen.findByTestId('detail-destination');
     expect(fetchMock.mock.calls[1][1]).toEqual(fetchMock.mock.calls[0][1]);
     expect(journals.size).toBe(1);
-    confirm.mockRestore();
   });
 
   it('uses a fresh key for an identical entry started after successful navigation', async () => {
@@ -358,33 +368,32 @@ describe('JournalNewPage', () => {
     expect(screen.getByLabelText(/더 확인할 것 확인할 질문 1/)).toHaveValue('확인할 질문 하나');
   });
 
-  it('returns a partial Review handoff target and keeps dirty warning behavior', () => {
+  it('returns a partial Review handoff target and keeps dirty warning behavior', async () => {
     const reviewHandoff: ReviewJournalHandoff = {
       kind: 'study',
       originalQuestion: '다시 검토할 질문',
       returnTarget: '/app/ask?q=다시+검토할+질문&fixture=partial',
       learningDraft: { title: '초안', keyContent: '내용', openQuestions: [] },
     };
-    const confirmSpy = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
     renderPage(buildAppJournalNewPath('study'), 'ko', undefined, false, { reviewHandoff });
 
     fireEvent.change(screen.getByLabelText('무엇을 배웠나요?'), {
       target: { value: '수정한 제목' },
     });
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    stayInDraft();
+    await waitFor(() => expect(leaveDialog()).toBeNull());
     expect(screen.getByRole('heading', { name: ko.app.journalNew.study })).toBeInTheDocument();
+    expect(screen.getByLabelText('무엇을 배웠나요?')).toHaveValue('수정한 제목');
 
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.handoff.returnToReview }));
-    expect(confirmSpy).toHaveBeenCalledTimes(2);
-    const reviewDestination = screen.getByTestId('review-destination').textContent ?? '';
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    leaveDraft();
+    const reviewDestination = (await screen.findByTestId('review-destination')).textContent ?? '';
     const search = new URLSearchParams(reviewDestination.replace(/^review:/, ''));
     expect(search.get('q')).toBeNull();
     expect(search.get('fixture')).toBe('partial');
-    confirmSpy.mockRestore();
   });
 
   it('returns a pristine full Review handoff to its exact originating URL', () => {
@@ -494,9 +503,9 @@ describe('JournalNewPage', () => {
     expect(within(panel).getAllByRole('checkbox')[0]).not.toBeChecked();
   });
 
-  it('guards context selection changes and clears the warning when restored', () => {
+  it('guards context selection changes and clears the warning when restored', async () => {
     render(
-      <MemoryRouter
+      <DataMemoryRouter
         initialEntries={[
           {
             pathname: APP_ROUTE_PATHS.journalNew,
@@ -511,41 +520,40 @@ describe('JournalNewPage', () => {
         <I18nProvider locale="ko">
           <JournalNavigationHarness />
         </I18nProvider>
-      </MemoryRouter>,
+      </DataMemoryRouter>,
     );
     const panel = screen.getByTestId('decision-context-capture');
     const toggle = within(panel).getByRole('switch');
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const unloadingIsBlocked = () => {
       const event = new Event('beforeunload', { cancelable: true });
       window.dispatchEvent(event);
       return event.defaultPrevented;
     };
-    try {
-      expect(unloadingIsBlocked()).toBe(false);
-      fireEvent.click(toggle);
-      expect(unloadingIsBlocked()).toBe(true);
-      fireEvent.click(screen.getByRole('link', { name: '검토' }));
-      expect(confirm).toHaveBeenCalledTimes(1);
-      expect(toggle).toHaveAttribute('aria-checked', 'false');
-      fireEvent.click(toggle);
-      expect(unloadingIsBlocked()).toBe(false);
+    expect(unloadingIsBlocked()).toBe(false);
+    fireEvent.click(toggle);
+    expect(unloadingIsBlocked()).toBe(true);
+    fireEvent.click(screen.getByRole('link', { name: '검토' }));
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    stayInDraft();
+    await waitFor(() => expect(leaveDialog()).toBeNull());
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(toggle);
+    expect(unloadingIsBlocked()).toBe(false);
 
-      const evidence = within(panel).getAllByRole('checkbox')[0];
-      const initiallyChecked = (evidence as HTMLInputElement).checked;
-      fireEvent.click(evidence);
-      expect(unloadingIsBlocked()).toBe(true);
-      fireEvent.click(screen.getByRole('link', { name: '저널' }));
-      expect(confirm).toHaveBeenCalledTimes(2);
-      expect((evidence as HTMLInputElement).checked).toBe(!initiallyChecked);
-      fireEvent.click(evidence);
-      expect(unloadingIsBlocked()).toBe(false);
-      fireEvent.click(screen.getByRole('link', { name: '검토' }));
-      expect(confirm).toHaveBeenCalledTimes(2);
-      expect(screen.getByText('Review destination')).toBeInTheDocument();
-    } finally {
-      confirm.mockRestore();
-    }
+    const evidence = within(panel).getAllByRole('checkbox')[0];
+    const initiallyChecked = (evidence as HTMLInputElement).checked;
+    fireEvent.click(evidence);
+    expect(unloadingIsBlocked()).toBe(true);
+    fireEvent.click(screen.getByRole('link', { name: '저널' }));
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    stayInDraft();
+    await waitFor(() => expect(leaveDialog()).toBeNull());
+    expect((evidence as HTMLInputElement).checked).toBe(!initiallyChecked);
+    fireEvent.click(evidence);
+    expect(unloadingIsBlocked()).toBe(false);
+    fireEvent.click(screen.getByRole('link', { name: '검토' }));
+    expect(await screen.findByText('Review destination')).toBeInTheDocument();
+    expect(leaveDialog()).toBeNull();
   });
 
   it('does not expose Decision Context on a direct Decision Entry route', () => {
@@ -799,8 +807,7 @@ describe('JournalNewPage', () => {
     expect(secondQuestion).toHaveValue('질문 둘');
   });
 
-  it('returns to pristine and opens entry choice without confirm after open questions are cleared', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm');
+  it('returns to pristine and opens entry choice without confirm after open questions are cleared', async () => {
     renderPage(buildAppJournalNewPath('study'));
     fireEvent.click(screen.getByRole('button', { name: '질문 추가' }));
     fireEvent.change(screen.getByLabelText(/더 확인할 것 확인할 질문 1/), {
@@ -808,11 +815,10 @@ describe('JournalNewPage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: '질문 1 삭제' }));
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(leaveDialog()).toBeNull();
     expect(
-      screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+      await screen.findByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
-    confirmSpy.mockRestore();
   });
 
   it('returns from entry choice to the journal list', () => {
@@ -821,27 +827,22 @@ describe('JournalNewPage', () => {
     expect(screen.getByText('Journal destination')).toBeInTheDocument();
   });
 
-  it('confirms before leaving a dirty direct-entry form for the journal', () => {
-    const confirmSpy = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
+  it('confirms before leaving a dirty direct-entry form for the journal', async () => {
     renderPage(buildAppJournalNewPath('study'));
     fireEvent.change(screen.getByLabelText('무엇을 배웠나요?'), { target: { value: '내용' } });
     const back = screen.getByRole('button', { name: '취소' });
     fireEvent.click(back);
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    stayInDraft();
+    await waitFor(() => expect(leaveDialog()).toBeNull());
     expect(screen.getByLabelText('무엇을 배웠나요?')).toHaveValue('내용');
     fireEvent.click(back);
-    expect(screen.getByText('Journal destination')).toBeInTheDocument();
-    expect(confirmSpy).toHaveBeenCalledWith(ko.app.journalNew.backToJournalDirtyConfirm);
-    confirmSpy.mockRestore();
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    leaveDraft();
+    expect(await screen.findByText('Journal destination')).toBeInTheDocument();
   });
 
-  it('keeps the current form on cancel and opens entry choice on confirm', () => {
-    const confirmSpy = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
+  it('keeps the current form on cancel and opens entry choice on confirm', async () => {
     renderPage(buildAppJournalNewPath('study'));
     fireEvent.click(screen.getByRole('button', { name: '질문 추가' }));
     fireEvent.change(screen.getByLabelText(/더 확인할 것 확인할 질문 1/), {
@@ -849,19 +850,20 @@ describe('JournalNewPage', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    stayInDraft();
+    await waitFor(() => expect(leaveDialog()).toBeNull());
     expect(
       screen.getByRole('heading', { level: 1, name: ko.app.journalNew.study }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/더 확인할 것 확인할 질문 1/)).toHaveValue('질문 하나');
 
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
-    expect(confirmSpy).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    leaveDraft();
     expect(
-      screen.getByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
+      await screen.findByRole('heading', { name: ko.app.journalNew.entryChoice.heading }),
     ).toBeInTheDocument();
-
-    confirmSpy.mockRestore();
   });
 
   it('validates a blank open-question item and keeps its accessible error state', async () => {
@@ -1091,16 +1093,18 @@ describe('JournalNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
     expect(keys[1]).toBe(keys[0]);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.form.newSubmission }));
-    expect(confirm).toHaveBeenCalledWith(ko.app.journalNew.form.newSubmissionConfirm);
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', { name: ko.app.journalNew.form.newSubmissionConfirmTitle }),
+      ).getByRole('button', { name: ko.app.journalNew.form.newSubmission }),
+    );
     expect(create).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
 
     await waitFor(() => expect(screen.getByText('detail destination:REPLACE')).toBeInTheDocument());
     expect(keys).toHaveLength(3);
     expect(keys[2]).not.toBe(keys[0]);
-    confirm.mockRestore();
   });
 
   it('shows a safe correction message for a backend 400 request rejection', async () => {
@@ -1132,18 +1136,16 @@ describe('JournalNewPage', () => {
     await waitFor(() => expect(screen.getByLabelText('대상')).toHaveFocus());
   });
 
-  it('blocks type-change navigation without calling the dirty confirmation while submitting', () => {
+  it('blocks type-change navigation without opening the leave confirmation while submitting', () => {
     const pending = deferredResult();
-    const confirmSpy = vi.spyOn(window, 'confirm');
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create: () => pending.promise });
     fillInvestmentForm();
     fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
     fireEvent.click(screen.getByRole('button', { name: ko.app.journalNew.typeChange.action }));
     expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
 
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(leaveDialog()).toBeNull();
     expect(screen.getByRole('heading', { name: ko.app.journalNew.investment })).toBeInTheDocument();
-    confirmSpy.mockRestore();
   });
 
   it('treats blank result IDs as an invalid response without navigation', async () => {

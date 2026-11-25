@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { useState, type ReactNode } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import type { ReactNode } from 'react';
+import { Route, Routes } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,7 +10,6 @@ import {
 } from '@/constants/routes';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
-import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { en } from '@/i18n/messages/en';
@@ -19,20 +18,25 @@ import { formatJournalOccurredAt } from '@/lib/date';
 import { JOURNAL_ENTRIES, type JournalEntry } from '@/mocks/journalEntries';
 import type { RetrospectiveSavePort } from '@/mocks/retrospective';
 import { JournalReviewPage } from '@/pages/JournalReviewPage';
+import { DataMemoryRouter } from '@/test/DataMemoryRouter';
 
 const PRIMARY_INVESTMENT_ID = 'journal-2026-06-28-01';
 const SECOND_INVESTMENT_ID = 'journal-2026-06-24-01';
 const STUDY_ID = 'journal-2026-06-27-01';
 
 function NavigationDraftHarness({ children }: { children: ReactNode }) {
-  const [dirty, setDirty] = useState(false);
   return (
-    <RetrospectiveDraftContext.Provider value={{ dirty, setDirty }}>
+    <>
       <BottomNavigation />
       {children}
-    </RetrospectiveDraftContext.Provider>
+    </>
   );
 }
+
+/** 이탈 보호 확인(공통 ConfirmDialog). 열려 있지 않으면 null이다. */
+const leaveDialog = () => screen.queryByRole('alertdialog', { name: ko.common.leaveGuard.title });
+const chooseInLeaveDialog = (label: string) =>
+  fireEvent.click(within(leaveDialog()!).getByRole('button', { name: label }));
 
 function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: RetrospectiveSavePort) {
   return render(
@@ -42,7 +46,7 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: Retrosp
         detail: vi.fn().mockResolvedValue({ ok: false, error: { code: 'journal_not_found' } }),
       }}
     >
-      <MemoryRouter initialEntries={[path]}>
+      <DataMemoryRouter initialEntries={[path]}>
         <I18nProvider locale={locale}>
           <Routes>
             <Route
@@ -51,7 +55,7 @@ function renderPage(path: string, locale: 'ko' | 'en' = 'ko', savePort?: Retrosp
             />
           </Routes>
         </I18nProvider>
-      </MemoryRouter>
+      </DataMemoryRouter>
     </JournalReadPortProvider>,
   );
 }
@@ -86,7 +90,7 @@ describe('JournalReviewPage', () => {
       render(
         <JournalEditFetchContext.Provider value={fetchImpl}>
           <JournalReadPortProvider port={{ list: vi.fn(), detail }}>
-            <MemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
+            <DataMemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
               <I18nProvider locale="ko">
                 <NavigationDraftHarness>
                   <Routes>
@@ -94,7 +98,7 @@ describe('JournalReviewPage', () => {
                   </Routes>
                 </NavigationDraftHarness>
               </I18nProvider>
-            </MemoryRouter>
+            </DataMemoryRouter>
           </JournalReadPortProvider>
         </JournalEditFetchContext.Provider>,
       );
@@ -105,48 +109,69 @@ describe('JournalReviewPage', () => {
       fireEvent.click(disclosure);
       expect(field).toHaveValue('새 복기 초안');
       expect(screen.getByText('원래 판단의 이유')).toBeInTheDocument();
-      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-      try {
-        const links = screen.getAllByRole('link', { name: /기록 상세/ });
-        expect(links).toHaveLength(2);
-        for (const link of links) {
-          for (const modifier of [
-            { ctrlKey: true },
-            { metaKey: true },
-            { shiftKey: true },
-            { altKey: true },
-            { button: 1 },
-          ]) {
-            fireEvent.click(link, modifier);
-            expect(confirm).not.toHaveBeenCalled();
-            expect(field).toHaveValue('새 복기 초안');
-          }
-          fireEvent.click(link);
-          expect(confirm).toHaveBeenCalledTimes(1);
+      const links = screen.getAllByRole('link', { name: /기록 상세/ });
+      expect(links).toHaveLength(2);
+      const stay = async () => {
+        await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+        expect(leaveDialog()).toHaveAccessibleDescription(ko.common.leaveGuard.description);
+        chooseInLeaveDialog(ko.common.leaveGuard.stay);
+        await waitFor(() => expect(leaveDialog()).toBeNull());
+        expect(field).toHaveValue('새 복기 초안');
+      };
+      for (const link of links) {
+        for (const modifier of [
+          { ctrlKey: true },
+          { metaKey: true },
+          { shiftKey: true },
+          { altKey: true },
+          { button: 1 },
+        ]) {
+          fireEvent.click(link, modifier);
+          expect(leaveDialog()).toBeNull();
           expect(field).toHaveValue('새 복기 초안');
-          confirm.mockClear();
         }
-        for (const name of ['검토', '저널']) {
-          const link = screen.getByRole('link', { name });
-          fireEvent.click(link, { ctrlKey: true });
-          expect(confirm).not.toHaveBeenCalled();
-          fireEvent.click(link);
-          expect(confirm).toHaveBeenCalledTimes(1);
-          expect(field).toHaveValue('새 복기 초안');
-          confirm.mockClear();
-        }
-        confirm.mockReturnValue(true);
-        fireEvent.click(screen.getByRole('link', { name: '검토' }));
-        expect(confirm).toHaveBeenCalledTimes(1);
+        fireEvent.click(link);
+        await stay();
+      }
+      for (const name of ['검토', '저널']) {
+        const link = screen.getByRole('link', { name });
+        fireEvent.click(link, { ctrlKey: true });
+        expect(leaveDialog()).toBeNull();
+        fireEvent.click(link);
+        await stay();
+      }
+      fireEvent.click(screen.getByRole('link', { name: '검토' }));
+      await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+      chooseInLeaveDialog(ko.common.leaveGuard.leave);
+      await waitFor(() =>
         expect(
           screen.queryByLabelText('지금 다시 보면, 무엇이 달라졌나요? *'),
-        ).not.toBeInTheDocument();
-      } finally {
-        confirm.mockRestore();
-      }
+        ).not.toBeInTheDocument(),
+      );
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+
+  it('guards the example retrospective draft until it is saved or emptied', async () => {
+    renderPage(buildAppJournalReviewPath(PRIMARY_INVESTMENT_ID));
+    const field = screen.getByLabelText(ko.app.journalReview.retrospective.bodyLabel);
+    const back = screen.getAllByRole('link', { name: ko.app.journalReview.backLabel })[0];
+
+    // 입력이 없으면 확인 없이 이동한다(링크 클릭은 이 라우트 트리에 목적지가 없어 빈 화면이 된다).
+    fireEvent.change(field, { target: { value: '쓰던 복기' } });
+    fireEvent.click(back);
+    await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+    chooseInLeaveDialog(ko.common.leaveGuard.stay);
+    await waitFor(() => expect(leaveDialog()).toBeNull());
+    expect(field).toHaveValue('쓰던 복기');
+
+    fireEvent.change(field, { target: { value: '' } });
+    fireEvent.click(back);
+    await waitFor(() =>
+      expect(screen.queryByLabelText(ko.app.journalReview.retrospective.bodyLabel)).toBeNull(),
+    );
+    expect(leaveDialog()).toBeNull();
   });
 
   it('reads a saved record from the configured port and does not offer mock persistence', async () => {
@@ -168,13 +193,13 @@ describe('JournalReviewPage', () => {
     });
     render(
       <JournalReadPortProvider port={{ list: vi.fn(), detail }}>
-        <MemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
+        <DataMemoryRouter initialEntries={[buildAppJournalReviewPath(id)]}>
           <I18nProvider locale="ko">
             <Routes>
               <Route path={APP_ROUTE_PATHS.journalReview} element={<JournalReviewPage />} />
             </Routes>
           </I18nProvider>
-        </MemoryRouter>
+        </DataMemoryRouter>
       </JournalReadPortProvider>,
     );
     expect(await screen.findByText('실제 기록 대상')).toBeInTheDocument();

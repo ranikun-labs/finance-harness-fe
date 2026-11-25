@@ -3,7 +3,8 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
-import { useRetrospectiveDraft } from '@/components/layout/RetrospectiveDraftContext';
+import { LeaveGuard } from '@/components/common/LeaveGuard';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { InvestmentJournalForm } from '@/features/journal-new/components/InvestmentJournalForm';
 import { StudyJournalForm } from '@/features/journal-new/components/StudyJournalForm';
 import {
@@ -93,7 +94,9 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
       ),
     );
   const dirty = formDirty || contextDirty;
-  const { setDirty: setNavigationDirty } = useRetrospectiveDraft();
+  // 저장 성공 직후의 이동은 이탈이 아니다 — 렌더가 따라오기 전에 보호를 풀어야 해서 ref로 읽는다.
+  const leaveAllowedRef = useRef(false);
+  const [newSubmissionConfirmOpen, setNewSubmissionConfirmOpen] = useState(false);
   const [hasSubmission, setHasSubmission] = useState(false);
   const [submitState, dispatch] = useReducer(journalSubmitReducer, initialJournalSubmitState);
   const inFlightRef = useRef(false);
@@ -102,11 +105,6 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   // Editing (even submitting another payload) cannot prove an earlier request failed.
   const idempotencyKeysRef = useRef(new Map<string, string>());
   const mountedRef = useRef(true);
-
-  useEffect(() => {
-    setNavigationDirty(dirty);
-    return () => setNavigationDirty(false);
-  }, [dirty, setNavigationDirty]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -240,24 +238,19 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
 
   const goToEntryChoice = () => {
     if (submitState.status === 'submitting') return;
-    if (!dirty || window.confirm(t('app.journalNew.typeChange.dirtyConfirm'))) {
-      navigate(APP_ROUTE_PATHS.journalNew);
-    }
+    // 입력이 남아 있으면 LeaveGuard가 같은 확인을 띄운다.
+    navigate(APP_ROUTE_PATHS.journalNew);
   };
   const returnToJournal = () => {
     if (submitState.status === 'submitting') return;
-    if (!dirty || window.confirm(t('app.journalNew.backToJournalDirtyConfirm'))) {
-      navigate(APP_ROUTE_PATHS.journalList, { replace: true });
-    }
+    navigate(APP_ROUTE_PATHS.journalList, { replace: true });
   };
   const returnToReview = () => {
     if (!reviewHandoff || submitState.status === 'submitting') return;
-    if (!dirty || window.confirm(t('app.journalNew.handoff.returnToReviewDirtyConfirm'))) {
-      if (navigationType === 'PUSH') {
-        navigate(-1);
-      } else {
-        navigate(safeReviewReturn(reviewHandoff.returnTarget), { replace: true });
-      }
+    if (navigationType === 'PUSH') {
+      navigate(-1);
+    } else {
+      navigate(safeReviewReturn(reviewHandoff.returnTarget), { replace: true });
     }
   };
   const submit = (state: InvestmentJournalFormState | StudyJournalFormState) => {
@@ -288,6 +281,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         idempotencyKeysRef.current.clear();
         setHasSubmission(false);
         dispatch({ type: 'submitSucceeded', journalId });
+        leaveAllowedRef.current = true;
         const savedDecisionContext =
           decisionContextEnabled && decisionContext
             ? {
@@ -314,9 +308,8 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   };
   const formEdited = () => dispatch({ type: 'formEdited' });
   const startNewSubmission = () => {
-    if (inFlightRef.current || !window.confirm(t('app.journalNew.form.newSubmissionConfirm'))) {
-      return;
-    }
+    setNewSubmissionConfirmOpen(false);
+    if (inFlightRef.current) return;
     idempotencyKeysRef.current.clear();
     setHasSubmission(false);
     dispatch({ type: 'newSubmission' });
@@ -333,6 +326,20 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         };
   return (
     <section className="flex min-h-full flex-col">
+      <LeaveGuard
+        when={() => dirty && !leaveAllowedRef.current}
+        saving={submitState.status === 'submitting'}
+      />
+      <ConfirmDialog
+        open={newSubmissionConfirmOpen}
+        title={t('app.journalNew.form.newSubmissionConfirmTitle')}
+        description={t('app.journalNew.form.newSubmissionConfirm')}
+        stayLabel={t('app.journalNew.form.newSubmissionKeep')}
+        confirmLabel={t('app.journalNew.form.newSubmission')}
+        onStay={() => setNewSubmissionConfirmOpen(false)}
+        onConfirm={startNewSubmission}
+        destructive={false}
+      />
       <header className="px-4 pt-6 sm:px-6 sm:pt-8">
         {!reviewHandoff && (
           <button
@@ -469,7 +476,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
           {hasSubmission && submitState.status !== 'submitting' && (
             <button
               type="button"
-              onClick={startNewSubmission}
+              onClick={() => setNewSubmissionConfirmOpen(true)}
               className="text-primary mt-2 min-h-11 rounded-md text-sm font-semibold underline-offset-4 hover:underline"
             >
               {t('app.journalNew.form.newSubmission')}
