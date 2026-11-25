@@ -126,7 +126,8 @@ export function DecisionContextCapturePanel({
           open={initiallyOpen}
           summary={t('app.journalNew.decisionContext.detailsSummary', {
             checklist: String(context.checklist.length),
-            facts: String(context.optionalEvidence.length),
+            // 접힌 요약은 지금 포함으로 선택된 사실만 센다(저장 payload와 무관한 화면 선택 상태).
+            included: String(context.optionalEvidence.filter((item) => item.included).length),
           })}
         >
           <div className="space-y-5 pb-2">

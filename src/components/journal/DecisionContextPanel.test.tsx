@@ -32,9 +32,37 @@ describe('DecisionContextCapturePanel', () => {
       screen.getByText(
         ko.app.journalNew.decisionContext.detailsSummary
           .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
-          .replace('{{facts}}', String(SAMPLE_DECISION_CONTEXT.optionalEvidence.length)),
+          .replace(
+            '{{included}}',
+            String(SAMPLE_DECISION_CONTEXT.optionalEvidence.filter((item) => item.included).length),
+          ),
       ),
     ).toBeInTheDocument();
+  });
+
+  it('접힌 요약의 사실 개수는 포함으로 선택된 사실만 센다(선택을 바꾸면 갱신)', () => {
+    const included = SAMPLE_DECISION_CONTEXT.optionalEvidence.filter(
+      (item) => item.included,
+    ).length;
+    const total = SAMPLE_DECISION_CONTEXT.optionalEvidence.length;
+    expect(included).not.toBe(total);
+    const label = (count: number) =>
+      ko.app.journalNew.decisionContext.detailsSummary
+        .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
+        .replace('{{included}}', String(count));
+    const { unmount } = render(
+      <I18nProvider locale="ko">
+        <DecisionContextCapturePanel
+          context={SAMPLE_DECISION_CONTEXT}
+          enabled
+          onEnabledChange={vi.fn()}
+          onEvidenceChange={vi.fn()}
+        />
+      </I18nProvider>,
+    );
+    expect(screen.getByText(label(included))).toBeInTheDocument();
+    expect(screen.queryByText(label(total))).toBeNull();
+    unmount();
   });
 
   it('꺼져 있으면 본문 Disclosure가 없다', () => {

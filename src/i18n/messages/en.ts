@@ -415,7 +415,7 @@ export const en: Messages = {
         unchecked: 'Not checked',
         optionalLabel: 'Optional · verified evidence',
         optionalDescription: 'Choose which evidence to keep with this record.',
-        detailsSummary: 'Context details · {{checklist}} checks · {{facts}} optional facts',
+        detailsSummary: 'Context details · {{checklist}} checks · {{included}} facts selected',
         immutableNotice:
           'The question, checklist version, check status, and captured time stay as they were. The full AI review result is not saved.',
       },
