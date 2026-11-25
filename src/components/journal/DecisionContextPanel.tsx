@@ -126,8 +126,8 @@ export function DecisionContextCapturePanel({
           open={initiallyOpen}
           summary={t('app.journalNew.decisionContext.detailsSummary', {
             checklist: String(context.checklist.length),
-            // 접힌 요약은 지금 포함으로 선택된 사실만 센다(저장 payload와 무관한 화면 선택 상태).
-            included: String(context.optionalEvidence.filter((item) => item.included).length),
+            // 접힌 요약은 참고로 보여 주는 사실의 전체 개수다. 저장되지 않으므로 선택 수를 세지 않는다.
+            facts: String(context.optionalEvidence.length),
           })}
         >
           <div className="space-y-5 pb-2">
@@ -205,6 +205,8 @@ export function DecisionContextCapturePanel({
                   <Checkbox
                     key={evidence.id}
                     checked={evidence.included}
+                    // 저장 포함은 아직 지원하지 않으므로 선택을 막는다(표시 전용 참고 사실).
+                    disabled
                     onChange={() => onEvidenceChange(evidence.id)}
                     label={
                       <span className="block min-w-0 space-y-1 text-sm">

@@ -3,17 +3,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
 import { I18nProvider } from '@/i18n/I18nContext';
+import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT } from '@/mocks/decisionContext';
 
-function renderPanel(enabled = true) {
+function renderPanel(locale: 'ko' | 'en' = 'ko') {
   const onEnabledChange = vi.fn();
   const onEvidenceChange = vi.fn();
   render(
-    <I18nProvider locale="ko">
+    <I18nProvider locale={locale}>
       <DecisionContextCapturePanel
         context={SAMPLE_DECISION_CONTEXT}
-        enabled={enabled}
+        enabled
         onEnabledChange={onEnabledChange}
         onEvidenceChange={onEvidenceChange}
       />
@@ -22,70 +23,98 @@ function renderPanel(enabled = true) {
   return { onEnabledChange, onEvidenceChange };
 }
 
-describe('DecisionContextCapturePanel', () => {
-  it('폰(matchMedia 없음)에서는 본문이 접히고 한 줄 요약에 개수가 보인다', () => {
+const panel = () => screen.getByTestId('decision-context-capture');
+
+describe('DecisionContextCapturePanel 문구 계약 (F-04)', () => {
+  it('저장을 암시하는 문구가 없다', () => {
+    const forbidden = [
+      '함께 남',
+      '남깁니다',
+      '남길 사실',
+      '저장 시점',
+      '저장 당시',
+      '함께 남긴',
+      '저장 포함 사실',
+    ];
+    const dc = { ...ko.app.journalNew.decisionContext, ...ko.app.journalDetail.decisionContext };
+    for (const value of Object.values(dc)) {
+      for (const phrase of forbidden) {
+        expect(String(value)).not.toContain(phrase);
+      }
+    }
     renderPanel();
-    const details = screen.getByTestId('decision-context-capture').querySelector('details');
-    expect(details).not.toBeNull();
-    expect(details).not.toHaveAttribute('open');
+    expect(panel().textContent).not.toMatch(/함께 남|남깁니다|저장 시점/);
+  });
+
+  it('참고 표시와 저장 여부를 구분해 보여 준다', () => {
+    renderPanel();
     expect(
-      screen.getByText(
-        ko.app.journalNew.decisionContext.detailsSummary
-          .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
-          .replace(
-            '{{included}}',
-            String(SAMPLE_DECISION_CONTEXT.optionalEvidence.filter((item) => item.included).length),
-          ),
-      ),
+      screen.getByRole('heading', { name: ko.app.journalNew.decisionContext.title }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(ko.app.journalNew.decisionContext.enabledDescription),
+    ).toBeInTheDocument();
+    expect(screen.getByText(ko.app.journalNew.decisionContext.minimumLabel)).toBeInTheDocument();
+    expect(screen.getByText(ko.app.journalNew.decisionContext.optionalLabel)).toBeInTheDocument();
+    expect(
+      screen.getByText(ko.app.journalNew.decisionContext.optionalDescription),
     ).toBeInTheDocument();
   });
 
-  it('접힌 요약의 사실 개수는 포함으로 선택된 사실만 센다(선택을 바꾸면 갱신)', () => {
-    const included = SAMPLE_DECISION_CONTEXT.optionalEvidence.filter(
-      (item) => item.included,
-    ).length;
-    const total = SAMPLE_DECISION_CONTEXT.optionalEvidence.length;
-    expect(included).not.toBe(total);
-    const label = (count: number) =>
-      ko.app.journalNew.decisionContext.detailsSummary
-        .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
-        .replace('{{included}}', String(count));
-    const { unmount } = render(
-      <I18nProvider locale="ko">
-        <DecisionContextCapturePanel
-          context={SAMPLE_DECISION_CONTEXT}
-          enabled
-          onEnabledChange={vi.fn()}
-          onEvidenceChange={vi.fn()}
-        />
-      </I18nProvider>,
-    );
-    expect(screen.getByText(label(included))).toBeInTheDocument();
-    expect(screen.queryByText(label(total))).toBeNull();
-    unmount();
+  it('저장 포함 선택(사실 체크박스)은 비활성이라 누를 수 없다', () => {
+    renderPanel();
+    const boxes = within(panel()).getAllByRole('checkbox');
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+      expect(box).toBeDisabled();
+    }
   });
 
-  it('꺼져 있으면 본문 Disclosure가 없다', () => {
-    renderPanel(false);
-    expect(screen.getByTestId('decision-context-capture').querySelector('details')).toBeNull();
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
-  });
-
-  it('스위치의 터치 영역은 44×44이고 누르면 전환을 알린다', () => {
+  it('표시 전환 스위치는 참고 화면만 바꾸므로 눌러 숨기고 다시 켤 수 있다', () => {
     const { onEnabledChange } = renderPanel();
-    const toggle = screen.getByRole('switch');
-    expect(toggle).toHaveClass('size-11');
-    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole('switch'));
     expect(onEnabledChange).toHaveBeenCalledWith(false);
+    expect(
+      screen.getByRole('switch', { name: ko.app.journalNew.decisionContext.switchLabel }),
+    ).toBeEnabled();
   });
 
-  it('선택 사실은 공통 Checkbox(라벨 전체가 44 이상 터치 영역)로 고르고 라벨로 접근된다', () => {
-    const { onEvidenceChange } = renderPanel();
-    const panel = screen.getByTestId('decision-context-capture');
-    const boxes = within(panel).getAllByRole('checkbox');
-    expect(boxes).toHaveLength(SAMPLE_DECISION_CONTEXT.optionalEvidence.length);
-    expect(boxes[0].closest('label')).toHaveClass('min-h-11');
-    fireEvent.click(boxes[0]);
-    expect(onEvidenceChange).toHaveBeenCalledWith(SAMPLE_DECISION_CONTEXT.optionalEvidence[0].id);
+  it('영문 문구도 저장 포함을 암시하지 않는다', () => {
+    const forbidden = [
+      'keep',
+      'saved at',
+      'will be saved',
+      'saved time',
+      'saved as-is',
+      'selected facts',
+    ];
+    const dc = { ...en.app.journalNew.decisionContext, ...en.app.journalDetail.decisionContext };
+    for (const value of Object.values(dc)) {
+      for (const phrase of forbidden) {
+        expect(String(value).toLowerCase()).not.toContain(phrase);
+      }
+    }
+  });
+});
+
+describe('검토 → 기록 안내 문구 계약 (F-04)', () => {
+  it('작성 안내는 검토 맥락이 아직 저장되지 않는다고 밝힌다', () => {
+    expect(ko.app.ask.handoff.investment.description).toContain('저장되지 않아요');
+    expect(en.app.ask.handoff.investment.description).toMatch(/not saved/);
+    expect(ko.app.ask.handoff.investment.description).not.toContain('함께 남');
+    expect(en.app.ask.handoff.investment.description).not.toMatch(/keep the review/);
+  });
+});
+
+describe('접힌 맥락 요약 문구 (F-02 · F-04)', () => {
+  it('요약은 참고 사실의 전체 개수와 "저장되지 않음"을 보여 준다', () => {
+    renderPanel();
+    const total = SAMPLE_DECISION_CONTEXT.optionalEvidence.length;
+    const summary = ko.app.journalNew.decisionContext.detailsSummary
+      .replace('{{checklist}}', String(SAMPLE_DECISION_CONTEXT.checklist.length))
+      .replace('{{facts}}', String(total));
+    expect(screen.getByText(summary)).toBeInTheDocument();
+    expect(summary).toContain('저장되지 않음');
+    expect(summary).not.toContain('선택');
   });
 });

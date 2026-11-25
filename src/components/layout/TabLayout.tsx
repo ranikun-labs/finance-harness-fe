@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from 'react-router';
 
@@ -6,7 +6,6 @@ import { BottomNavigation, type NavFocusMemory } from '@/components/layout/Botto
 import { useHeaderNavSlot } from '@/components/layout/HeaderNavSlot';
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
 import { useRouteScrollAndFocus } from '@/components/layout/useRouteScrollAndFocus';
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
@@ -30,7 +29,6 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
   const headerNavSlot = useHeaderNavSlot();
   const isTopNav = useMediaQuery(TOP_NAV_MEDIA_QUERY);
   const navHost = isTopNav ? headerNavSlot : null;
-  const [retrospectiveDirty, setRetrospectiveDirty] = useState(false);
   // 내비가 body 앞/뒤로 옮겨 다시 마운트돼도 포커스 위치(탭)를 이어받기 위한 기억.
   const navFocusMemory: NavFocusMemory = useRef(null);
   useEffect(() => {
@@ -50,58 +48,54 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
   const isRetrospectiveWorkspace = journalRouteKind === 'review';
 
   return (
-    <RetrospectiveDraftContext.Provider
-      value={{ dirty: retrospectiveDirty, setDirty: setRetrospectiveDirty }}
-    >
-      <JournalReadPortProvider port={journalReadPort}>
-        <div className="adaptive-shell-layout flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          {navHost &&
-            createPortal(
-              <BottomNavigation focusMemory={navFocusMemory} placement="header" />,
-              navHost,
-            )}
-          {!navHost && navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
-          <main
-            ref={mainRef}
-            id={MAIN_LANDMARK_ID}
+    <JournalReadPortProvider port={journalReadPort}>
+      <div className="adaptive-shell-layout flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        {navHost &&
+          createPortal(
+            <BottomNavigation focusMemory={navFocusMemory} placement="header" />,
+            navHost,
+          )}
+        {!navHost && navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
+        <main
+          ref={mainRef}
+          id={MAIN_LANDMARK_ID}
+          className={cn(
+            'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
+            // 고정 하단 행동이 포커스·앵커 이동 대상을 가리지 않도록 96px 여유.
+            isReviewResult && 'scroll-pb-24',
+            isJournalWorkspace && 'journal-workspace-main',
+            isRetrospectiveWorkspace && 'retrospective-workspace-main',
+          )}
+        >
+          <PageContainer
+            size={isReviewResult ? 'result' : 'reading'}
             className={cn(
-              'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
-              // 고정 하단 행동이 포커스·앵커 이동 대상을 가리지 않도록 96px 여유.
-              isReviewResult && 'scroll-pb-24',
-              isJournalWorkspace && 'journal-workspace-main',
-              isRetrospectiveWorkspace && 'retrospective-workspace-main',
+              'adaptive-readable-host',
+              // 1280 이상 결과 화면은 본문 + 보조 열 폭까지 넓힌다(좁은 상태는 AskPage가 760으로 되돌린다).
+              isReviewResult && 'xl:max-w-[1132px]',
+              isJournalWorkspace && 'journal-workspace-host',
+              isRetrospectiveWorkspace && 'retrospective-workspace-host',
             )}
+            data-testid="adaptive-content-host"
           >
-            <PageContainer
-              size={isReviewResult ? 'result' : 'reading'}
-              className={cn(
-                'adaptive-readable-host',
-                // 1280 이상 결과 화면은 본문 + 보조 열 폭까지 넓힌다(좁은 상태는 AskPage가 760으로 되돌린다).
-                isReviewResult && 'xl:max-w-[1132px]',
-                isJournalWorkspace && 'journal-workspace-host',
-                isRetrospectiveWorkspace && 'retrospective-workspace-host',
-              )}
-              data-testid="adaptive-content-host"
-            >
-              {isJournalWorkspace ? (
-                <AuthRequiredSurface
-                  fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
-                  fallbackCancelLabel="auth.entry.cancelReviewStart"
-                >
-                  <Suspense fallback={<LazyLoadingFallback />}>
-                    <LazyJournalWorkspace />
-                  </Suspense>
-                </AuthRequiredSurface>
-              ) : (
+            {isJournalWorkspace ? (
+              <AuthRequiredSurface
+                fallbackCancelTarget={APP_ROUTE_PATHS.appHome}
+                fallbackCancelLabel="auth.entry.cancelReviewStart"
+              >
                 <Suspense fallback={<LazyLoadingFallback />}>
-                  <Outlet />
+                  <LazyJournalWorkspace />
                 </Suspense>
-              )}
-            </PageContainer>
-          </main>
-          {!navHost && !navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
-        </div>
-      </JournalReadPortProvider>
-    </RetrospectiveDraftContext.Provider>
+              </AuthRequiredSurface>
+            ) : (
+              <Suspense fallback={<LazyLoadingFallback />}>
+                <Outlet />
+              </Suspense>
+            )}
+          </PageContainer>
+        </main>
+        {!navHost && !navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
+      </div>
+    </JournalReadPortProvider>
   );
 }

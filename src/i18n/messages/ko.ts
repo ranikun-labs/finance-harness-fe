@@ -29,6 +29,17 @@ export const ko: Messages = {
   common: {
     appName: 'AI 투자 체크리스트',
     loading: '불러오는 중이에요',
+    leaveGuard: {
+      title: '작성 중인 내용이 사라져요',
+      description: '지금 나가면 입력한 내용을 다시 볼 수 없어요.',
+      stay: '계속 작성',
+      leave: '나가기',
+      saving: {
+        title: '저장 중이에요',
+        description: '저장이 끝나면 이동할 수 있어요. 실패하면 이 화면에서 다시 저장할 수 있어요.',
+        stay: '확인',
+      },
+    },
   },
   theme: {
     trigger: '화면 모드',
@@ -258,7 +269,7 @@ export const ko: Messages = {
         partialNarrow: '부분 결과는 오류가 아니라 정상적인 불완전 결과입니다.',
       },
       recordQuestions: {
-        heading: '다음 기록에 남길 질문',
+        heading: '기록 작성 때 참고할 질문',
         items: {
           businessAssumption: '내가 중요하게 본 사업 전제는 무엇인가?',
           evidenceToCheck: '산업과 실적 기대 중 확인이 더 필요한 것은 무엇인가?',
@@ -271,7 +282,7 @@ export const ko: Messages = {
         investment: {
           title: '판단 기록 남기기',
           description:
-            '내 판단과 이유를 직접 적어요. 검토 질문과 확인 상태를 함께 남길지는 작성 화면에서 골라요.',
+            '내 판단과 이유를 직접 적어요. 검토 질문과 확인 상태는 작성 화면에서 참고로만 보여요. 아직 기록에 저장되지 않아요.',
         },
         study: {
           title: '학습 노트로 남기기',
@@ -363,7 +374,6 @@ export const ko: Messages = {
     journalNew: {
       cancelDirectEntry: '취소',
       backToJournal: '저널로 돌아가기',
-      backToJournalDirtyConfirm: '작성 중인 내용이 사라집니다. 저널로 돌아갈까요?',
       investment: '판단 기록',
       study: '학습 노트',
       entryChoice: {
@@ -382,7 +392,6 @@ export const ko: Messages = {
       },
       typeChange: {
         action: '기록 유형 변경',
-        dirtyConfirm: '입력한 내용이 사라집니다. 기록 유형을 바꿀까요?',
       },
       handoff: {
         originHeading: '검토에서 이어진 기록',
@@ -392,25 +401,25 @@ export const ko: Messages = {
         learningDraftNotice:
           '검토 결과에서 가져온 초안입니다. 저장하기 전에 자유롭게 수정하거나 지울 수 있습니다.',
         returnToReview: '검토 결과로 돌아가기',
-        returnToReviewDirtyConfirm: '작성 중인 내용이 사라집니다. 검토 결과로 돌아갈까요?',
       },
       decisionContext: {
-        title: '검토 맥락 함께 남기기',
-        switchLabel: '검토 맥락 포함',
-        enabledDescription: '이 판단을 내릴 때 참고한 검토 맥락도 함께 남깁니다.',
-        disabledDescription: '이 판단에는 검토 맥락을 포함하지 않습니다.',
-        minimumLabel: '항상 포함 · 최소 기록',
+        title: '검토 맥락 (참고용)',
+        switchLabel: '검토 맥락 표시',
+        enabledDescription: '이 화면에서 검토 맥락을 참고로 보여 드려요. 기록에는 저장되지 않아요.',
+        disabledDescription: '검토 맥락을 숨기고 있어요.',
+        minimumLabel: '항상 표시 · 저장되지 않음',
         originalQuestionLabel: '그때 내가 한 질문',
         checklistLabel: '확인 항목과 그때의 확인 상태',
-        capturedAtLabel: '저장 시점',
+        capturedAtLabel: '검토 시점',
         checked: '확인함',
         unchecked: '확인하지 않음',
-        optionalLabel: '선택 포함 · 확인된 사실',
-        optionalDescription: '함께 남길 사실만 선택할 수 있어요.',
+        optionalLabel: '참고한 확인된 사실 · 저장되지 않음',
         detailsSummary:
-          '맥락 자세히 보기 · 확인 항목 {{checklist}}개 · 포함 선택한 사실 {{included}}개',
+          '맥락 자세히 보기 · 확인 항목 {{checklist}}개 · 참고 사실 {{facts}}개 · 저장되지 않음',
+        optionalDescription:
+          '저장 포함은 아직 지원하지 않아요. 표시된 사실은 기록에 저장되지 않아요.',
         immutableNotice:
-          '질문, 체크리스트 버전, 확인 상태와 기록 시점을 당시 상태 그대로 남깁니다. AI 검토 결과 전체를 저장하지는 않습니다.',
+          '질문, 체크리스트 버전, 확인 상태와 검토 시점을 당시 상태 그대로 보여 드려요. AI 검토 결과 전체는 보관하지 않아요.',
       },
       form: {
         optional: '선택',
@@ -429,6 +438,8 @@ export const ko: Messages = {
         idempotencyConflict:
           '제출 키가 다른 요청에 사용되었습니다. 별도 기록을 만들려면 새 요청 시작을 선택하세요.',
         networkError: '연결에 실패했습니다. 같은 제출을 다시 시도하면 안전하게 재요청합니다.',
+        newSubmissionConfirmTitle: '새 요청을 시작할까요?',
+        newSubmissionKeep: '이전 요청 유지',
         newSubmission: '새 요청 시작',
         newSubmissionConfirm:
           '이전 요청이 이미 저장되었을 수 있습니다. 새 요청으로 제출하면 같은 내용의 기록이 추가로 생성될 수 있습니다. 새 요청을 시작할까요?',
@@ -542,17 +553,17 @@ export const ko: Messages = {
       uncheckedStatus: '확인하지 않음',
       decisionContext: {
         heading: '당시 검토 맥락',
-        snapshotLabel: '저장 당시 그대로 · 변경되지 않음',
+        snapshotLabel: '검토 당시 상태 · 변경되지 않음',
         originalQuestionLabel: '그때 내가 한 질문',
         checklistLabel: '확인 항목과 그때의 확인 상태',
         versionLabel: '체크리스트 버전',
-        capturedAtLabel: '저장 시점',
+        capturedAtLabel: '검토 시점',
         checked: '확인함',
         unchecked: '확인하지 않음',
-        optionalEvidenceLabel: '함께 남긴 확인된 사실',
-        noOptionalEvidence: '선택해서 남긴 사실이 없습니다.',
+        optionalEvidenceLabel: '참고로 표시한 확인된 사실',
+        noOptionalEvidence: '참고로 표시한 사실이 없습니다.',
         immutableNotice:
-          '이 맥락은 저장 당시의 snapshot입니다. 이후 검토 결과나 체크리스트가 바뀌어도 갱신되지 않습니다.',
+          '이 맥락은 검토 당시 상태를 참고용으로 보여 드려요. 이후 검토 결과나 체크리스트가 바뀌어도 갱신되지 않습니다.',
       },
       navigation: {
         review: 'AI와 복기하기',
