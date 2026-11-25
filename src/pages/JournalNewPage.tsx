@@ -1,4 +1,4 @@
-import { resolveTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
+import { resolveTransient, safeReviewReturn } from '@/lib/transientNavigation';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
@@ -282,20 +282,8 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         setHasSubmission(false);
         dispatch({ type: 'submitSucceeded', journalId });
         leaveAllowedRef.current = true;
-        const savedDecisionContext =
-          decisionContextEnabled && decisionContext
-            ? {
-                ...decisionContext,
-                checklist: decisionContext.checklist.map((item) => ({ ...item })),
-                optionalEvidence: decisionContext.optionalEvidence.map((item) => ({ ...item })),
-              }
-            : undefined;
-        navigate(buildAppJournalDetailPath(journalId), {
-          replace: true,
-          state: savedDecisionContext
-            ? transientState({ decisionContext: savedDecisionContext })
-            : undefined,
-        });
+        // 검토 맥락은 저장 payload에 없고 상세 화면도 읽지 않으므로 다음 화면으로 넘기지 않는다.
+        navigate(buildAppJournalDetailPath(journalId), { replace: true });
       })
       .catch((error: unknown) => {
         if (!mountedRef.current || attempt !== attemptRef.current) return;

@@ -275,7 +275,7 @@ export const en: Messages = {
         partialNarrow: 'A partial result is an expected incomplete result, not an error.',
       },
       recordQuestions: {
-        heading: 'Questions for your next record',
+        heading: 'Questions to consider when you write',
         items: {
           businessAssumption: 'Which business assumption mattered most to me?',
           evidenceToCheck:
@@ -290,7 +290,7 @@ export const en: Messages = {
         investment: {
           title: 'Leave a decision record',
           description:
-            'Write your judgment and reasoning yourself. You choose on the next screen whether to keep the review question and check status with it.',
+            'Write your judgment and reasoning yourself. The review question and check status appear on the next screen for reference only; they are not saved with the record yet.',
         },
         study: {
           title: 'Leave a learning note',
@@ -411,20 +411,22 @@ export const en: Messages = {
         returnToReview: 'Back to review result',
       },
       decisionContext: {
-        title: 'Keep the review context with this record',
-        switchLabel: 'Include review context',
-        enabledDescription: 'Keep the review context you used when making this judgment.',
-        disabledDescription: 'This judgment will not include the review context.',
-        minimumLabel: 'Always included · minimum record',
+        title: 'Review context (reference only)',
+        switchLabel: 'Show review context',
+        enabledDescription:
+          'The review context is shown here for reference. It is not saved with this record.',
+        disabledDescription: 'The review context is hidden.',
+        minimumLabel: 'Always shown · not saved',
         originalQuestionLabel: 'Question at the time',
         checklistLabel: 'Checks and their status at the time',
-        capturedAtLabel: 'Saved at',
+        capturedAtLabel: 'Reviewed at',
         checked: 'Checked',
         unchecked: 'Not checked',
-        optionalLabel: 'Optional · verified evidence',
-        optionalDescription: 'Choose which evidence to keep with this record.',
+        optionalLabel: 'Verified facts for reference · not saved',
+        optionalDescription:
+          'Saving facts is not supported yet. Facts shown here are not saved with this record.',
         immutableNotice:
-          'The question, checklist version, check status, and captured time stay as they were. The full AI review result is not saved.',
+          'The question, checklist version, check status, and review time are shown as they were. The full AI review result is not kept.',
       },
       form: {
         optional: 'Optional',
@@ -558,17 +560,17 @@ export const en: Messages = {
       uncheckedStatus: 'Not checked',
       decisionContext: {
         heading: 'Review context at the time',
-        snapshotLabel: 'Saved as-is · unchanged',
+        snapshotLabel: 'As reviewed · unchanged',
         originalQuestionLabel: 'Question at the time',
         checklistLabel: 'Checks and their status at the time',
         versionLabel: 'Checklist version',
-        capturedAtLabel: 'Saved at',
+        capturedAtLabel: 'Reviewed at',
         checked: 'Checked',
         unchecked: 'Not checked',
-        optionalEvidenceLabel: 'Verified evidence kept with this record',
-        noOptionalEvidence: 'No optional evidence was selected.',
+        optionalEvidenceLabel: 'Verified facts shown for reference',
+        noOptionalEvidence: 'No facts were shown for reference.',
         immutableNotice:
-          'This context is a snapshot from the saved time. It does not update when later review results or checklists change.',
+          'This context shows the state at review time for reference. It does not update when later review results or checklists change.',
       },
       navigation: {
         review: 'Review with AI',

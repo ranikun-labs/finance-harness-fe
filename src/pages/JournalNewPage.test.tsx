@@ -562,7 +562,7 @@ describe('JournalNewPage', () => {
     expect(screen.queryByTestId('decision-context-capture')).not.toBeInTheDocument();
   });
 
-  it('keeps the create command unchanged while carrying minimum context on ON navigation', async () => {
+  it('keeps the create command unchanged and does not pass unread context to the detail page', async () => {
     const create = vi.fn().mockResolvedValue({ journalId: 'context-on' });
     renderPage(buildAppJournalNewPath('investment'), 'ko', { create }, false, {
       decisionContext: SAMPLE_DECISION_CONTEXT,
@@ -589,12 +589,8 @@ describe('JournalNewPage', () => {
       expect.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/),
     );
 
-    const savedContext = JSON.parse(screen.getByTestId('detail-context-state').textContent ?? '');
-    expect(savedContext.originalQuestion).toBe(SAMPLE_DECISION_CONTEXT.originalQuestion);
-    expect(savedContext.checklistVersion).toBe(SAMPLE_DECISION_CONTEXT.checklistVersion);
-    expect(savedContext.checklist).toEqual(SAMPLE_DECISION_CONTEXT.checklist);
-    expect(savedContext.capturedAt).toBe(SAMPLE_DECISION_CONTEXT.capturedAt);
-    expect(savedContext.optionalEvidence[0].included).toBe(false);
+    // 상세 화면은 이 값을 읽지 않으므로 저장 뒤 다음 화면으로 넘기지 않는다.
+    expect(screen.getByTestId('detail-context-state')).toHaveTextContent('none');
   });
 
   it('omits Decision Context on OFF navigation without changing the create command', async () => {
