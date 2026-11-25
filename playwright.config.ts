@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: './e2e',
   testIgnore: [
     '**/editor-harness.spec.ts',
+    '**/flow-harness.spec.ts',
     '**/dialog-harness.spec.ts',
     '**/general-analysis-http-smoke.spec.ts',
   ],
