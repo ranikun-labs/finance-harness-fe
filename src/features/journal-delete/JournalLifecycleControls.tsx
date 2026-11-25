@@ -2,6 +2,11 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { JournalEditFetchContext } from '@/features/journal-edit/JournalEditContext';
 import type { JournalDetailViewModel } from '@/features/journal-read/model/journalReadViewModel';
 import type { JournalRevisionRef } from '@/features/journal-edit/journalEditPort';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
+import { Notice } from '@/components/ui/notice';
+import { DetailAction } from '@/features/journal-edit/DetailAction';
 import { useTranslation } from '@/i18n/I18nContext';
 import {
   createJournalLifecyclePort,
@@ -55,45 +60,53 @@ export function JournalDeleteControl({
     }
   };
   return (
-    <section aria-label={t('journalLifecycle.remove')}>
-      <p>{t('journalLifecycle.retained')}</p>
-      {confirmed ? (
-        <>
-          <p>{t('journalLifecycle.confirm')}</p>
-          <button type="button" disabled={busy} onClick={() => void remove()}>
-            {t('journalLifecycle.confirm')}
-          </button>
-          <button type="button" disabled={busy} onClick={() => setConfirmed(null)}>
-            {t('journalEdit.cancel')}
-          </button>
-        </>
-      ) : (
-        <button
+    <>
+      {/* 삭제는 앱바의 텍스트 행동이다. 안내(숨김·보관)는 제목 앞에 두지 않고 확인 Dialog 안에서 말한다. */}
+      <DetailAction>
+        <Button
           type="button"
+          variant="danger-text"
+          className="h-11 px-3"
           disabled={busy || error !== null}
           onClick={() => setConfirmed({ journalId: detail.journalId, revision: detail.revision! })}
         >
           {t('journalLifecycle.remove')}
-        </button>
-      )}
+        </Button>
+      </DetailAction>
+      <Dialog
+        open={confirmed !== null}
+        destructive
+        title={t('journalLifecycle.remove')}
+        description={t('journalLifecycle.retained')}
+        cancelLabel={t('journalEdit.cancel')}
+        confirmLabel={t('journalLifecycle.confirm')}
+        onClose={() => {
+          if (!busy) setConfirmed(null);
+        }}
+        onConfirm={() => void remove()}
+      />
       {error && (
-        <>
-          <p role="alert">
-            {t(error === 'conflict' ? 'journalEdit.conflict' : 'journalEdit.failed')}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setConfirmed(null);
-              onReload();
-            }}
-          >
-            {t('journalEdit.reload')}
-          </button>
-        </>
+        <Notice
+          tone="danger"
+          action={
+            <Button
+              type="button"
+              variant="text"
+              className="h-11 px-3"
+              onClick={() => {
+                setError(null);
+                setConfirmed(null);
+                onReload();
+              }}
+            >
+              {t('journalEdit.reload')}
+            </Button>
+          }
+        >
+          {t(error === 'conflict' ? 'journalEdit.conflict' : 'journalEdit.failed')}
+        </Notice>
       )}
-    </section>
+    </>
   );
 }
 
@@ -165,40 +178,64 @@ export function DeletedJournalList() {
     }
   };
   return (
-    <section aria-label={t('journalLifecycle.deletedList')}>
-      <button type="button" disabled={busy} onClick={() => setOpen((v) => !v)}>
+    <section aria-label={t('journalLifecycle.deletedList')} className="px-5 pt-2 pb-10 sm:px-6">
+      {/* 목록 끝의 텍스트 링크다. 평소에는 목록을 밀어내지 않고, 눌러야 펼쳐진다. */}
+      <Button
+        type="button"
+        variant="text-neutral"
+        className="-ml-3 h-11 px-3"
+        aria-expanded={open}
+        disabled={busy}
+        onClick={() => setOpen((v) => !v)}
+      >
         {t('journalLifecycle.deletedList')}
-      </button>
+      </Button>
       {open && (
-        <>
-          <p>{t('journalLifecycle.retained')}</p>
-          <button type="button" disabled={busy} onClick={() => setReload((v) => v + 1)}>
-            {t('journalEdit.reload')}
-          </button>
-          {error && <p role="alert">{t('journalEdit.failed')}</p>}
+        <Card className="mt-2 flex flex-col gap-3 p-5">
+          <p className="type-supporting text-text-secondary break-keep">
+            {t('journalLifecycle.retained')}
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="text"
+              className="-ml-3 h-11 px-3"
+              disabled={busy}
+              onClick={() => setReload((v) => v + 1)}
+            >
+              {t('journalEdit.reload')}
+            </Button>
+          </div>
+          {error && <Notice tone="danger">{t('journalEdit.failed')}</Notice>}
           {listing?.source === fetchImpl && (
             <>
-              {listing.items.length === 0 && <p>{t('journalLifecycle.empty')}</p>}
-              <ul>
+              {listing.items.length === 0 && (
+                <p className="type-body text-foreground">{t('journalLifecycle.empty')}</p>
+              )}
+              <ul className="divide-border divide-y">
                 {listing.items.map((item) => (
-                  <li key={item.journalId}>
-                    <span>
+                  <li key={item.journalId} className="flex items-center justify-between gap-3">
+                    <span className="type-supporting text-text-body min-w-0 wrap-anywhere">
                       {item.type} · {item.deletedAt}
                     </span>
-                    <button
+                    <Button
                       type="button"
+                      variant="text"
+                      className="h-11 shrink-0 px-3"
                       disabled={busy || error}
                       onClick={() => void restore(item)}
                     >
                       {t('journalLifecycle.restore')}
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>
-              {listing.hasMore && <p>{t('journalLifecycle.more')}</p>}
+              {listing.hasMore && (
+                <p className="type-supporting text-text-secondary">{t('journalLifecycle.more')}</p>
+              )}
             </>
           )}
-        </>
+        </Card>
       )}
     </section>
   );
