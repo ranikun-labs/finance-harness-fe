@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: '**/editor-harness.spec.ts',
+  testMatch: ['**/editor-harness.spec.ts', '**/flow-harness.spec.ts'],
   reporter: 'line',
   workers: 1,
   use: {
