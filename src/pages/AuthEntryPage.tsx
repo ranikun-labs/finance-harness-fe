@@ -252,7 +252,7 @@ export function AuthEntryPage({
                 {t('auth.entry.referenceUserId')}
                 <input
                   autoComplete="username"
-                  className="border-input bg-background focus-visible:ring-ring min-h-11 rounded-md border px-3 outline-none focus-visible:ring-2"
+                  className="border-input bg-background min-h-11 rounded-md border px-3"
                   value={userId}
                   onChange={(event) => setUserId(event.target.value)}
                   disabled={phase === 'loading'}
@@ -265,7 +265,7 @@ export function AuthEntryPage({
                   ref={passwordInputRef}
                   type="password"
                   autoComplete="current-password"
-                  className="border-input bg-background focus-visible:ring-ring min-h-11 rounded-md border px-3 outline-none focus-visible:ring-2"
+                  className="border-input bg-background min-h-11 rounded-md border px-3"
                   disabled={phase === 'loading'}
                   required
                 />
@@ -300,7 +300,7 @@ export function AuthEntryPage({
               type="button"
               onClick={cancel}
               disabled={phase === 'loading'}
-              className="text-primary focus-visible:ring-ring/50 min-h-11 rounded-md text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+              className="text-primary min-h-11 rounded-md text-sm font-semibold underline-offset-4 hover:underline"
             >
               {t(cancelLabel)}
             </button>

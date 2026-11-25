@@ -270,7 +270,15 @@
     font-family: var(--font-sans);
   }
 
-  /* 포커스: 2px brand strong + offset 2px. :where로 specificity 0 — 컴포넌트가 덮어쓸 수 있다. */
+  /*
+   * 포커스 표시 계약(F3 X-01): 2px 실선 + offset 2, 색은 항상 --ring(color.focus). 글자색(currentColor)·반투명 금지.
+   * 평소에도 outline-color를 --ring으로 고정한다 — 기본값(currentColor)에서 시작하면 transition-colors가 있는
+   * 요소(버튼)의 첫 포커스가 글자색(Strong은 흰색)에서 --ring으로 150ms 동안 번쩍인다.
+   * :where로 specificity 0 — 컴포넌트가 의도적으로 덮어쓸 수 있지만 ring-ring/50·outline-none은 쓰지 않는다(focus.test.ts).
+   */
+  :where(a, button, input, select, textarea, summary, dialog, [tabindex]) {
+    outline-color: var(--ring);
+  }
   :where(a, button, input, select, textarea, summary, dialog, [tabindex]):focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
