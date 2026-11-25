@@ -8,10 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Notice } from '@/components/ui/notice';
+import { BREAKPOINTS, RESULT_ASIDE_WIDTH_PX } from '@/constants/layout';
 import { AUTH_ROUTE_PATHS, APP_ROUTE_PATHS, buildAppJournalNewPath } from '@/constants/routes';
 import { useAuthPresentation } from '@/features/auth/AuthPresentationContext';
 import type { AuthResumeIntent } from '@/features/auth/authPresentation';
 import { useTranslation } from '@/i18n/I18nContext';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 import {
   readReviewChecks,
@@ -186,6 +188,8 @@ function StructuredReviewResult({
 }) {
   const { locale, t } = useTranslation();
   const navigate = useNavigate();
+  // 보조 열은 DOM 구성이 달라지므로 CSS가 아니라 breakpoint(≥1280)로 분기한다.
+  const wide = useMediaQuery(`(min-width: ${BREAKPOINTS.desktop}px)`);
   const investmentLinkRef = useRef<HTMLAnchorElement>(null);
   const studyLinkRef = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
@@ -265,8 +269,8 @@ function StructuredReviewResult({
     },
   };
 
-  return (
-    <div className="flex min-w-0 flex-col gap-6">
+  const sections = (
+    <>
       <header className="flex min-w-0 flex-col gap-2">
         <p className="type-meta text-text-secondary">
           {t('app.ask.structured.resultTitle')} · {t('app.ask.structured.fixtureLabel')}
@@ -444,61 +448,101 @@ function StructuredReviewResult({
           </Notice>
         </Card>
       </section>
+    </>
+  );
 
-      <section aria-labelledby="review-handoff-heading" className="flex min-w-0 flex-col gap-3">
-        <header className="flex min-w-0 flex-col gap-1">
-          <h2 id="review-handoff-heading" className="type-section-title">
-            {t('app.ask.handoff.heading')}
-          </h2>
-          <p className="type-supporting text-text-secondary">{t('app.ask.handoff.description')}</p>
-        </header>
-        <Card className="flex min-w-0 flex-col gap-1 p-4">
+  const investmentLink = (
+    <Link
+      ref={investmentLinkRef}
+      className={cn(buttonVariants({ variant: 'strong' }), 'w-full', !wide && 'md:w-fit')}
+      {...investmentLinkProps}
+    >
+      {t('app.ask.handoff.investment.title')}
+    </Link>
+  );
+
+  /**
+   * "기록으로 이어가기" 블록. 같은 DOM이 viewport에 따라 자리만 바뀐다(중복 렌더 없음).
+   * - 좁은 화면: 본문 끝에 놓고 판단 기록 버튼은 고정 하단 바에 둔다.
+   * - 1280 이상: 보조 열에 놓고 판단 기록 버튼을 카드 안에 둔다(고정 하단 바 없음).
+   */
+  const handoff = (
+    <section aria-labelledby="review-handoff-heading" className="flex min-w-0 flex-col gap-3">
+      <header className="flex min-w-0 flex-col gap-1">
+        <h2 id="review-handoff-heading" className="type-section-title">
+          {t('app.ask.handoff.heading')}
+        </h2>
+        <p className="type-supporting text-text-secondary">{t('app.ask.handoff.description')}</p>
+      </header>
+      <Card className="flex min-w-0 flex-col gap-3 p-4">
+        <div className="flex flex-col gap-1">
           <h3 className="type-content-title">{t('app.ask.handoff.investment.title')}</h3>
           <p className="type-supporting text-text-secondary">
             {t('app.ask.handoff.investment.description')}
           </p>
-        </Card>
-        <Card className="flex min-w-0 flex-col gap-3 p-4">
-          <div className="flex flex-col gap-1">
-            <h3 className="type-content-title">{t('app.ask.handoff.study.title')}</h3>
-            <p className="type-supporting text-text-secondary">
-              {t('app.ask.handoff.study.description')}
-            </p>
-          </div>
-          <Link
-            ref={studyLinkRef}
-            className={cn(buttonVariants({ variant: 'subtle' }), 'w-full md:w-fit')}
-            to={studyDestination}
-            onClick={(event) => {
-              if (
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
-              event.preventDefault();
-              navigate(studyDestination, { state: transientState(studyDestinationState) });
-            }}
-          >
-            {t('app.ask.handoff.study.title')}
-          </Link>
-        </Card>
-      </section>
+        </div>
+        {wide && <div data-testid="review-primary-action">{investmentLink}</div>}
+      </Card>
+      <Card className="flex min-w-0 flex-col gap-3 p-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="type-content-title">{t('app.ask.handoff.study.title')}</h3>
+          <p className="type-supporting text-text-secondary">
+            {t('app.ask.handoff.study.description')}
+          </p>
+        </div>
+        <Link
+          ref={studyLinkRef}
+          className={cn(buttonVariants({ variant: 'subtle' }), 'w-full', !wide && 'md:w-fit')}
+          to={studyDestination}
+          onClick={(event) => {
+            if (
+              event.button !== 0 ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            )
+              return;
+            event.preventDefault();
+            navigate(studyDestination, { state: transientState(studyDestinationState) });
+          }}
+        >
+          {t('app.ask.handoff.study.title')}
+        </Link>
+      </Card>
+    </section>
+  );
+
+  if (wide) {
+    return (
+      <div
+        data-testid="review-result-layout"
+        className="grid min-w-0 items-start gap-x-8"
+        style={{ gridTemplateColumns: `minmax(0, 1fr) ${RESULT_ASIDE_WIDTH_PX}px` }}
+      >
+        <div className="flex min-w-0 flex-col gap-6">{sections}</div>
+        <aside
+          data-testid="review-result-aside"
+          aria-labelledby="review-handoff-heading"
+          className="sticky top-4 min-w-0"
+        >
+          {handoff}
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      {sections}
+      {handoff}
 
       {/* 화면의 Strong 1개. 긴 결과를 끝까지 내리지 않아도 보이도록 하단에 붙인다(폰 전폭, 태블릿 이상 내용 폭). */}
       <div
         data-testid="review-primary-action"
         className="bg-background border-border sticky bottom-0 z-10 -mx-5 border-t px-5 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
-        <Link
-          ref={investmentLinkRef}
-          className={cn(buttonVariants({ variant: 'strong' }), 'w-full md:w-fit')}
-          {...investmentLinkProps}
-        >
-          {t('app.ask.handoff.investment.title')}
-        </Link>
+        {investmentLink}
       </div>
     </div>
   );
@@ -541,8 +585,21 @@ export function AskPage() {
     navigate(APP_ROUTE_PATHS.appHome, { state: transientState({ prefill: question }) });
   }
 
+  const localAnalysis =
+    question !== '' &&
+    import.meta.env.DEV &&
+    import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS === 'true';
+  // 1280 이상에서 TabLayout host는 본문 + 보조 열 폭이다. 결과 화면 외 상태(로딩·오류·빈 화면)는
+  // 기존 760 열 그대로 가운데에 둔다.
+  const showsResult = !localAnalysis && question !== '' && phase === 'result';
+
   return (
-    <div className="flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-8">
+    <div
+      className={cn(
+        'flex w-full min-w-0 flex-col gap-6 px-5 pt-4 pb-8',
+        !showsResult && 'xl:mx-auto xl:max-w-[760px]',
+      )}
+    >
       <header className="relative flex min-h-11 items-center justify-center">
         <Link
           aria-label={t('app.ask.header.backLabel')}
@@ -558,9 +615,7 @@ export function AskPage() {
         )}
       </header>
 
-      {question !== '' &&
-      import.meta.env.DEV &&
-      import.meta.env.VITE_LOCAL_GENERAL_ANALYSIS === 'true' ? (
+      {localAnalysis ? (
         <LocalGeneralAnalysis
           key={question}
           question={question}

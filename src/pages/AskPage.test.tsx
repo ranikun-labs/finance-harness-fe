@@ -326,3 +326,79 @@ describe('AskPage / Structured Review Result', () => {
     expect(container.querySelector('script')).toBeNull();
   });
 });
+
+function stubDesktopMatchMedia(matchesDesktop: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: matchesDesktop && query.includes('1280px'),
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+}
+
+describe('AskPage result layout by breakpoint (F1-G7)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps one column with the hand-off at the end and a sticky Strong bar below 1280', () => {
+    stubDesktopMatchMedia(false);
+    renderPage(buildAppAskPath('좁은 화면'));
+
+    expect(screen.queryByTestId('review-result-aside')).not.toBeInTheDocument();
+    const bar = screen.getByTestId('review-primary-action');
+    expect(bar.className).toContain('sticky');
+    expect(
+      within(bar).getByRole('link', { name: ko.app.ask.handoff.investment.title }),
+    ).toBeInTheDocument();
+  });
+
+  it('moves the hand-off block into a side column at 1280+ without duplicating it', () => {
+    stubDesktopMatchMedia(true);
+    renderPage(buildAppAskPath('넓은 화면'));
+
+    const aside = screen.getByTestId('review-result-aside');
+    expect(
+      within(aside).getByRole('heading', { name: ko.app.ask.handoff.heading }),
+    ).toBeInTheDocument();
+    const investment = within(aside).getByRole('link', {
+      name: ko.app.ask.handoff.investment.title,
+    });
+    const study = within(aside).getByRole('link', { name: ko.app.ask.handoff.study.title });
+    expect(investment.className).toContain('bg-primary');
+    expect(study.className).toContain('bg-brand-subtle');
+    // 정보 중복 금지: 같은 링크·제목은 문서에 한 번만 있고 고정 하단 바는 없다.
+    expect(screen.getAllByRole('link', { name: ko.app.ask.handoff.investment.title })).toHaveLength(
+      1,
+    );
+    expect(screen.getAllByRole('heading', { name: ko.app.ask.handoff.heading })).toHaveLength(1);
+    expect(screen.getByTestId('review-primary-action').className).not.toContain('sticky');
+    // 결과 본문은 보조 열 밖에 그대로 있고, G8에 따라 맥락 Checkbox는 두지 않는다.
+    expect(
+      within(aside).queryByRole('heading', { name: ko.app.ask.structured.checklist.heading }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: ko.app.ask.structured.checklist.heading }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('keeps the same hand-off behavior from the side column', () => {
+    stubDesktopMatchMedia(true);
+    renderPage(buildAppAskPath('보조 열 이동'));
+
+    fireEvent.click(
+      screen.getByRole('link', { name: new RegExp(ko.app.ask.handoff.investment.title) }),
+    );
+    expect(screen.getByTestId('decision-context-state')).toHaveTextContent('4');
+  });
+
+  it('keeps loading, error and empty states in the 760 column at 1280+', () => {
+    stubDesktopMatchMedia(true);
+    const { container } = renderPage(`${APP_ROUTE_PATHS.ask}?fixture=error`);
+    expect(container.firstElementChild?.className).toContain('xl:max-w-[760px]');
+  });
+});

@@ -412,7 +412,18 @@ test.describe('Adaptive app shell', () => {
       const hostBox = (await page.getByTestId('app-shell-host').boundingBox())!;
       const contentBox = (await page.getByTestId('adaptive-content-host').boundingBox())!;
       expect(hostBox.width).toBe(viewport.width);
-      expect(contentBox.width).toBe(760);
+      if (viewport.width >= 1280) {
+        // 1280 이상은 host가 본문 760 + 보조 열(F1-G7)까지 넓어진다. 읽기 본문 열은 여전히 760이다.
+        expect(contentBox.width).toBe(1132);
+        const bodyBox = (await page
+          .getByTestId('review-result-layout')
+          .locator('> div')
+          .first()
+          .boundingBox())!;
+        expect(bodyBox.width).toBe(760);
+      } else {
+        expect(contentBox.width).toBe(760);
+      }
     }
   });
 });

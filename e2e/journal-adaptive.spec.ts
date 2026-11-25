@@ -497,3 +497,38 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     }
   });
 });
+
+test.describe('Review result side column (F1-G7)', () => {
+  for (const [width, height, aside] of [
+    [1279, 800, false],
+    [1280, 800, true],
+    [1280, 1366, true],
+    [1440, 900, true],
+  ] as const) {
+    test(`${width}x${height}: hand-off ${aside ? 'moves to a side column' : 'stays at the end with a sticky bar'}`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== 'Desktop Chromium', 'viewport is set explicitly');
+      await page.setViewportSize({ width, height });
+      await startReview(page, '보조 열 배치 확인');
+
+      const invest = page.getByRole('link', { name: ko.app.ask.handoff.investment.title });
+      await expect(invest).toHaveCount(1);
+      await expect(invest).toBeVisible();
+      const asideBox = page.getByTestId('review-result-aside');
+      if (aside) {
+        await expect(asideBox).toBeVisible();
+        const a = await asideBox.boundingBox();
+        const h1 = await page.getByRole('heading', { level: 1 }).boundingBox();
+        // 보조 열은 본문 오른쪽에 있고 폭 300이며 본문 폭은 줄어도 가로 넘침은 없다.
+        expect(a!.width).toBeCloseTo(300, 0);
+        expect(a!.x).toBeGreaterThan(h1!.x + h1!.width - 1);
+        await expect(page.getByTestId('review-primary-action')).toHaveCSS('position', 'static');
+      } else {
+        await expect(asideBox).toHaveCount(0);
+        await expect(page.getByTestId('review-primary-action')).toHaveCSS('position', 'sticky');
+      }
+      await expectNoHorizontalOverflow(page);
+    });
+  }
+});

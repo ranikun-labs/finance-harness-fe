@@ -29,7 +29,15 @@ export const CONTENT_MAX_WIDTH_PX = {
   reading: 660,
   /** 검토 결과 등 구조화된 결과 화면. */
   result: 760,
+  /**
+   * 검토 결과 + 보조 열(≥1280). 본문 760 + 열 간격 32 + 보조 열 300 + 좌우 padding 40.
+   * 보조 열은 결과 화면 안의 구성이다(질문|결과 2-pane이 아님, F1-01 §5.3).
+   */
+  resultWithAside: 1132,
 } as const;
+
+/** 결과 화면 보조 열("기록으로 이어가기") 폭(px). 본문 끝 블록만 옆으로 옮긴다. */
+export const RESULT_ASIDE_WIDTH_PX = 300;
 
 /** WCAG 2.5.8 하한(24)이 아니라 Foundation 터치 최소(44)를 따른다. */
 export const TOUCH_TARGET_MIN_PX = 44;
