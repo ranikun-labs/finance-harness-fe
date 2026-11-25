@@ -37,6 +37,7 @@ export interface Messages {
   common: {
     appName: string;
     loading: string;
+    leaveGuard: { title: string; description: string; stay: string; leave: string };
   };
   theme: {
     trigger: string;
@@ -252,7 +253,6 @@ export interface Messages {
       study: string;
       backToJournal: string;
       cancelDirectEntry: string;
-      backToJournalDirtyConfirm: string;
       entryChoice: {
         authNotice: string;
         authUnavailable: string;
@@ -261,14 +261,13 @@ export interface Messages {
         investment: { title: string; description: string };
         study: { title: string; description: string };
       };
-      typeChange: { action: string; dirtyConfirm: string };
+      typeChange: { action: string };
       handoff: {
         originHeading: string;
         originDescription: string;
         questionLabel: string;
         learningDraftNotice: string;
         returnToReview: string;
-        returnToReviewDirtyConfirm: string;
       };
       decisionContext: {
         title: string;
@@ -303,6 +302,8 @@ export interface Messages {
         networkError: string;
         newSubmission: string;
         newSubmissionConfirm: string;
+        newSubmissionConfirmTitle: string;
+        newSubmissionKeep: string;
         retry: string;
         validationSummary: string;
         validation: {

@@ -168,17 +168,18 @@ test('preserves a saved retrospective draft while opening the original across ro
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(original).not.toHaveAttribute('open');
   await expect(field).toHaveValue('작성 중인 복기');
-  let confirmations = 0;
-  page.on('dialog', async (dialog) => {
-    confirmations += 1;
-    await dialog.dismiss();
-  });
-  await page.getByRole('link', { name: ko.app.journalReview.backLabel }).first().click();
-  expect(confirmations).toBe(1);
-  await expect(field).toHaveValue('작성 중인 복기');
-  await page.getByRole('link', { name: ko.app.journalReview.backLabel }).last().click();
-  expect(confirmations).toBe(2);
-  await expect(field).toHaveValue('작성 중인 복기');
+  // 작성 중인 복기가 있으면 두 "기록 상세" 링크 모두 공통 이탈 확인(Dialog)을 띄우고, 머무르면 입력이 그대로다.
+  const leaveDialog = page.getByRole('alertdialog', { name: ko.common.leaveGuard.title });
+  for (const link of [
+    page.getByRole('link', { name: ko.app.journalReview.backLabel }).first(),
+    page.getByRole('link', { name: ko.app.journalReview.backLabel }).last(),
+  ]) {
+    await link.click();
+    await expect(leaveDialog).toBeVisible();
+    await leaveDialog.getByRole('button', { name: ko.common.leaveGuard.stay }).click();
+    await expect(leaveDialog).toBeHidden();
+    await expect(field).toHaveValue('작성 중인 복기');
+  }
 });
 
 test('wraps long saved retrospective fields on a phone', async ({ page }) => {

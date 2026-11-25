@@ -25,6 +25,12 @@ export const en: Messages = {
   common: {
     appName: 'AI Investment Checklist',
     loading: 'Loading…',
+    leaveGuard: {
+      title: 'Your draft will be lost',
+      description: 'If you leave now, what you entered cannot be recovered.',
+      stay: 'Keep writing',
+      leave: 'Leave',
+    },
   },
   theme: {
     trigger: 'Appearance',
@@ -371,7 +377,6 @@ export const en: Messages = {
     journalNew: {
       cancelDirectEntry: 'Cancel',
       backToJournal: 'Back to journal',
-      backToJournalDirtyConfirm: 'Your unsaved work will be lost. Return to the journal?',
       investment: 'Decision record',
       study: 'Learning note',
       entryChoice: {
@@ -390,7 +395,6 @@ export const en: Messages = {
       },
       typeChange: {
         action: 'Change record type',
-        dirtyConfirm: 'Your current entries will be discarded. Change record type?',
       },
       handoff: {
         originHeading: 'Record continued from review',
@@ -400,7 +404,6 @@ export const en: Messages = {
         learningDraftNotice:
           'This draft came from the review result. Edit or remove anything before saving.',
         returnToReview: 'Back to review result',
-        returnToReviewDirtyConfirm: 'Your draft will be discarded. Return to the review result?',
       },
       decisionContext: {
         title: 'Keep the review context with this record',
@@ -435,6 +438,8 @@ export const en: Messages = {
         idempotencyConflict:
           'This submission key was used for a different request. Choose Start a new submission to create a separate entry.',
         networkError: 'The connection failed. Retrying this submission safely repeats the request.',
+        newSubmissionConfirmTitle: 'Start a new request?',
+        newSubmissionKeep: 'Keep previous request',
         newSubmission: 'Start a new submission',
         newSubmissionConfirm:
           'The previous request may already have been saved. Submitting a new request can create another entry with the same content. Start a new submission?',
