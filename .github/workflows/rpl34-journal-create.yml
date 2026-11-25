@@ -11,6 +11,7 @@ on:
       - .prettierignore
       - e2e/journal-adaptive.spec.ts
       - e2e/editor-harness.spec.ts
+      - e2e/flow-harness.spec.ts
       - e2e/journal-backend.integration.spec.ts
       - e2e/support/**
       - eslint.config.js
@@ -82,6 +83,7 @@ jobs:
         run: |
           test ! -e dist/e2e/support/journal-backend-harness.html
           test ! -e dist/e2e/support/editor-harness/index.html
+          test ! -e dist/e2e/support/flow-harness/index.html
           if grep -R -l 'journalBackendHarness' dist; then
             echo 'test-only Journal harness leaked into the production build'
             exit 1

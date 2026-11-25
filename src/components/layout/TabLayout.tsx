@@ -7,6 +7,7 @@ import { useHeaderNavSlot } from '@/components/layout/HeaderNavSlot';
 import { LazyLoadingFallback } from '@/components/layout/LazyLoadingFallback';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { RetrospectiveDraftContext } from '@/components/layout/RetrospectiveDraftContext';
+import { useRouteScrollAndFocus } from '@/components/layout/useRouteScrollAndFocus';
 import { APP_ROUTE_PATHS, getAppJournalRouteKind } from '@/constants/routes';
 import { AuthRequiredSurface } from '@/features/auth/AuthRequiredSurface';
 import { JournalReadPortProvider } from '@/features/journal-read/JournalReadPortContext';
@@ -41,6 +42,8 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
     return () => document.removeEventListener('pointerdown', clear, true);
   }, []);
   const { pathname } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  useRouteScrollAndFocus(mainRef);
   const isReviewResult = pathname === APP_ROUTE_PATHS.ask;
   const journalRouteKind = getAppJournalRouteKind(pathname);
   const isJournalWorkspace = journalRouteKind === 'list' || journalRouteKind === 'detail';
@@ -59,6 +62,7 @@ export function TabLayout({ journalReadPort }: { journalReadPort?: JournalReadPo
             )}
           {!navHost && navFirst && <BottomNavigation focusMemory={navFocusMemory} />}
           <main
+            ref={mainRef}
             id={MAIN_LANDMARK_ID}
             className={cn(
               'adaptive-content-main order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto md:order-2',
