@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/verify-prerender-output.mjs",
-    "build:dev-acceptance": "NODE_ENV=production vite build --mode dev-acceptance",
+    "build:dev-acceptance": "vite build --mode dev-acceptance --outDir dist-dev-acceptance",
     "verify:prod-bundle": "node scripts/verify-prod-bundle.mjs",
     "verify:build-idempotency": "node scripts/verify-build-idempotency.mjs",
     "preview": "vite preview",

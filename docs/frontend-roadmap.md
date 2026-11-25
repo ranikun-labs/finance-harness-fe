@@ -447,6 +447,8 @@ passed.
   제외된다. `pnpm verify:prod-bundle`(`verify` 체인 포함)이 모든 DEV 스위치를 켠 운영 빌드를 만들고
   `finance-reference/signup` 문자열이 없음을 검증한다.
 - journal create 직접 경로(`main.tsx`)와 참조 인증 경로(`AppRouter.tsx`) 모두 같은 MODE gate를 쓴다.
+- 로컬에서 참조 패널을 보려면 `vite --mode dev-acceptance`로 dev 서버를 띄운다. 기본 `pnpm dev`(MODE=development)에서는 패널이 나타나지 않는다.
+- PR 메모: 운영(PROD) journal create를 나중에 열려면 현재 dev-acceptance 전용 gate와 별개의 새 gate와 승인 절차가 필요하다. 지금 gate를 완화해 운영 빌드에 노출하지 않는다.
 
 ## STEP 11 dependency state
 

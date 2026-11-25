@@ -77,10 +77,12 @@ export function AuthEntryPage({
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const signupPasswordRef = useRef<HTMLInputElement>(null);
   const loginControllerRef = useRef<AbortController | null>(null);
+  const signupControllerRef = useRef<AbortController | null>(null);
 
   useEffect(
     () => () => {
       loginControllerRef.current?.abort();
+      signupControllerRef.current?.abort();
       if (passwordInputRef.current) passwordInputRef.current.value = '';
       if (signupPasswordRef.current) signupPasswordRef.current.value = '';
     },
@@ -164,16 +166,20 @@ export function AuthEntryPage({
     const password = signupPasswordRef.current?.value ?? '';
     if (signupPasswordRef.current) signupPasswordRef.current.value = '';
     const email = signupEmail.trim();
+    const controller = new AbortController();
+    signupControllerRef.current = controller;
     setSignupPhase('loading');
 
-    void signup({ email, password })
+    void signup({ email, password }, controller.signal)
       .then(() => {
+        if (controller.signal.aborted) return;
         // Account creation does not sign in; prefill the login ID so the user logs in next.
         setUserId(email);
         setSignupEmail('');
         setSignupPhase('done');
       })
       .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
         const code = error instanceof FinanceReferenceAuthError ? error.code : undefined;
         setSignupPhase(
           code === 'account_exists'

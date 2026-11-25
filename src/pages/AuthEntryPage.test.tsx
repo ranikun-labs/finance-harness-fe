@@ -224,10 +224,13 @@ describe('AuthEntryPage DEV reference panel', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.signupDone),
     );
-    expect(signup).toHaveBeenCalledWith({
-      email: 'dev.account@example.test',
-      password: 'devpass2026',
-    });
+    expect(signup).toHaveBeenCalledWith(
+      {
+        email: 'dev.account@example.test',
+        password: 'devpass2026',
+      },
+      expect.any(AbortSignal),
+    );
     expect(signupPassword).toHaveValue('');
     expect(screen.getByLabelText(ko.auth.entry.referenceUserId)).toHaveValue(
       'dev.account@example.test',

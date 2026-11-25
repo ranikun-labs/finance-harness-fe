@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-ssr/
+dist-dev-acceptance/
 .prerender-manifest.json
 *.local
 *.tsbuildinfo
