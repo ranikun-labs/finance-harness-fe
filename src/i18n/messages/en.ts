@@ -424,7 +424,7 @@ export const en: Messages = {
         unchecked: 'Not checked',
         optionalLabel: 'Verified facts for reference · not saved',
         optionalDescription:
-          'Saving selected facts is not supported yet. Facts you pick here are not saved with this record.',
+          'Saving facts is not supported yet. Facts shown here are not saved with this record.',
         immutableNotice:
           'The question, checklist version, check status, and review time are shown as they were. The full AI review result is not kept.',
       },
@@ -560,17 +560,17 @@ export const en: Messages = {
       uncheckedStatus: 'Not checked',
       decisionContext: {
         heading: 'Review context at the time',
-        snapshotLabel: 'Saved as-is · unchanged',
+        snapshotLabel: 'As reviewed · unchanged',
         originalQuestionLabel: 'Question at the time',
         checklistLabel: 'Checks and their status at the time',
         versionLabel: 'Checklist version',
-        capturedAtLabel: 'Saved at',
+        capturedAtLabel: 'Reviewed at',
         checked: 'Checked',
         unchecked: 'Not checked',
-        optionalEvidenceLabel: 'Verified evidence kept with this record',
-        noOptionalEvidence: 'No optional evidence was selected.',
+        optionalEvidenceLabel: 'Verified facts shown for reference',
+        noOptionalEvidence: 'No facts were shown for reference.',
         immutableNotice:
-          'This context is a snapshot from the saved time. It does not update when later review results or checklists change.',
+          'This context shows the state at review time for reference. It does not update when later review results or checklists change.',
       },
       navigation: {
         review: 'Review with AI',

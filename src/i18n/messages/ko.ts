@@ -415,7 +415,7 @@ export const ko: Messages = {
         unchecked: '확인하지 않음',
         optionalLabel: '참고한 확인된 사실 · 저장되지 않음',
         optionalDescription:
-          '저장 포함은 아직 지원하지 않아요. 여기서 고른 사실은 기록에 저장되지 않아요.',
+          '저장 포함은 아직 지원하지 않아요. 표시된 사실은 기록에 저장되지 않아요.',
         immutableNotice:
           '질문, 체크리스트 버전, 확인 상태와 검토 시점을 당시 상태 그대로 보여 드려요. AI 검토 결과 전체는 보관하지 않아요.',
       },
@@ -551,17 +551,17 @@ export const ko: Messages = {
       uncheckedStatus: '확인하지 않음',
       decisionContext: {
         heading: '당시 검토 맥락',
-        snapshotLabel: '저장 당시 그대로 · 변경되지 않음',
+        snapshotLabel: '검토 당시 상태 · 변경되지 않음',
         originalQuestionLabel: '그때 내가 한 질문',
         checklistLabel: '확인 항목과 그때의 확인 상태',
         versionLabel: '체크리스트 버전',
-        capturedAtLabel: '저장 시점',
+        capturedAtLabel: '검토 시점',
         checked: '확인함',
         unchecked: '확인하지 않음',
-        optionalEvidenceLabel: '함께 남긴 확인된 사실',
-        noOptionalEvidence: '선택해서 남긴 사실이 없습니다.',
+        optionalEvidenceLabel: '참고로 표시한 확인된 사실',
+        noOptionalEvidence: '참고로 표시한 사실이 없습니다.',
         immutableNotice:
-          '이 맥락은 저장 당시의 snapshot입니다. 이후 검토 결과나 체크리스트가 바뀌어도 갱신되지 않습니다.',
+          '이 맥락은 검토 당시 상태를 참고용으로 보여 드려요. 이후 검토 결과나 체크리스트가 바뀌어도 갱신되지 않습니다.',
       },
       navigation: {
         review: 'AI와 복기하기',

@@ -27,8 +27,16 @@ const panel = () => screen.getByTestId('decision-context-capture');
 
 describe('DecisionContextCapturePanel 문구 계약 (F-04)', () => {
   it('저장을 암시하는 문구가 없다', () => {
-    const forbidden = ['함께 남', '남깁니다', '남길 사실', '저장 시점', '저장 당시'];
-    const dc = ko.app.journalNew.decisionContext;
+    const forbidden = [
+      '함께 남',
+      '남깁니다',
+      '남길 사실',
+      '저장 시점',
+      '저장 당시',
+      '함께 남긴',
+      '저장 포함 사실',
+    ];
+    const dc = { ...ko.app.journalNew.decisionContext, ...ko.app.journalDetail.decisionContext };
     for (const value of Object.values(dc)) {
       for (const phrase of forbidden) {
         expect(String(value)).not.toContain(phrase);
@@ -72,8 +80,16 @@ describe('DecisionContextCapturePanel 문구 계약 (F-04)', () => {
   });
 
   it('영문 문구도 저장 포함을 암시하지 않는다', () => {
-    const forbidden = ['keep', 'saved at', 'will be saved'];
-    for (const value of Object.values(en.app.journalNew.decisionContext)) {
+    const forbidden = [
+      'keep',
+      'saved at',
+      'will be saved',
+      'saved time',
+      'saved as-is',
+      'selected facts',
+    ];
+    const dc = { ...en.app.journalNew.decisionContext, ...en.app.journalDetail.decisionContext };
+    for (const value of Object.values(dc)) {
       for (const phrase of forbidden) {
         expect(String(value).toLowerCase()).not.toContain(phrase);
       }
