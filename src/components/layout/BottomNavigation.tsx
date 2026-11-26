@@ -110,7 +110,8 @@ export function BottomNavigation({
                   ],
               activeTab === tab.id
                 ? [
-                    'text-primary font-semibold',
+                    // 활성 라벨은 brand-deep(Foundation 값 그대로). primary 글자는 primary/10 위에서 4.5:1에 못 미친다(F-07).
+                    'text-brand-deep font-semibold',
                     inHeader
                       ? 'bg-background shadow-sm'
                       : 'bg-primary/10 md:bg-background lg:bg-primary/10 md:shadow-sm lg:shadow-none',
