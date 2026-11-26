@@ -18,7 +18,7 @@
 
 - A Worker serves the `dist-dev-acceptance/` SPA and answers `/api` requests itself. Known Finance routes are forwarded
   to the shared Gateway at the same path. The Gateway's StripPrefix routing for `/api/finance` is unchanged.
-- `PUBLIC_ORIGIN` is the exact browser origin of the Worker. It is validated at startup (missing or malformed fails closed) but is not forwarded upstream.
+- `PUBLIC_ORIGIN` is the exact browser origin of the Worker. It is validated on each API request (missing or malformed fails closed) but is not forwarded upstream.
   The client's `Origin` is never forwarded. `GATEWAY_ORIGIN` is the exact HTTPS origin of the DEV Gateway, with no path.
   Both are Worker secrets. Missing or malformed values answer every `/api` request with JSON 500.
 - Forwarded routes (exact method and path, anything else under `/api/finance` is JSON 404, a wrong method is JSON 405 with `Allow`):
@@ -52,7 +52,7 @@
 
 ### Differences from the Carelog Worker
 
-- No `Origin` rewrite on any finance route. Carelog's registration CORS allowlist has no finance counterpart: Gateway and Core (platform-services f9adfd3) have no CORS or Origin check on finance-reference signup. Origin 검사 없음 (f9adfd3 기준).
+- No `Origin` rewrite on any finance route. Carelog's registration CORS allowlist has no finance counterpart: Gateway and Core (platform-services f9adfd3) have no CORS or Origin check on finance-reference signup.
 - Route table is per-method and per-path. Carelog forwards any non-auth path under `/api` to the Gateway. Finance answers unknown `/api/finance/*` paths with 404.
 - `idempotency-key` is forwarded (see above).
 
