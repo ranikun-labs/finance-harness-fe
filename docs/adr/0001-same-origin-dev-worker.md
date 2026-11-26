@@ -33,6 +33,9 @@
 
   The `{uuid}` match is lowercase canonical UUID, the same shape the FE guard uses.
 
+- `POST .../delete` and `POST .../restore` require `Content-Type: application/json`. The FE sends it with body `{expectedRevision}`
+  (`journalLifecyclePort.ts`). The Worker forwards `content-type` unchanged and does not check it. Rejecting other content types is the Gateway's and the Finance backend's job, and that is not verified here.
+
 - Auth paths under `/api/v1/auth` accept POST on the two exact routes only. Anything else there gets JSON 405 with `Allow: POST` and never reaches the Gateway.
 - Raw path guard, for every path. It reads `request.url` before URL normalization and rejects with JSON 400 if the path contains
   `%2f`, `%5c`, `%2e` (case-insensitive), `;`, `\`, `//`, a `..` segment, or a percent-encoded unreserved character. The forwarded path is taken from the same string.
@@ -66,6 +69,18 @@
 | Cloudflare WAF rate-limit rule (proposed starting values, not measured) | Zone of the Worker route, and of the Gateway host (checklist 4) | Expression: `http.request.method eq "POST" and http.request.uri.path in {"/api/v1/auth/finance-reference/login" "/api/v1/auth/finance-reference/signup"}`. Per IP (`ip.src`), period 60 s, threshold 20, action Block, mitigation 600 s. Tune after DEV observation. Check plan support first (checklist 9). |
 | Build                                                                   | CI or local                                                     | `pnpm build:dev-acceptance` (outputs `dist-dev-acceptance/`, mode `dev-acceptance`, loads `.env.dev-acceptance`)                                                                                                                                                                                             |
 | Deploy                                                                  | `worker/`                                                       | `wrangler deploy` with the two secrets set. Not run here: no Cloudflare account access.                                                                                                                                                                                                                      |
+
+## 배포 대상 정보 (미정)
+
+아래 값은 모두 아직 정해지지 않았다. 실제 값은 배포 환경에서만 설정하고 저장소에 커밋하지 않는다.
+
+- Worker 이름: 미정. `worker/wrangler.toml`의 `finance-fe-dev`는 잠정값이다.
+- routes / custom domain: 미정. `routes`는 배포 환경에서 지정하며 호스트명을 커밋하지 않는다.
+- `PUBLIC_ORIGIN` (Worker secret): 미정. 형식은 `https://<host>`이며 경로와 끝 슬래시를 붙이지 않는다.
+- `GATEWAY_ORIGIN` (Worker secret): 미정. 형식은 `https://<host>`이며 경로를 붙이지 않는다.
+- Cloudflare account / zone: 미정.
+- Gateway allowed origins: 설정 불필요. Finance 경로에는 Origin 검사가 없어 `PLATFORM_GATEWAY_CARELOG_REGISTRATION_ALLOWED_ORIGINS`에 대응하는 값이 필요하지 않다(Decision 참고).
+- Gateway env `FINANCE_BE_URI`: 필수. 값 미정.
 
 ## Deploy checklist (must verify before the DEV URL is shared)
 
