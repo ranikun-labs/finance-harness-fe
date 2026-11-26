@@ -120,3 +120,40 @@ describe('Foundation v1 token values (Finance)', () => {
     expect(token(theme, name).toLowerCase()).toBe(expected);
   });
 });
+
+// 내비 활성 라벨(F3 F-07): 하단 탭·rail 활성 항목은 `primary/10` 면 위에 놓인다. 면 색은 실제 합성값으로 잰다.
+function blend(top: string, bottom: string, alpha: number): string {
+  const a = parseHexColor(top);
+  const b = parseHexColor(bottom);
+  return `#${a
+    .map((channel, i) => Math.round(channel * alpha + b[i] * (1 - alpha)))
+    .map((channel) => channel.toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+describe.each(['light', 'dark'] as const)('Nav active label on %s (>= 4.5:1)', (theme) => {
+  it.each([
+    ['bottom tab / rail: brand-deep on primary/10 over page', 'page'],
+    ['tablet top: brand-deep on page (active pill)', 'page-pill'],
+    ['tablet top: brand-deep on control (bg-muted track)', 'control'],
+  ])('%s', (_name, surface) => {
+    const deep = token(theme, 'brand-deep');
+    const page = token(theme, 'page');
+    const primary = token(theme, 'primary');
+    const background =
+      surface === 'page-pill'
+        ? page
+        : surface === 'control'
+          ? token(theme, 'control')
+          : blend(primary, page, 0.1);
+    expect(deep).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(contrastRatio(deep, background)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the old primary text color failed on the phone tab fill (guard against regression)', () => {
+    // 회귀 기준: primary 글자 + primary/10 면 조합은 Light에서 4.5:1 미만이었다(F-07 원인).
+    if (theme !== 'light') return;
+    const background = blend(token(theme, 'primary'), token(theme, 'page'), 0.1);
+    expect(contrastRatio(token(theme, 'primary'), background)).toBeLessThan(4.5);
+  });
+});
