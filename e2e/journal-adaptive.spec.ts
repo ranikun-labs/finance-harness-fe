@@ -111,7 +111,7 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('keeps the shell header to one row: phone inner screens fold it, tablet starts content high', async ({
+  test('keeps the shell header to one row: phone inner screens keep only the mode row, tablet starts content high', async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
@@ -125,8 +125,10 @@ test.describe('Journal adaptive List | Detail presentation', () => {
     for (const path of [buildAppJournalDetailPath(PRIMARY_ID), APP_ROUTE_PATHS.journalNew]) {
       await page.goto(path);
       await expect(page.locator('main')).toBeVisible();
-      await expect(appHeader).toBeHidden();
-      expect(await mainTop()).toBeLessThan(8);
+      // 폰 안쪽 화면: 제품 이름 줄은 접고 화면 모드 버튼만 남은 44px 줄(F3 F-08).
+      await expect(appHeader.getByTestId('theme-trigger')).toBeVisible();
+      expect((await appHeader.boundingBox())!.height).toBeLessThanOrEqual(45); // 44px 줄 + 하단 경계선 1px
+      expect(await mainTop()).toBeLessThanOrEqual(45);
     }
 
     await page.setViewportSize({ width: 768, height: 1024 });

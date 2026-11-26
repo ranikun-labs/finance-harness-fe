@@ -115,3 +115,19 @@ test.describe('화면 모드 (시스템/라이트/다크)', () => {
     await expect(trigger).toBeFocused();
   });
 });
+
+test.describe('폰 안쪽 화면의 화면 모드 (F3 F-08)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('작성 화면에서도 화면 모드 버튼이 닿고 바꾸면 즉시 적용된다', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto(APP_ROUTE_PATHS.journalNew);
+    const trigger = page.getByTestId('theme-trigger');
+    await expect(trigger).toBeVisible();
+    expect((await trigger.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await choose(page, ko.theme.dark);
+    expect(await isDark(page)).toBe(true);
+    await page.reload();
+    expect(await isDark(page)).toBe(true);
+  });
+});
