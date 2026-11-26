@@ -48,12 +48,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: >-
           pnpm exec playwright test --config playwright.editor-harness.config.ts
-          --fail-on-flaky-tests --output test-results/editor
+          --trace retain-on-failure --fail-on-flaky-tests --output test-results/editor
       - name: Dialog harness e2e
         if: ${{ !cancelled() }}
         run: >-
           pnpm exec playwright test --config playwright.dialog-harness.config.ts
-          --fail-on-flaky-tests --output test-results/dialog
+          --trace retain-on-failure --fail-on-flaky-tests --output test-results/dialog
       - name: Upload Playwright report and traces on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
