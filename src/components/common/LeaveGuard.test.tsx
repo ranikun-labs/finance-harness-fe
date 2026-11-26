@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createMemoryRouter, Link, MemoryRouter, RouterProvider, useNavigate } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { LeaveGuard } from '@/components/common/LeaveGuard';
+import { LeaveGuard, LeaveGuardDataRouterScope } from '@/components/common/LeaveGuard';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { ko } from '@/i18n/messages/ko';
 
@@ -39,7 +39,14 @@ function Editor({
 function renderEditor(props: Parameters<typeof Editor>[0] = {}) {
   const router = createMemoryRouter(
     [
-      { path: '/', element: <Editor {...props} /> },
+      {
+        path: '/',
+        element: (
+          <LeaveGuardDataRouterScope>
+            <Editor {...props} />
+          </LeaveGuardDataRouterScope>
+        ),
+      },
       { path: '/other', element: <p>다른 화면입니다</p> },
     ],
     { initialEntries: ['/other', '/'], initialIndex: 1 },
@@ -135,6 +142,21 @@ describe('LeaveGuard', () => {
     await waitFor(() => expect(savingDialog()).toBeNull());
     expect(input).toHaveValue('저장 중인 내용');
     expect(screen.queryByText('다른 화면입니다')).toBeNull();
+  });
+
+  it('data router여도 표식(LeaveGuardDataRouterScope)이 없으면 보호가 꺼진다', async () => {
+    const router = createMemoryRouter(
+      [
+        { path: '/', element: <Editor /> },
+        { path: '/other', element: <p>다른 화면입니다</p> },
+      ],
+      { initialEntries: ['/other', '/'], initialIndex: 1 },
+    );
+    render(<RouterProvider router={router} />);
+    fireEvent.change(screen.getByLabelText('내용'), { target: { value: '입력 중' } });
+    fireEvent.click(screen.getByRole('link', { name: '다른 화면' }));
+    expect(await screen.findByText('다른 화면입니다')).toBeInTheDocument();
+    expect(dialog()).toBeNull();
   });
 
   it('data router가 아니면 아무것도 하지 않는다(렌더 오류 없음)', () => {
