@@ -39,13 +39,14 @@ function AppHeader({ onNavSlot }: { onNavSlot: (node: HTMLDivElement | null) => 
     <header
       className={cn(
         'border-border bg-background flex min-h-14 shrink-0 items-center gap-3 border-b px-4 sm:px-6',
-        // 폰의 안쪽 화면(작성·상세·복기)은 화면 자체의 뒤로 가기 줄이 머리다. 제품 이름 줄이 위에 겹치면
-        // 본문이 112px 아래에서 시작하므로 폰에서만 접는다(태블릿 이상은 내비와 함께 유지).
-        mayContainJournalEdits && 'max-md:hidden',
+        // 폰의 안쪽 화면(작성·상세·복기)은 화면 자체의 뒤로 가기 줄이 머리다. 제품 이름 줄은 접고,
+        // 화면 모드 버튼만 남긴 44px 줄을 둔다(F3 F-08: 안쪽 화면에서도 모드 변경에 닿게 한다).
+        // 태블릿 이상은 제품 이름 줄을 그대로 유지한다.
+        mayContainJournalEdits && 'max-md:min-h-11 max-md:px-2 max-md:py-0',
       )}
     >
       {mayContainJournalEdits ? (
-        <span className="text-foreground inline-flex min-h-11 items-center px-2 text-sm font-bold">
+        <span className="text-foreground inline-flex min-h-11 items-center px-2 text-sm font-bold max-md:hidden">
           {t('common.appName')}
         </span>
       ) : (
