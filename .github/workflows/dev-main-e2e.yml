@@ -34,24 +34,35 @@ jobs:
       # 메인 e2e의 webServer는 dist를 preview한다. 빌드 산출물이 현재 HEAD와 같아야 한다.
       - name: Build
         run: pnpm run build
+      # 실행별 산출물 경로를 나눠 서로 덮어쓰지 않게 한다(main / editor / dialog).
+      # --fail-on-flaky-tests: retry로 통과한 테스트도 job을 실패시켜, 회귀가 재시도 뒤 성공으로 숨지 않게 한다.
       - name: Main e2e (Desktop Chromium + Mobile 375)
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/main
         run: |
           set -euo pipefail
           SPECS=$(find e2e -name '*.spec.ts' ! -name 'journal-backend.integration.spec.ts' | sort)
-          pnpm exec playwright test --reporter=line,html --trace retain-on-failure $SPECS
+          pnpm exec playwright test --reporter=line,html --trace retain-on-failure \
+            --fail-on-flaky-tests --output test-results/main $SPECS
       - name: Editor and flow harness e2e
         if: ${{ !cancelled() }}
-        run: pnpm run test:e2e:editor
+        run: >-
+          pnpm exec playwright test --config playwright.editor-harness.config.ts
+          --fail-on-flaky-tests --output test-results/editor
       - name: Dialog harness e2e
         if: ${{ !cancelled() }}
-        run: pnpm run test:e2e:dialog
+        run: >-
+          pnpm exec playwright test --config playwright.dialog-harness.config.ts
+          --fail-on-flaky-tests --output test-results/dialog
       - name: Upload Playwright report and traces on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-artifacts-${{ github.run_id }}
           path: |
-            playwright-report/
-            test-results/
+            playwright-report/main/
+            test-results/main/
+            test-results/editor/
+            test-results/dialog/
           retention-days: 3
           if-no-files-found: ignore
