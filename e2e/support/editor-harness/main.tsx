@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, createMemoryRouter, RouterProvider } from 'react-router';
 import { AppRouter } from '@/app/AppRouter';
+import { LeaveGuardDataRouterScope } from '@/components/common/LeaveGuard';
 import '@/styles/globals.css';
 
 // Test-only presentation fixture. This file is served by the E2E dev server,
@@ -11,7 +12,11 @@ const params = new URLSearchParams(window.location.search);
 const requested = params.get('path');
 const path =
   requested === '/app/journal/new?type=study' ? requested : '/app/journal/new?type=investment';
-const element = <AppRouter authPresentation={{ state: 'authenticated' }} />;
+const element = (
+  <LeaveGuardDataRouterScope>
+    <AppRouter authPresentation={{ state: 'authenticated' }} />
+  </LeaveGuardDataRouterScope>
+);
 
 let router;
 if (params.get('history') === 'browser' && requested?.startsWith('/app')) {

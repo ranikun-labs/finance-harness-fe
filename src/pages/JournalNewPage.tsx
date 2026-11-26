@@ -1,5 +1,5 @@
 import { resolveTransient, safeReviewReturn } from '@/lib/transientNavigation';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router';
 
 import { DecisionContextCapturePanel } from '@/components/journal/DecisionContextPanel';
@@ -106,15 +106,24 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
   const idempotencyKeysRef = useRef(new Map<string, string>());
   const mountedRef = useRef(true);
 
+  // 이탈 보호 기준: 입력을 고쳤거나, 저장 시도가 아직 확정되지 않았을 때(진행 중 또는 실패 후 재시도 대기).
+  // 수정하지 않은 유효 초안도 저장 중·실패 뒤에는 잃을 수 있으므로 dirty만으로 판단하지 않는다.
+  // 성공 직후 이동은 leaveAllowedRef로 허용한다. 호출 시점의 ref를 읽어 렌더 지연에 영향받지 않는다.
+  const leaveGuardActive = useCallback(
+    () =>
+      (dirty || inFlightRef.current || idempotencyKeysRef.current.size > 0) &&
+      !leaveAllowedRef.current,
+    [dirty],
+  );
   useEffect(() => {
-    if (!dirty) return;
     const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!leaveGuardActive()) return;
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', warnBeforeUnload);
     return () => window.removeEventListener('beforeunload', warnBeforeUnload);
-  }, [dirty]);
+  }, [leaveGuardActive]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -314,10 +323,7 @@ export function JournalNewPage({ createPort, createMode = 'test', authAvailable 
         };
   return (
     <section className="flex min-h-full flex-col">
-      <LeaveGuard
-        when={() => dirty && !leaveAllowedRef.current}
-        saving={submitState.status === 'submitting'}
-      />
+      <LeaveGuard when={leaveGuardActive} saving={submitState.status === 'submitting'} />
       <ConfirmDialog
         open={newSubmissionConfirmOpen}
         title={t('app.journalNew.form.newSubmissionConfirmTitle')}

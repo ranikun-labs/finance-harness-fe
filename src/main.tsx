@@ -3,6 +3,7 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 
 import { AppRouter } from '@/app/AppRouter';
+import { LeaveGuardDataRouterScope } from '@/components/common/LeaveGuard';
 import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
 import { shouldHydrate } from '@/prerender/shouldHydrate';
 import { initTheme } from '@/theme/theme';
@@ -22,14 +23,17 @@ const journalCreatePort =
 
 // 이탈 보호(`useBlocker`)가 data router에서만 동작해 `createBrowserRouter`로 연다. 경로 트리는 그대로
 // `AppRouter`의 `<Routes>`가 소유하므로 로더·액션 없이 splat 라우트 하나가 전체를 위임한다.
+// `LeaveGuardDataRouterScope`가 Data Router 표식을 내려 `LeaveGuard`가 켜지게 한다.
 const router = createBrowserRouter([
   {
     path: '*',
     element: (
-      <AppRouter
-        journalCreatePort={journalCreatePort}
-        journalCreateMode={journalCreatePort ? 'production' : undefined}
-      />
+      <LeaveGuardDataRouterScope>
+        <AppRouter
+          journalCreatePort={journalCreatePort}
+          journalCreateMode={journalCreatePort ? 'production' : undefined}
+        />
+      </LeaveGuardDataRouterScope>
     ),
   },
 ]);
