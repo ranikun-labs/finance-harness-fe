@@ -618,7 +618,10 @@ export function AskPage() {
         {question === '' ? (
           <h1 className="text-base font-bold">{t('app.ask.header.title')}</h1>
         ) : (
-          <p className="text-base font-bold">{t('app.ask.header.title')}</p>
+          // 768 이상 결과 화면은 뒤로 가기만 왼쪽에 둔다. 가운데 제목 줄은 폰 전용(F-09).
+          <p className={cn('text-base font-bold', showsResult && 'md:hidden')}>
+            {t('app.ask.header.title')}
+          </p>
         )}
       </header>
 
