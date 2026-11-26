@@ -432,7 +432,7 @@ test.describe('Adaptive app shell', () => {
     }
   });
 
-  test('keeps the 1280+ Review Result aside inside short windows and centers the header on the body column', async ({
+  test('keeps the 1280+ Review Result aside inside short windows and aligns the remaining header row to the body column', async ({
     page,
   }) => {
     for (const viewport of [
@@ -473,26 +473,32 @@ test.describe('Adaptive app shell', () => {
         viewport.height,
       );
 
-      // 뒤로·"검토" 머리 줄의 중심은 본문 열의 중심이다(보조 열 포함 host의 중심이 아니다).
+      // 768 이상 결과 화면은 가운데 제목 줄을 두지 않는다(F3 F-09). 제목 텍스트는 DOM에 있지만 보이지 않는다.
       const title = page
         .getByTestId('adaptive-content-host')
         .getByText(ko.app.ask.header.title, { exact: true });
-      const titleBox = (await title.boundingBox())!;
+      await expect(title, `${label} center title hidden`).toBeHidden();
+
+      // 남은 머리 요소(뒤로 가기)는 본문 열 시작에 맞고, 그 머리 줄도 본문 열 안에 있다.
       const bodyBox = (await page
         .getByTestId('review-result-layout')
         .locator('> div')
         .first()
         .boundingBox())!;
-      expect(
-        Math.abs(titleBox.x + titleBox.width / 2 - (bodyBox.x + bodyBox.width / 2)),
-        `${label} header center vs body column`,
-      ).toBeLessThanOrEqual(1);
-      const back = (await page
-        .getByRole('link', { name: ko.app.ask.header.backLabel })
-        .boundingBox())!;
+      const backLink = page.getByRole('link', { name: ko.app.ask.header.backLabel });
+      const back = (await backLink.boundingBox())!;
       expect(
         Math.abs(back.x - bodyBox.x),
         `${label} back link at body column start`,
+      ).toBeLessThanOrEqual(1);
+      const headerBox = (await backLink.locator('xpath=..').boundingBox())!;
+      expect(
+        Math.abs(headerBox.x - bodyBox.x),
+        `${label} header row starts at body column`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(headerBox.x + headerBox.width - (bodyBox.x + bodyBox.width)),
+        `${label} header row ends at body column`,
       ).toBeLessThanOrEqual(1);
     }
   });
