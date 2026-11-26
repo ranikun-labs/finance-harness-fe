@@ -1,7 +1,7 @@
 import { resolveTransient } from '@/lib/transientNavigation';
 import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { Route, Routes, useLocation, useNavigationType } from 'react-router';
+import { Link, Route, Routes, useLocation, useNavigationType } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -993,6 +993,105 @@ describe('JournalNewPage', () => {
     expect(buildAppJournalDetailPath('retry/id')).toBe('/app/journal/retry%2Fid');
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  describe('수정하지 않은 학습 초안을 저장하는 동안·실패 뒤의 이탈 보호', () => {
+    const savedDraftHandoff: ReviewJournalHandoff = {
+      kind: 'study',
+      originalQuestion: '실적을 어떻게 복기할까?',
+      returnTarget: '/app/ask?q=실적을+어떻게+복기할까?',
+      learningDraft: {
+        title: '실적을 어떻게 복기할까?',
+        keyContent: '화면에 표시된 검토 안내',
+        openQuestions: ['확인할 질문 하나'],
+      },
+    };
+
+    function renderUneditedStudyDraft(create: JournalCreatePort['create']) {
+      const [pathname, search = ''] = buildAppJournalNewPath('study').split('?');
+      return render(
+        <DataMemoryRouter
+          initialEntries={[
+            {
+              pathname,
+              search: search ? `?${search}` : '',
+              state: { reviewHandoff: savedDraftHandoff },
+            },
+          ]}
+        >
+          <I18nProvider locale="ko">
+            <Link to={APP_ROUTE_PATHS.journalList}>저널 목록으로 이동</Link>
+            <Routes>
+              <Route
+                path={APP_ROUTE_PATHS.journalNew}
+                element={<JournalNewPage createPort={{ create }} />}
+              />
+              <Route path={APP_ROUTE_PATHS.journalDetail} element={<DetailDestination />} />
+              <Route path={APP_ROUTE_PATHS.journalList} element={<p>Journal destination</p>} />
+            </Routes>
+          </I18nProvider>
+        </DataMemoryRouter>,
+      );
+    }
+    const savingDialog = () =>
+      screen.queryByRole('alertdialog', { name: ko.common.leaveGuard.saving.title });
+
+    it('blocks navigation and unload with the saving copy while the save is pending, then lets the successful save finish', async () => {
+      const pending = deferredResult();
+      const create = vi.fn(() => pending.promise);
+      renderUneditedStudyDraft(create);
+      expect(leaveDialog()).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+      await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+
+      fireEvent.click(screen.getByRole('link', { name: '저널 목록으로 이동' }));
+      const dialog = await waitFor(() => {
+        const found = savingDialog();
+        expect(found).toBeInTheDocument();
+        return found!;
+      });
+      expect(dialog).toHaveAccessibleDescription(ko.common.leaveGuard.saving.description);
+      expect(screen.queryByText('Journal destination')).toBeNull();
+      const unload = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(unload);
+      expect(unload.defaultPrevented).toBe(true);
+
+      fireEvent.click(
+        within(dialog).getByRole('button', { name: ko.common.leaveGuard.saving.stay }),
+      );
+      await waitFor(() => expect(savingDialog()).toBeNull());
+      expect(create).toHaveBeenCalledTimes(1);
+
+      pending.resolve({ journalId: 'saved-study' });
+      expect(await screen.findByTestId('detail-destination')).toBeInTheDocument();
+      expect(leaveDialog()).toBeNull();
+      expect(savingDialog()).toBeNull();
+      const afterSuccess = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(afterSuccess);
+      expect(afterSuccess.defaultPrevented).toBe(false);
+    });
+
+    it('keeps the entered draft and keeps navigation guarded after a failed save', async () => {
+      const create = vi.fn(() => Promise.reject(new JournalCreatePortError('network_error')));
+      renderUneditedStudyDraft(create);
+      fireEvent.click(screen.getByRole('button', { name: '테스트 제출' }));
+      await waitFor(() =>
+        expect(screen.getByRole('alert')).toHaveTextContent(ko.app.journalNew.form.networkError),
+      );
+      const title = screen.getByLabelText('무엇을 배웠나요?');
+      expect(title).toHaveValue(savedDraftHandoff.learningDraft!.title);
+
+      fireEvent.click(screen.getByRole('link', { name: '저널 목록으로 이동' }));
+      await waitFor(() => expect(leaveDialog()).toBeInTheDocument());
+      expect(leaveDialog()).toHaveAccessibleDescription(ko.common.leaveGuard.description);
+      stayInDraft();
+      await waitFor(() => expect(leaveDialog()).toBeNull());
+      expect(screen.getByLabelText('무엇을 배웠나요?')).toHaveValue(
+        savedDraftHandoff.learningDraft!.title,
+      );
+      expect(create).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('maps a valid study submission to its exact discriminated command', async () => {
