@@ -228,3 +228,74 @@ test.describe('이탈 보호: 브라우저 history·내비·링크 (실제 Brows
     await expect(page).toHaveURL(reviewUrl);
   });
 });
+
+// 폰 작성 화면의 화면 모드(F3 F-08). 인증된 editor harness에서 실제 판단·학습 작성 폼을 본다.
+// 저장(테스트 제출)·취소가 닿고, 모드를 바꿔도 입력이 남으며, Dialog를 닫으면 트리거로 포커스가 돌아온다.
+test.describe('폰 작성 화면의 화면 모드 (F3 F-08)', () => {
+  const PHONE_VIEWPORTS = [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 390, height: 844 },
+  ];
+  const FORMS = [
+    { type: 'investment', field: '대상', fieldValue: '보존할 대상' },
+    { type: 'study', field: '무엇을 배웠나요?', fieldValue: '보존할 학습 제목' },
+  ] as const;
+
+  for (const form of FORMS) {
+    test(`${form.type} 작성: 모든 폰 폭에서 첫 입력·저장·취소가 닿고 모드 변경 뒤 입력이 남는다`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== 'Desktop Chromium',
+        'responsive contract runs on Chromium',
+      );
+
+      for (const viewport of PHONE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+        await page.emulateMedia({ colorScheme: 'light' });
+        await page.goto(
+          `http://localhost:49183/e2e/support/editor-harness/?path=${encodeURIComponent(buildAppJournalNewPath(form.type))}`,
+        );
+
+        const field = page.getByLabel(form.field);
+        await expect(field).toBeVisible();
+        const trigger = page.getByTestId('theme-trigger');
+        await expect(trigger).toBeVisible();
+        expect((await trigger.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+        // 저장(harness에서는 테스트 제출)과 취소는 스크롤로 닿는다.
+        // 저장 버튼은 harness 모드에 따라 문구가 다르므로 폼의 submit 버튼으로 찾는다.
+        const save = page.locator('main form button[type="submit"]');
+        const cancel = page.getByRole('button', { name: ko.app.journalNew.cancelDirectEntry });
+        await save.scrollIntoViewIfNeeded();
+        await expect(save).toBeVisible();
+        await cancel.scrollIntoViewIfNeeded();
+        await expect(cancel).toBeVisible();
+
+        await field.fill(form.fieldValue);
+        // 키보드로 트리거에 포커스를 옮기고 Enter로 연다.
+        await trigger.focus();
+        await expect(trigger).toBeFocused();
+        await page.keyboard.press('Enter');
+        const dialog = page.getByRole('dialog', { name: ko.theme.title });
+        await expect(dialog).toBeVisible();
+        await dialog.getByRole('radio', { name: ko.theme.dark, exact: true }).check();
+        await page.getByRole('button', { name: ko.theme.close }).click();
+        await expect(dialog).toBeHidden();
+        await expect(trigger).toBeFocused();
+        expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(
+          true,
+        );
+        await expect(field).toHaveValue(form.fieldValue);
+
+        // 다음 폭에서 다시 쓰도록 system/light로 되돌린다(localStorage 상태 초기화 대신 명시 복원).
+        await trigger.focus();
+        await page.keyboard.press('Enter');
+        await dialog.getByRole('radio', { name: ko.theme.light, exact: true }).check();
+        await page.getByRole('button', { name: ko.theme.close }).click();
+        await expect(dialog).toBeHidden();
+      }
+    });
+  }
+});

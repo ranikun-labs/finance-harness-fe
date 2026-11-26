@@ -263,7 +263,7 @@ test.describe('Retrospective adaptive presentation', () => {
     }
   });
 
-  test('starts the phone Retrospective on one back-link row with the product name row folded', async ({
+  test('starts the phone Retrospective on one back-link row with the product name folded and the mode row kept', async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== 'Desktop Chromium', 'responsive contract runs on Chromium');
@@ -273,8 +273,12 @@ test.describe('Retrospective adaptive presentation', () => {
 
     const workspace = page.getByTestId('retrospective-workspace');
     await expect(workspace).toBeVisible();
-    // 제품 이름 줄(앱 셸 header)은 폰 복기에서 접힌다.
-    await expect(page.getByTestId('app-shell-host').locator('> header')).toBeHidden();
+    // 제품 이름 줄은 접고, 화면 모드 버튼만 남은 44px 줄을 둔다(F3 F-08).
+    const shellHeader = page.getByTestId('app-shell-host').locator('> header');
+    await expect(shellHeader.getByTestId('theme-trigger')).toBeVisible();
+    const headerBox = (await shellHeader.boundingBox())!;
+    // 머리는 44px 줄 + 경계선 1px를 넘지 않는다(F3 F-08 모드 줄).
+    expect(headerBox.height).toBeLessThanOrEqual(45);
 
     // 뒤로 가기 한 줄: 링크와 제목이 같은 줄(세로 중심 차이 ≤ 4)에 있다.
     const back = page.getByRole('link', { name: ko.app.journalReview.backLabel });
@@ -288,12 +292,14 @@ test.describe('Retrospective adaptive presentation', () => {
 
     // 본문 시작: main이 화면 맨 위에서 시작하고, 뒤로 가기 한 줄 뒤에 원본이 바로 이어진다.
     const mainBox = (await page.locator('main').boundingBox())!;
-    expect(mainBox.y).toBeLessThan(8);
+    // 본문은 머리 바로 아래에서 시작한다(머리 높이에 맞춘 상대 기준, 고정 픽셀 완화 없음).
+    expect(mainBox.y).toBeCloseTo(headerBox.y + headerBox.height, 0);
     const original = page.getByRole('heading', {
       name: ko.app.journalReview.retrospective.originalHeading,
     });
     const originalBox = (await original.boundingBox())!;
-    expect(originalBox.y).toBeLessThan(160);
+    // 기존 기준 160px은 머리 높이를 뺀 본문 기준으로 그대로 유지한다. 모드 줄 높이만큼 보정해 회귀를 숨기지 않는다.
+    expect(originalBox.y - headerBox.height).toBeLessThan(160);
     await expectNoHorizontalOverflow(page);
   });
 

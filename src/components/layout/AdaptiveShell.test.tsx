@@ -66,14 +66,18 @@ describe('adaptive app shell', () => {
         </Routes>
       </MemoryRouter>,
     );
-    // 폰에서만 접는다(`max-md:hidden`): 태블릿 이상은 내비와 함께 제품 이름 줄을 유지한다.
-    expect(screen.getByText('AI 투자 체크리스트').closest('header')).toHaveClass('max-md:hidden');
+    // 폰에서는 제품 이름 글자만 접고(`max-md:hidden`) 화면 모드 버튼이 남는 44px 줄을 둔다(F3 F-08).
+    // 태블릿 이상은 제품 이름 줄을 그대로 유지한다.
+    const innerHeader = screen.getByText('AI 투자 체크리스트').closest('header');
+    expect(innerHeader).toHaveClass('max-md:min-h-11');
+    expect(screen.getByText('AI 투자 체크리스트')).toHaveClass('max-md:hidden');
+    expect(within(innerHeader as HTMLElement).getByTestId('theme-trigger')).toBeInTheDocument();
     unmount();
 
     renderShell();
-    expect(
-      screen.getByRole('link', { name: 'AI 투자 체크리스트' }).closest('header'),
-    ).not.toHaveClass('max-md:hidden');
+    expect(screen.getByRole('link', { name: 'AI 투자 체크리스트' })).not.toHaveClass(
+      'max-md:hidden',
+    );
   });
 
   it('does not offer sign-in to an authenticated session', () => {
