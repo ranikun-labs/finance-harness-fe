@@ -127,8 +127,9 @@ test.describe('Journal adaptive List | Detail presentation', () => {
       await expect(page.locator('main')).toBeVisible();
       // 폰 안쪽 화면: 제품 이름 줄은 접고 화면 모드 버튼만 남은 44px 줄(F3 F-08).
       await expect(appHeader.getByTestId('theme-trigger')).toBeVisible();
-      expect((await appHeader.boundingBox())!.height).toBeLessThanOrEqual(45); // 44px 줄 + 하단 경계선 1px
-      expect(await mainTop()).toBeLessThanOrEqual(45);
+      const headerBox = (await appHeader.boundingBox())!;
+      expect(headerBox.height).toBeLessThanOrEqual(45); // 44px 줄 + 하단 경계선 1px
+      expect(await mainTop()).toBeCloseTo(headerBox.y + headerBox.height, 0);
     }
 
     await page.setViewportSize({ width: 768, height: 1024 });

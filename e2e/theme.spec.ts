@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { APP_ROUTE_PATHS } from '@/constants/routes';
+import {
+  APP_ROUTE_PATHS,
+  buildAppJournalDetailPath,
+  buildAppJournalReviewPath,
+} from '@/constants/routes';
 import { ko } from '@/i18n/messages/ko';
 import { THEME_COLOR, THEME_STORAGE_KEY } from '@/theme/theme';
 
@@ -116,18 +120,41 @@ test.describe('화면 모드 (시스템/라이트/다크)', () => {
   });
 });
 
-test.describe('폰 안쪽 화면의 화면 모드 (F3 F-08)', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+const PHONE_VIEWPORTS = [
+  { width: 320, height: 568 },
+  { width: 375, height: 667 },
+  { width: 390, height: 844 },
+];
+// 조회 가능한 fixture 기록(상세·복기). 작성 화면은 editor-harness.spec.ts가 입력·저장·취소까지 본다.
+const FIXTURE_DETAIL_PATH = buildAppJournalDetailPath('550e8400-e29b-41d4-a716-446655440000');
+const FIXTURE_REVIEW_PATH = buildAppJournalReviewPath('journal-2026-06-28-01');
 
-  test('작성 화면에서도 화면 모드 버튼이 닿고 바꾸면 즉시 적용된다', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'light' });
-    await page.goto(APP_ROUTE_PATHS.journalNew);
-    const trigger = page.getByTestId('theme-trigger');
-    await expect(trigger).toBeVisible();
-    expect((await trigger.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await choose(page, ko.theme.dark);
-    expect(await isDark(page)).toBe(true);
-    await page.reload();
-    expect(await isDark(page)).toBe(true);
-  });
+test.describe('폰 안쪽 화면의 화면 모드 (F3 F-08)', () => {
+  for (const [name, path] of [
+    ['상세', FIXTURE_DETAIL_PATH],
+    ['복기', FIXTURE_REVIEW_PATH],
+  ] as const) {
+    test(`${name}: 머리 줄 모드 버튼이 44px로 닿고, 바꾸면 적용되며 새로고침 뒤에도 남는다`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== 'Desktop Chromium',
+        'responsive contract runs on Chromium',
+      );
+      for (const viewport of PHONE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+        await page.emulateMedia({ colorScheme: 'light' });
+        await page.goto(path);
+        const trigger = page.getByTestId('theme-trigger');
+        await expect(trigger).toBeVisible();
+        expect((await trigger.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await choose(page, ko.theme.dark);
+        expect(await isDark(page)).toBe(true);
+        await page.reload();
+        expect(await isDark(page)).toBe(true);
+        await choose(page, ko.theme.light);
+        expect(await isDark(page)).toBe(false);
+      }
+    });
+  }
 });
