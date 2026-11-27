@@ -129,8 +129,9 @@ export function createMockGateway() {
       ) {
         return envelope(400, 'Invalid signup request.');
       }
-      if (accounts.has(email)) return envelope(409, 'Account already exists.');
-      accounts.set(email, { userId: email, password });
+      if (!accounts.has(email)) {
+        accounts.set(email, { userId: email, password });
+      }
       return envelope(202, 'Signup request processed.');
     }
 

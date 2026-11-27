@@ -131,6 +131,23 @@ test('reference signup, login, save, reload, re-login, logout and cross-account 
   // 1. DEV signup creates the account. It does not log in by itself.
   await signup(page, firstEmail);
 
+  const duplicatePassword = 'different-horse-2';
+  const duplicateSignup = await pageFetch(page, '/api/v1/auth/finance-reference/signup', {
+    method: 'POST',
+    body: { email: firstEmail, password: duplicatePassword },
+  });
+  expect(duplicateSignup.status).toBe(202);
+  expect(JSON.parse(duplicateSignup.text)).toEqual({
+    status: 202,
+    message: 'Signup request processed.',
+  });
+
+  const duplicatePasswordLogin = await pageFetch(page, '/api/v1/auth/finance-reference/login', {
+    method: 'POST',
+    body: { userId: firstEmail, password: duplicatePassword },
+  });
+  expect(duplicatePasswordLogin.status).toBe(401);
+
   // 2. Password login. The access token lives in memory only.
   await login(page, firstEmail);
 
