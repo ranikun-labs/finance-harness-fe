@@ -63,7 +63,7 @@ async function signup(page: Page, email: string) {
   await form.locator('input[type="password"]').fill(PASSWORD);
   await page.getByTestId('finance-reference-signup-submit').click();
   await expect(page.getByTestId('finance-reference-signup-message')).toContainText(
-    '계정을 만들었습니다',
+    '가입 요청을 처리했습니다',
   );
 }
 

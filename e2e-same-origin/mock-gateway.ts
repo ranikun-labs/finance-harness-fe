@@ -131,7 +131,7 @@ export function createMockGateway() {
       }
       if (accounts.has(email)) return envelope(409, 'Account already exists.');
       accounts.set(email, { userId: email, password });
-      return envelope(201, 'Account created.');
+      return envelope(202, 'Signup request processed.');
     }
 
     if (method === 'POST' && pathname === '/api/v1/auth/finance-reference/login') {
