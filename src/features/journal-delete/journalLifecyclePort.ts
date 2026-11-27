@@ -1,3 +1,4 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
 import type { JournalEditFetch, JournalRevisionRef } from '@/features/journal-edit/journalEditPort';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -17,7 +18,7 @@ export function createJournalLifecyclePort(fetchImpl: JournalEditFetch) {
     async transition(ref: JournalRevisionRef, action: 'delete' | 'restore', signal?: AbortSignal) {
       if (!validRef(ref) || ref.revision >= Number.MAX_SAFE_INTEGER)
         throw new JournalLifecycleError('failed');
-      const response = await fetchImpl(`/finance/journals/${ref.journalId}/${action}`, {
+      const response = await fetchImpl(`${FINANCE_JOURNALS_PATH}/${ref.journalId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expectedRevision: ref.revision }),
@@ -40,7 +41,7 @@ export function createJournalLifecyclePort(fetchImpl: JournalEditFetch) {
       return { journalId: ref.journalId, revision: ref.revision + 1, state: result.state };
     },
     async list(signal?: AbortSignal): Promise<{ items: DeletedJournal[]; hasMore: boolean }> {
-      const response = await fetchImpl('/finance/journals/deleted', {
+      const response = await fetchImpl(`${FINANCE_JOURNALS_PATH}/deleted`, {
         credentials: 'omit',
         signal,
       });

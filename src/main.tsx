@@ -4,7 +4,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 
 import { AppRouter } from '@/app/AppRouter';
 import { LeaveGuardDataRouterScope } from '@/components/common/LeaveGuard';
+import { createFinanceReferenceSignup } from '@/features/auth/financeReferenceSignup';
 import { createProductionJournalCreatePort } from '@/features/journal-new/adapter/productionJournalCreatePort';
+import { isDevAcceptanceFlagEnabled } from '@/features/finance-api/devAcceptanceGate';
 import { shouldHydrate } from '@/prerender/shouldHydrate';
 import { initTheme } from '@/theme/theme';
 
@@ -14,11 +16,19 @@ import '@/styles/globals.css';
 initTheme();
 
 const rootElement = document.getElementById('root')!;
-// Journal Create stays off by default; an explicit deployment/local opt-in enables the
-// existing same-origin HTTP adapter without changing the server-owned request contract.
-const journalCreatePort =
-  import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED === 'true'
-    ? createProductionJournalCreatePort()
+// DEV acceptance switches are honored only in the `dev-acceptance` build mode, never in PROD.
+const journalCreatePort = isDevAcceptanceFlagEnabled(
+  import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED,
+  import.meta.env.MODE,
+)
+  ? createProductionJournalCreatePort()
+  : undefined;
+// Signup is injected only behind a literal build-time gate: Vite folds it to `undefined` in PROD,
+// which lets the bundler drop the signup module and its endpoint string from the output.
+const financeReferenceSignup =
+  import.meta.env.MODE === 'dev-acceptance' &&
+  import.meta.env.VITE_FINANCE_REFERENCE_SIGNUP_ENABLED === 'true'
+    ? createFinanceReferenceSignup()
     : undefined;
 
 // 이탈 보호(`useBlocker`)가 data router에서만 동작해 `createBrowserRouter`로 연다. 경로 트리는 그대로
@@ -32,6 +42,7 @@ const router = createBrowserRouter([
         <AppRouter
           journalCreatePort={journalCreatePort}
           journalCreateMode={journalCreatePort ? 'production' : undefined}
+          financeReferenceSignup={financeReferenceSignup}
         />
       </LeaveGuardDataRouterScope>
     ),

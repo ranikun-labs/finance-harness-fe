@@ -10,13 +10,18 @@ import type {
   AuthPresentationDriver,
   AuthResumeIntent,
 } from '@/features/auth/authPresentation';
-import type { FinanceReferenceCredentials } from '@/features/auth/financeReferenceAuth';
+import {
+  FinanceReferenceAuthError,
+  type FinanceReferenceCredentials,
+} from '@/features/auth/financeReferenceAuth';
+import type { FinanceReferenceSignupCredentials } from '@/features/auth/financeReferenceSignup';
 import type { MessageKey } from '@/i18n/dictionary';
 import { useTranslation } from '@/i18n/I18nContext';
 import { cn } from '@/lib/utils';
 import { resolveTransient, safeReviewReturn, transientState } from '@/lib/transientNavigation';
 
 type AuthPhase = 'idle' | 'loading' | 'failure' | 'unavailable';
+type SignupPhase = 'idle' | 'loading' | 'done' | 'exists' | 'invalid' | 'unavailable';
 
 interface AuthEntryPageProps {
   /** Explicit test/fixture driver. Production composition intentionally omits it. */
@@ -25,6 +30,11 @@ interface AuthEntryPageProps {
   financeReferenceAuth?: {
     enabled: boolean;
     login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
+    /** DEV-only account creation. Omitted outside the dev-acceptance build (see main.tsx). */
+    signup?: (
+      credentials: FinanceReferenceSignupCredentials,
+      signal?: AbortSignal,
+    ) => Promise<void>;
   };
   fallbackCancelTarget?: string;
   fallbackCancelLabel?: string;
@@ -65,14 +75,20 @@ export function AuthEntryPage({
   const intent = locationState.authResumeIntent;
   const [phase, setPhase] = useState<AuthPhase>('idle');
   const [userId, setUserId] = useState('');
+  const [signupPhase, setSignupPhase] = useState<SignupPhase>('idle');
+  const [signupEmail, setSignupEmail] = useState('');
   const attemptRef = useRef(0);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  const signupPasswordRef = useRef<HTMLInputElement>(null);
   const loginControllerRef = useRef<AbortController | null>(null);
+  const signupControllerRef = useRef<AbortController | null>(null);
 
   useEffect(
     () => () => {
       loginControllerRef.current?.abort();
+      signupControllerRef.current?.abort();
       if (passwordInputRef.current) passwordInputRef.current.value = '';
+      if (signupPasswordRef.current) signupPasswordRef.current.value = '';
     },
     [],
   );
@@ -152,6 +168,47 @@ export function AuthEntryPage({
         if (!controller.signal.aborted) setUserId('');
       });
   }
+
+  function beginFinanceReferenceSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const signup = financeReferenceAuth?.signup;
+    if (!signup || signupPhase === 'loading') return;
+
+    const password = signupPasswordRef.current?.value ?? '';
+    if (signupPasswordRef.current) signupPasswordRef.current.value = '';
+    const email = signupEmail.trim();
+    const controller = new AbortController();
+    signupControllerRef.current = controller;
+    setSignupPhase('loading');
+
+    void signup({ email, password }, controller.signal)
+      .then(() => {
+        if (controller.signal.aborted) return;
+        // Account creation does not sign in; prefill the login ID so the user logs in next.
+        setUserId(email);
+        setSignupEmail('');
+        setSignupPhase('done');
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        const code = error instanceof FinanceReferenceAuthError ? error.code : undefined;
+        setSignupPhase(
+          code === 'account_exists'
+            ? 'exists'
+            : code === 'invalid_request'
+              ? 'invalid'
+              : 'unavailable',
+        );
+      });
+  }
+
+  const signupMessageKey: Partial<Record<SignupPhase, MessageKey>> = {
+    done: 'auth.entry.signupDone',
+    exists: 'auth.entry.signupExists',
+    invalid: 'auth.entry.signupInvalid',
+    unavailable: 'auth.entry.signupUnavailable',
+  };
+  const signupMessage = signupMessageKey[signupPhase];
 
   return (
     <div className="bg-muted flex min-h-dvh w-full justify-center px-4 py-6 sm:px-6 sm:py-10">
@@ -244,41 +301,101 @@ export function AuthEntryPage({
           )}
 
           {financeReferenceAuth?.enabled ? (
-            <form onSubmit={beginFinanceReferenceAuth} className="flex flex-col gap-3">
-              <p className="border-border bg-muted rounded-xl border p-3 text-sm">
-                {t('auth.entry.referenceNotice')}
-              </p>
-              <label className="flex flex-col gap-1 text-sm font-semibold">
-                {t('auth.entry.referenceUserId')}
-                <input
-                  autoComplete="username"
-                  className="border-input bg-background min-h-11 rounded-md border px-3"
-                  value={userId}
-                  onChange={(event) => setUserId(event.target.value)}
+            <>
+              <form onSubmit={beginFinanceReferenceAuth} className="flex flex-col gap-3">
+                <p className="border-border bg-muted rounded-xl border p-3 text-sm">
+                  {t('auth.entry.referenceNotice')}
+                </p>
+                <label className="flex flex-col gap-1 text-sm font-semibold">
+                  {t('auth.entry.referenceUserId')}
+                  <input
+                    autoComplete="username"
+                    className="border-input bg-background min-h-11 rounded-md border px-3"
+                    value={userId}
+                    onChange={(event) => setUserId(event.target.value)}
+                    disabled={phase === 'loading'}
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold">
+                  {t('auth.entry.referencePassword')}
+                  <input
+                    ref={passwordInputRef}
+                    type="password"
+                    autoComplete="current-password"
+                    className="border-input bg-background min-h-11 rounded-md border px-3"
+                    disabled={phase === 'loading'}
+                    required
+                  />
+                </label>
+                <button
+                  type="submit"
                   disabled={phase === 'loading'}
-                  required
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm font-semibold">
-                {t('auth.entry.referencePassword')}
-                <input
-                  ref={passwordInputRef}
-                  type="password"
-                  autoComplete="current-password"
-                  className="border-input bg-background min-h-11 rounded-md border px-3"
-                  disabled={phase === 'loading'}
-                  required
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={phase === 'loading'}
-                className={cn(buttonVariants({ size: 'lg' }), 'min-h-11 w-full')}
-                data-testid="finance-reference-login"
-              >
-                {t('auth.entry.referenceAction')}
-              </button>
-            </form>
+                  className={cn(buttonVariants({ size: 'lg' }), 'min-h-11 w-full')}
+                  data-testid="finance-reference-login"
+                >
+                  {t('auth.entry.referenceAction')}
+                </button>
+              </form>
+              {financeReferenceAuth.signup && (
+                <form
+                  onSubmit={beginFinanceReferenceSignup}
+                  aria-labelledby="finance-reference-signup-heading"
+                  className="border-border flex flex-col gap-3 border-t pt-6"
+                  data-testid="finance-reference-signup"
+                >
+                  <h2 id="finance-reference-signup-heading" className="text-sm font-extrabold">
+                    {t('auth.entry.signupHeading')}
+                  </h2>
+                  <p className="text-muted-foreground text-xs leading-5">
+                    {t('auth.entry.signupNotice')}
+                  </p>
+                  <label className="flex flex-col gap-1 text-sm font-semibold">
+                    {t('auth.entry.signupEmail')}
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      className="border-input bg-background min-h-11 rounded-md border px-3"
+                      value={signupEmail}
+                      onChange={(event) => setSignupEmail(event.target.value)}
+                      disabled={signupPhase === 'loading'}
+                      required
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm font-semibold">
+                    {t('auth.entry.signupPassword')}
+                    <input
+                      ref={signupPasswordRef}
+                      type="password"
+                      autoComplete="new-password"
+                      className="border-input bg-background min-h-11 rounded-md border px-3"
+                      disabled={signupPhase === 'loading'}
+                      required
+                    />
+                  </label>
+                  {signupMessage && (
+                    <p
+                      role={signupPhase === 'done' ? 'status' : 'alert'}
+                      className="text-sm leading-6"
+                      data-testid="finance-reference-signup-message"
+                    >
+                      {t(signupMessage)}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={signupPhase === 'loading'}
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'lg' }),
+                      'min-h-11 w-full',
+                    )}
+                    data-testid="finance-reference-signup-submit"
+                  >
+                    {t('auth.entry.signupAction')}
+                  </button>
+                </form>
+              )}
+            </>
           ) : driver ? (
             <div className="flex flex-col gap-3">
               <button

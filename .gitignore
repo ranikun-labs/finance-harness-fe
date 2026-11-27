@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-ssr/
+dist-dev-acceptance/
 .prerender-manifest.json
 *.local
 *.tsbuildinfo
@@ -26,6 +27,7 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+!.env.dev-acceptance
 
 # test / e2e output
 coverage/

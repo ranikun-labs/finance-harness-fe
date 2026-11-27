@@ -9,6 +9,7 @@ import { en } from '@/i18n/messages/en';
 import { ko } from '@/i18n/messages/ko';
 import { SAMPLE_DECISION_CONTEXT } from '@/mocks/decisionContext';
 import type { ReviewJournalHandoff } from '@/mocks/reviewResult';
+import { FinanceReferenceAuthError } from '@/features/auth/financeReferenceAuth';
 import { AuthEntryPage } from '@/pages/AuthEntryPage';
 import { JournalNewPage } from '@/pages/JournalNewPage';
 
@@ -242,5 +243,121 @@ describe('AuthEntryPage presentation seam', () => {
       ),
     );
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+});
+
+describe('AuthEntryPage DEV reference panel', () => {
+  function renderReference(
+    options: {
+      signup?: (credentials: { email: string; password: string }) => Promise<void>;
+      login?: () => Promise<void>;
+    } = {},
+  ) {
+    return render(
+      <MemoryRouter initialEntries={[AUTH_ROUTE_PATHS.entry]}>
+        <I18nProvider locale="ko">
+          <AuthEntryPage
+            financeReferenceAuth={{
+              enabled: true,
+              login: options.login ?? vi.fn().mockResolvedValue(undefined),
+              signup: options.signup,
+            }}
+          />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows the signup form only when a signup handler is supplied (flag on, non-PROD)', () => {
+    renderReference({ signup: vi.fn().mockResolvedValue(undefined) });
+    expect(screen.getByTestId('finance-reference-login')).toBeInTheDocument();
+    expect(screen.getByTestId('finance-reference-signup')).toBeInTheDocument();
+  });
+
+  it('hides signup while keeping password login when no signup handler is supplied', () => {
+    renderReference();
+    expect(screen.getByTestId('finance-reference-login')).toBeInTheDocument();
+    expect(screen.queryByTestId('finance-reference-signup')).not.toBeInTheDocument();
+  });
+
+  it('creates an account with email and password, then prefills the login ID without signing in', async () => {
+    const signup = vi.fn().mockResolvedValue(undefined);
+    renderReference({ signup });
+
+    const signupForm = screen.getByTestId('finance-reference-signup');
+    fireEvent.change(within(signupForm).getByLabelText(ko.auth.entry.signupEmail), {
+      target: { value: 'dev.account@example.test' },
+    });
+    const signupPassword = within(signupForm).getByLabelText(ko.auth.entry.signupPassword);
+    fireEvent.change(signupPassword, { target: { value: 'devpass2026' } });
+    fireEvent.click(screen.getByTestId('finance-reference-signup-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(ko.auth.entry.signupDone),
+    );
+    expect(signup).toHaveBeenCalledWith(
+      {
+        email: 'dev.account@example.test',
+        password: 'devpass2026',
+      },
+      expect.any(AbortSignal),
+    );
+    expect(signupPassword).toHaveValue('');
+    expect(screen.getByLabelText(ko.auth.entry.referenceUserId)).toHaveValue(
+      'dev.account@example.test',
+    );
+  });
+
+  it('shows the duplicate-account message on 409 and clears the password field', async () => {
+    const signup = vi.fn().mockRejectedValue(new FinanceReferenceAuthError('account_exists'));
+    renderReference({ signup });
+
+    const signupForm = screen.getByTestId('finance-reference-signup');
+    fireEvent.change(within(signupForm).getByLabelText(ko.auth.entry.signupEmail), {
+      target: { value: 'dup@example.test' },
+    });
+    const signupPassword = within(signupForm).getByLabelText(ko.auth.entry.signupPassword);
+    fireEvent.change(signupPassword, { target: { value: 'devpass2026' } });
+    fireEvent.click(screen.getByTestId('finance-reference-signup-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('finance-reference-signup-message')).toHaveTextContent(
+        ko.auth.entry.signupExists,
+      ),
+    );
+    expect(screen.getByTestId('finance-reference-signup-message')).toHaveAttribute('role', 'alert');
+    expect(signupPassword).toHaveValue('');
+  });
+
+  it('maps validation and unavailable failures to their own copy', async () => {
+    const signup = vi
+      .fn()
+      .mockRejectedValueOnce(new FinanceReferenceAuthError('invalid_request'))
+      .mockRejectedValueOnce(new FinanceReferenceAuthError('unavailable'));
+    renderReference({ signup });
+
+    const signupForm = screen.getByTestId('finance-reference-signup');
+    fireEvent.change(within(signupForm).getByLabelText(ko.auth.entry.signupEmail), {
+      target: { value: 'a@b.test' },
+    });
+    fireEvent.change(within(signupForm).getByLabelText(ko.auth.entry.signupPassword), {
+      target: { value: 'short' },
+    });
+    fireEvent.click(screen.getByTestId('finance-reference-signup-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('finance-reference-signup-message')).toHaveTextContent(
+        ko.auth.entry.signupInvalid,
+      ),
+    );
+
+    fireEvent.change(within(signupForm).getByLabelText(ko.auth.entry.signupPassword), {
+      target: { value: 'devpass2026' },
+    });
+    fireEvent.click(screen.getByTestId('finance-reference-signup-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('finance-reference-signup-message')).toHaveTextContent(
+        ko.auth.entry.signupUnavailable,
+      ),
+    );
   });
 });

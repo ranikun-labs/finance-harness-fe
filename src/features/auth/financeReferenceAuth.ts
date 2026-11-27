@@ -1,3 +1,5 @@
+import { FINANCE_JOURNALS_PATH } from '@/features/finance-api/financeApiBase';
+
 export interface FinanceReferenceCredentials {
   userId: string;
   password: string;
@@ -22,7 +24,8 @@ export type FinanceReferenceAuthErrorCode =
   | 'invalid_response'
   | 'stale_attempt'
   | 'external_request'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'account_exists';
 
 export class FinanceReferenceAuthError extends Error {
   constructor(readonly code: FinanceReferenceAuthErrorCode) {
@@ -42,16 +45,18 @@ interface Snapshot {
 }
 
 const LOGIN_PATH = '/api/v1/auth/finance-reference/login';
-const JOURNAL_PATH = '/finance/journals';
+const JOURNAL_PATH = FINANCE_JOURNALS_PATH;
+const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const JOURNAL_DETAIL_PATTERN = new RegExp(`^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}$`);
+const JOURNAL_LIFECYCLE_PATTERN = new RegExp(
+  `^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}/(delete|restore)$`,
+);
 const MAX_LOGIN_BODY_BYTES = 2048;
 const MAX_USER_ID_BYTES = 128;
 const MAX_PASSWORD_BYTES = 72;
 const MAX_RESPONSE_TOKEN_BYTES = 8192;
 const MAX_CLIENT_LIFETIME_MS = 330_000; // 300s token lifetime plus the 30s issuer clock skew.
-
-export function isFinanceReferenceAuthEnabled(flag: string | undefined, production: boolean) {
-  return flag === 'true' && !production;
-}
 
 export class FinanceReferenceLoginPort {
   constructor(
@@ -267,23 +272,16 @@ export function createFinanceReferenceJournalFetch(
       (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET')
     ).toUpperCase();
     const isJournalBase = target.pathname === JOURNAL_PATH;
-    const isJournalDetail =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
-        target.pathname,
-      );
-    const isDeletedList = target.pathname === '/finance/journals/deleted';
-    const isLifecycle =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(delete|restore)$/.test(
-        target.pathname,
-      );
-    const isRetrospectiveCollection =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/retrospectives$/.test(
-        target.pathname,
-      );
-    const isRetrospectiveDetail =
-      /^\/finance\/journals\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/retrospectives\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
-        target.pathname,
-      );
+    const isJournalDetail = JOURNAL_DETAIL_PATTERN.test(target.pathname);
+    const isDeletedList = target.pathname === `${JOURNAL_PATH}/deleted`;
+    const isLifecycle = JOURNAL_LIFECYCLE_PATTERN.test(target.pathname);
+    const isRetrospectiveCollection = new RegExp(
+      `^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}/retrospectives$`,
+    ).test(target.pathname);
+    const isRetrospectiveDetail = new RegExp(
+      `^${escapeRegExp(JOURNAL_PATH)}/${UUID_PATTERN}/retrospectives/${UUID_PATTERN}$`,
+    ).test(target.pathname);
+
     const protectedPath = isJournalBase || target.pathname.startsWith(`${JOURNAL_PATH}/`);
     if (!protectedPath) {
       return fetchImpl(input, { ...init, credentials: 'omit' });

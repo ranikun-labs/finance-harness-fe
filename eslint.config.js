@@ -5,7 +5,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'ios', 'android', 'coverage', 'playwright-report', 'test-results'] },
+  {
+    ignores: [
+      'dist',
+      'dist-dev-acceptance',
+      'ios',
+      'android',
+      'coverage',
+      'playwright-report',
+      'test-results',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['src/**/*.{ts,tsx}'],
@@ -24,7 +34,7 @@ export default tseslint.config(
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['*.config.ts', 'e2e/**/*.ts'],
+    files: ['*.config.ts', 'e2e/**/*.ts', 'e2e-same-origin/**/*.ts', 'worker/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.node,

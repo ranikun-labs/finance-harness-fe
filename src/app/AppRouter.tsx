@@ -33,10 +33,11 @@ import { createProductionJournalCreatePort } from '@/features/journal-new/adapte
 import { createProductionJournalReadPort } from '@/features/journal-read/adapter/productionJournalReadPort';
 import {
   FinanceReferenceAuthSession,
-  isFinanceReferenceAuthEnabled,
   type FinanceReferenceCredentials,
   type FinanceReferenceFetch,
 } from '@/features/auth/financeReferenceAuth';
+import type { FinanceReferenceSignupFn } from '@/features/auth/financeReferenceSignup';
+import { isDevAcceptanceFlagEnabled } from '@/features/finance-api/devAcceptanceGate';
 
 /** `/:locale` — 공개 웹 브랜치의 base(중첩 상대 경로 파생용). */
 const LOCALE_BASE = PUBLIC_ROUTE_PATHS.localeHome;
@@ -82,6 +83,7 @@ function AuthEntryRoute({
   financeReferenceAuth?: {
     enabled: boolean;
     login: (credentials: FinanceReferenceCredentials, signal?: AbortSignal) => Promise<void>;
+    signup?: FinanceReferenceSignupFn;
   };
 }) {
   return (
@@ -170,6 +172,13 @@ interface AppRouterProps {
   journalCreateMode?: 'test' | 'production';
   /** Explicit nonproduction-only test seam; omitted production composition uses Vite env. */
   financeReferenceAuthEnabled?: boolean;
+  /**
+   * DEV-only account creation capability. Composition passes it only in the dev-acceptance build;
+   * when omitted the reference panel offers no signup form.
+   */
+  financeReferenceSignup?: FinanceReferenceSignupFn;
+  /** Overrides the DEV-acceptance Journal create switch on the reference-auth path. */
+  financeJournalCreateEnabled?: boolean;
   financeReferenceFetchImpl?: FinanceReferenceFetch;
 }
 
@@ -179,13 +188,21 @@ export function AppRouter({
   journalCreatePort,
   journalCreateMode,
   financeReferenceAuthEnabled,
+  financeReferenceSignup,
+  financeJournalCreateEnabled,
   financeReferenceFetchImpl,
 }: AppRouterProps = {}) {
   const referenceAuthEnabled =
     financeReferenceAuthEnabled ??
-    isFinanceReferenceAuthEnabled(
+    isDevAcceptanceFlagEnabled(
       import.meta.env.VITE_FINANCE_REFERENCE_AUTH_ENABLED,
-      import.meta.env.PROD,
+      import.meta.env.MODE,
+    );
+  const referenceJournalCreateEnabled =
+    financeJournalCreateEnabled ??
+    isDevAcceptanceFlagEnabled(
+      import.meta.env.VITE_FINANCE_JOURNAL_CREATE_ENABLED,
+      import.meta.env.MODE,
     );
   const [financeAuth] = useState(
     () => new FinanceReferenceAuthSession(referenceAuthEnabled, financeReferenceFetchImpl),
@@ -203,14 +220,20 @@ export function AppRouter({
         : journalReadPort,
     [financeAuth, journalReadPort, referenceAuthEnabled],
   );
-  const activeJournalCreatePort = useMemo(
-    () =>
-      referenceAuthEnabled
-        ? createProductionJournalCreatePort({ fetchImpl: financeAuth.fetch })
-        : journalCreatePort,
-    [financeAuth, journalCreatePort, referenceAuthEnabled],
-  );
-  const activeCreateMode = referenceAuthEnabled ? 'test' : journalCreateMode;
+  // Reference-auth path: Journal create is server-authenticated and only exists behind the DEV flag.
+  // With the flag off the create route stays unavailable rather than falling back to an unauthenticated port.
+  const activeJournalCreatePort = useMemo(() => {
+    if (!referenceAuthEnabled) return journalCreatePort;
+    return referenceJournalCreateEnabled
+      ? createProductionJournalCreatePort({ fetchImpl: financeAuth.fetch })
+      : undefined;
+  }, [financeAuth, journalCreatePort, referenceAuthEnabled, referenceJournalCreateEnabled]);
+  // Reference path saves to the DEV backend when the create flag is on, so it must not claim a test-only save.
+  const activeCreateMode = referenceAuthEnabled
+    ? referenceJournalCreateEnabled
+      ? 'production'
+      : 'test'
+    : journalCreateMode;
   const activePresentation = authPresentation ?? { state: authSnapshot.state };
 
   return (
@@ -246,6 +269,7 @@ export function AppRouter({
                     ? {
                         enabled: true,
                         login: (credentials, signal) => financeAuth.login(credentials, signal),
+                        signup: financeReferenceSignup,
                       }
                     : undefined
                 }
