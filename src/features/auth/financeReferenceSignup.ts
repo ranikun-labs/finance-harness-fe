@@ -94,7 +94,7 @@ export class FinanceReferenceSignupPort {
       signal?.removeEventListener('abort', abortFromCaller);
     }
 
-    if (response.status === 201) return;
+    if (response.status === 201 || response.status === 202) return;
     if (response.status === 400) throw new FinanceReferenceAuthError('invalid_request');
     if (response.status === 409) throw new FinanceReferenceAuthError('account_exists');
     if (response.status === 404 || response.status >= 500) {

@@ -98,6 +98,13 @@ describe('FinanceReferenceSignupPort', () => {
     expect(JSON.parse(String(init?.body))).toEqual(VALID);
   });
 
+  it('accepts a generic 202 response without account data', async () => {
+    const port = new FinanceReferenceSignupPort(async () =>
+      jsonResponse(202, { status: 202, message: 'Signup request processed.' }),
+    );
+    await expect(port.signup(VALID)).resolves.toBeUndefined();
+  });
+
   it.each([
     [400, 'invalid_request'],
     [409, 'account_exists'],

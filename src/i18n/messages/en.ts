@@ -65,7 +65,7 @@ export const en: Messages = {
       signupEmail: 'Email',
       signupPassword: 'Password (10-72 bytes, letters and digits)',
       signupAction: 'Create account',
-      signupDone: 'Account created. Sign in using the form above.',
+      signupDone: 'Signup request processed. Sign in using the form above.',
       signupExists: 'An account with this email already exists.',
       signupInvalid: 'Check the email and password format.',
       signupUnavailable: 'Accounts cannot be created right now. Try again later.',
